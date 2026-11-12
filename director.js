@@ -16,8 +16,8 @@ export const SHOT = {
   p_digital: { pos: [4, 7.4, 24], target: [8, 1.2, 5], fov: 52 },
   p_cell: { pos: [14.2, 2.35, 6.4], target: [21.5, 2.2, 13.4], fov: 48 },
   p_press: { pos: [5.0, 2.4, 8.0], target: [10.6, 1.6, 1.4], fov: 46 },
-  s_stand: { pos: [0.8, 2.6, 25.4], target: [7.4, 2.5, 22.4], fov: 50 },
-  s_close: { pos: [3.0, 2.2, 24.6], target: [7.4, 2.9, 22.4], fov: 46 },
+  s_stand: { pos: [-1.6, 2.9, 25.9], target: [7.4, 2.3, 22.4], fov: 50 },
+  s_close: { pos: [-0.4, 2.4, 25.4], target: [7.4, 2.5, 22.4], fov: 48 },
   c_low: { pos: [0.5, 1.7, 17.0], target: [0, 1.9, 26], fov: 48 },
   c_crane: { pos: [0, 9.5, 11.5], target: [0, 1.8, 25], fov: 50 },
 };
