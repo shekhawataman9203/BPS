@@ -121,6 +121,7 @@ async function boot() {
   const everyone = [...Object.values(app.cast), ...app.ops];
   function frame() {
     requestAnimationFrame(frame);
+    app.frames = (app.frames || 0) + 1;
     timer.update(); const rawDt = timer.getDelta(); const dt = Math.min(rawDt, 0.05) * (ui.paused ? 0 : app.timeScale); t += dt;
     director.update(dt);
     if (controls.enabled) controls.update(); else rig.update(dt, t);
