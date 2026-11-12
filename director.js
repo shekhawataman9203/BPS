@@ -11,6 +11,7 @@ export const SHOT = {
   in_greet: { pos: [4.2, 1.9, 29.6], target: [-0.6, 1.4, 25.4], fov: 46 },
   k_wall: { pos: [3.3, 2.9, 25.6], target: [-7.6, 3.2, 22.2], fov: 50 },
   k_team: { pos: [-4.3, 2.1, 28.0], target: [0.4, 1.3, 23.4], fov: 50 },
+  in_both: { pos: [0.6, 3.0, 31.2], target: [0, 2.2, 19.5], fov: 62 },
   p_high: { pos: [0, 17, 33], target: [0, 0, 4], fov: 55 },
   p_digital: { pos: [4, 7.4, 24], target: [8, 1.2, 5], fov: 52 },
   p_cell: { pos: [14.2, 2.35, 6.4], target: [21.5, 2.2, 13.4], fov: 48 },
@@ -135,7 +136,7 @@ export class Director {
     const c = this.cast, a = this.app; const lookAll = t => this.all().forEach(m => m.lookAt(t));
     this.stage(id);
     switch (id) {
-      case 'flashback': a.factory.gate.snap(true); this.placeGroup(WAIT, () => 0); c.ph.place(0, 27.4, PI); c.bps.place(-0.6, 26.3, PI * 0.75); lookAll(c.ph); a.rig.cut(SHOT.in_greet); break;
+      case 'flashback': a.factory.gate.snap(true); this.placeGroup(WAIT, () => 0); c.ph.place(0, 27.4, PI); c.bps.place(-0.6, 26.3, PI * 0.75); lookAll(c.ph); a.rig.cut(SHOT.in_both); break;
       case 'kpis': a.rig.cut(SHOT.k_wall); lookAll(this.wallCenter()); break;
       case 'plant': c.ph.place(18.3, 11.2, 0.4); c.bps.place(17.3, 10.4, 0.6); c.dig.place(18.6, 12.0, -2.6); a.rig.cut(SHOT.p_cell); break;
       case 'bpsgo': a.entrance.snapBuild(1); lookAll(c.ph); a.rig.cut(SHOT.s_stand); break;
@@ -224,7 +225,7 @@ export class Director {
   resetView() {
     this.userCam = false; this.app.ui.showResetView(false);
     const id = CHAPTERS[this.index]?.id;
-    const shot = { flashback: SHOT.in_greet, kpis: SHOT.k_wall, plant: SHOT.p_cell, bpsgo: SHOT.s_stand, closing: SHOT.c_crane }[id];
+    const shot = { flashback: SHOT.in_both, kpis: SHOT.k_wall, plant: SHOT.p_cell, bpsgo: SHOT.s_stand, closing: SHOT.c_crane }[id];
     if (shot) this.app.rig.moveTo(shot, 2.2);
   }
 
@@ -293,7 +294,7 @@ export class Director {
     ph.faceTo(W); ph.lookAt(W); bps.lookAt(W); team.forEach(m => m.lookAt(W));
     ph.gesture('point', 2.6, { target: W });
     ctx.cap('On the left, the KPI wall. On the right, BPS GO!+.');
-    ctx.cam(SHOT.k_team, 3);
+    ctx.cam(SHOT.in_both, 3);
     await ctx.wait(3.2);
   }
 
