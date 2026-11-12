@@ -179,7 +179,7 @@ export class UI {
 
   // ------------------------------------------------------------ panel
   openPanel() { const ch = CHAPTERS[this.chapter]; if (!ch || ch.id === 'opening') return; this.panelOpen = true; document.body.classList.add('panel-open'); this.pressed('#panelToggle', true); $('#panelToggle').textContent = 'Hide'; this.animateCounters(); }
-  closePanel(silent) { this.panelOpen = false; document.body.classList.remove('panel-open'); $('#panelToggle').textContent = 'Show'; }
+  closePanel() { this.panelOpen = false; document.body.classList.remove('panel-open'); this.pressed('#panelToggle', false); $('#panelToggle').textContent = 'Show'; }
   panelSize() { const p = $('#panel'); return { w: p.offsetWidth, h: p.offsetHeight }; }
   renderPanel(i) {
     const ch = CHAPTERS[i], body = $('#panelBody');
@@ -405,17 +405,19 @@ export class UI {
   setPins(list) {
     const wrap = $('#pins'); wrap.innerHTML = '';
     this.pins = list.map(p => {
-      const el = h('button', { class: 'pin' + (p.compact ? ' compact' : '') + (p.role ? ' role' : ''), 'aria-label': p.label, onclick: () => { if (p.type === 'role') return; if (p.type === 'pillar' && this._pickPillar) this._pickPillar(p.id); else this.select(p.type, p.id); this.syncPanel(p.type, p.id); } },
+      const el = h('button', { class: 'pin' + (p.compact ? ' compact' : '') + (p.role ? ' role' : ''), 'aria-label': p.label, onclick: () => { if (p.type === 'role') return; if (p.type === 'pillar' && this._pickPillar) { this.syncPanel(p.type, p.id); this._pickPillar(p.id); } else if (!this.syncPanel(p.type, p.id)) this.select(p.type, p.id); } },
         h('i', { class: 'pin-dot' }), h('span', { class: 'pin-label' }, p.compact ? h('span', { class: 'pin-name' }, p.label) : p.label, p.value ? h('b', {}, p.value) : null));
       wrap.append(el);
       return { ...p, el, v: new THREE.Vector3() };
     });
   }
+  // Mirrors a scene selection in the panel. Returns true when the panel control it clicked already ran select().
   syncPanel(type, id) {
     if (!this.panelOpen) this.openPanel();
-    if (type === 'station') { const b = document.querySelector(`.stations button[data-id="${id}"]`); b?.click(); }
+    if (type === 'station') { const b = document.querySelector(`.stations button[data-id="${id}"]`); if (b) { b.click(); return true; } }
     if (type === 'project') { this.sel.project = id; const f = document.querySelector('.chips button'); f?.click(); setTimeout(() => document.querySelector('.proj.open')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 50); }
-    if (type === 'kpi') { [...document.querySelectorAll('.kpi')].find(b => b.querySelector('.k-name').textContent === this.data.kpis.items.find(k => k.id === id).name)?.click(); }
+    if (type === 'kpi') { const name = this.data.kpis.items.find(k => k.id === id)?.name; const b = [...document.querySelectorAll('.kpi')].find(b => b.querySelector('.k-name').textContent === name); if (b) { b.click(); return true; } }
+    return false;
   }
   updatePins(camera, W, H) {
     for (const p of this.pins) {

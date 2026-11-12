@@ -89,7 +89,7 @@ function makeRobot(accent = true) {
   const band = cyl(0.115, 0.115, 0.06, red, 16, elbow); band.position.y = 0.75;
   const wrist = new THREE.Group(); wrist.position.y = 0.9; elbow.add(wrist);
   cyl(0.08, 0.08, 0.14, dark, 14, wrist).position.y = 0.06;
-  const grip = box(0.18, 0.05, 0.08, dark, 0, 0.15, 0, wrist);
+  box(0.18, 0.05, 0.08, dark, 0, 0.15, 0, wrist);
   const f1 = box(0.03, 0.12, 0.06, dark, 0.07, 0.22, 0, wrist), f2 = box(0.03, 0.12, 0.06, dark, -0.07, 0.22, 0, wrist);
   shadows(g, true, false);
   return { g, turret, shoulder, elbow, wrist, f1, f2 };
@@ -99,7 +99,7 @@ function makeAGV() {
   const g = new THREE.Group();
   const body = new THREE.Mesh(new RoundedBoxGeometry(1.3, 0.32, 0.86, 3, 0.08), mat(0x2a2f37, { rough: 0.45, metal: 0.3 }));
   body.position.y = 0.2; g.add(body);
-  const strip = box(1.32, 0.03, 0.88, glow(C.red, 2.4), 0, 0.12, 0, g);
+  box(1.32, 0.03, 0.88, glow(C.red, 2.4), 0, 0.12, 0, g);
   const lidar = cyl(0.07, 0.07, 0.08, mat(0x0c0d10, { rough: 0.3 }), 16, g); lidar.position.set(0, 0.4, 0.33);
   const cart = box(1.2, 0.04, 0.8, mat(0x8d949e, { rough: 0.4, metal: 0.6 }), 0, 0.38, 0, g);
   for (const [x, c] of [[-0.3, C.red], [0.3, 0x5b6470]]) { const bin = new THREE.Mesh(new RoundedBoxGeometry(0.52, 0.32, 0.7, 2, 0.03), mat(c, { rough: 0.6 })); bin.position.set(x, 0.56, 0); g.add(bin); }
@@ -241,7 +241,7 @@ export function buildFactory(scene, renderer) {
   box(3.95, 0.14, 1.62, mat(C.red, { rough: 0.4 }), 0, 3.5, 0, press);
   const ram = box(2.4, 0.5, 1.1, mat(0x3a414c, { rough: 0.35, metal: 0.7 }), 0, 2.6, 0, press);
   const die = box(1.6, 0.3, 0.9, mat(C.red, { rough: 0.45, metal: 0.3 }), 0, 1.05, 0, press);
-  for (const sx of [-2.1, 2.1]) { const lc = box(0.06, 1.8, 0.06, glow(C.red, 2), sx, 1.4, 0.75, press); }
+  for (const sx of [-2.1, 2.1]) box(0.06, 1.8, 0.06, glow(C.red, 2), sx, 1.4, 0.75, press);
   // changeover cart with spare die (SMED prepared outside stop time)
   const cart = new THREE.Group(); cart.position.set(-3.4, 0, 1.7); press.add(cart);
   box(1.4, 0.06, 0.9, mat(0x8d949e, { rough: 0.4, metal: 0.6 }), 0, 0.8, 0, cart);
@@ -281,7 +281,7 @@ export function buildFactory(scene, renderer) {
   box(5.3, 1.65, 0.16, mat(0x101317, { rough: 0.4, metal: 0.4 }), 0, 0, -0.09, andon);
   const andonScreen = new THREE.Mesh(new THREE.PlaneGeometry(5.12, 1.5), new THREE.MeshBasicMaterial({ map: andonCT.tex, toneMapped: false }));
   andon.add(andonScreen);
-  for (const sx of [-2, 2]) { const c = box(0.03, 3.6, 0.03, railM, sx, 2.6, -0.1, andon); }
+  for (const sx of [-2, 2]) box(0.03, 3.6, 0.03, railM, sx, 2.6, -0.1, andon);
   let outCount = 1248, andonT = 0;
   anim.push((dt) => { andonT += dt; if (andonT > 3.2) { andonT = 0; outCount = outCount >= 1300 ? 1180 : outCount + 1; andonCT.redraw(outCount); } });
   hotspots.andon = V(-10, 7.3, 3.2);
@@ -341,7 +341,6 @@ export function buildFactory(scene, renderer) {
 
   // ---------- Line B manual workstations ----------
   const benchM = mat(0xcfd4da, { rough: 0.4, metal: 0.3 }), benchTop = mat(0x2a3038, { rough: 0.6 });
-  const stationScreens = [];
   const swCT = new CanvasTex(256, 160, (ctx, w, h) => {
     ctx.fillStyle = '#0d1014'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = CSS.red; ctx.fillRect(0, 0, w, 8);
     ctx.fillStyle = '#F4F6F8'; ctx.font = `700 22px ${FONT}`; ctx.fillText('Standard work', 14, 40);
@@ -403,7 +402,6 @@ export function buildFactory(scene, renderer) {
     }
   });
   hotspots.agv = agvs[0].g.position; // live reference (pin follows the vehicle)
-  hotspots.agvLabelOffset = 1.2;
 
   // ---------- Digital layer (visible in chapter 4) ----------
   const digital = new THREE.Group(); digital.visible = false; root.add(digital);

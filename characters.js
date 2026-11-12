@@ -160,7 +160,7 @@ export class Character {
       const cap = add(head, geo('hairCap', () => new THREE.SphereGeometry(0.106, 22, 14, 0, Math.PI * 2, 0, Math.PI * 0.5)), hairM, 0, 0.12, -0.005);
       cap.scale.set(0.98, 1.12, 1.1); cap.rotation.x = -0.25;
       const back = add(head, sphere(0.1), hairM, 0, 0.1, -0.03); back.scale.set(0.97, 1.05, 0.9);
-      if (o.hairStyle === 'long') { const l = add(head, geo('hairLong', () => new RoundedBox(0.2, 0.26, 0.08)), hairM, 0, 0.0, -0.065); }
+      if (o.hairStyle === 'long') add(head, geo('hairLong', () => new RoundedBox(0.2, 0.26, 0.08)), hairM, 0, 0.0, -0.065);
       if (o.hairStyle === 'bun') add(head, sphere(0.05), hairM, 0, 0.2, -0.08);
     }
     if (o.hardhat) {
@@ -171,7 +171,7 @@ export class Character {
     }
     if (o.glasses) {
       const gm = mat(0x0b0c0f, { rough: 0.3, metal: 0.6 });
-      for (const sx of [0.036, -0.036]) { const r = add(head, geo('lens', () => new THREE.TorusGeometry(0.022, 0.0035, 6, 18)), gm, sx, 0.115, 0.104); }
+      for (const sx of [0.036, -0.036]) add(head, geo('lens', () => new THREE.TorusGeometry(0.022, 0.0035, 6, 18)), gm, sx, 0.115, 0.104);
       add(head, geo('bridge', () => new THREE.BoxGeometry(0.03, 0.005, 0.005)), gm, 0, 0.118, 0.106);
     }
     // arms
@@ -184,7 +184,7 @@ export class Character {
       if (o.jacket) add(el, geo('cuff', () => new THREE.CylinderGeometry(0.041, 0.041, 0.025, 12)), mat(C.white, { rough: 0.6 }), 0, -0.245, 0);
       const hand = new THREE.Group(); hand.position.y = -0.27; el.add(hand);
       const palm = add(hand, sphere(0.045), skin, 0, -0.035, 0); palm.scale.set(0.75, 1.1, 0.55);
-      const th = add(hand, capsule(0.013, 0.03), skin, 0.028 * -sx * -1, -0.02, 0.022); th.rotation.z = 0.5 * sx; th.rotation.x = -0.4;
+      const th = add(hand, capsule(0.013, 0.03), skin, 0.028 * sx, -0.02, 0.022); th.rotation.z = 0.5 * sx; th.rotation.x = -0.4;
       j[side + 'Hand'] = hand;
     };
     arm('l'); arm('r');
@@ -194,7 +194,7 @@ export class Character {
       add(hp, capsule(0.07, 0.29), bottom, 0, -0.21, 0);
       const kn = j[side + 'Knee'] = new THREE.Group(); kn.position.y = -0.43; hp.add(kn);
       add(kn, capsule(0.055, 0.3), bottom, 0, -0.2, 0);
-      const foot = add(kn, geo('foot', () => new RoundedBox(0.1, 0.07, 0.25)), shoes, 0, -0.425, 0.05);
+      add(kn, geo('foot', () => new RoundedBox(0.1, 0.07, 0.25)), shoes, 0, -0.425, 0.05);
     };
     leg('l'); leg('r');
     this.root.traverse(m => { if (m.isMesh) m.userData.character = this; });
