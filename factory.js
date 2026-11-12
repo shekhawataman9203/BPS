@@ -2,18 +2,26 @@ import { THREE, RoundedBoxGeometry } from './lib.js';
 import { C, CSS, FONT, mat, glow, box, cyl, shadows, CanvasTex, fitText, V, fmt, clamp } from './util.js';
 
 /*
-  Factory hall layout (metres, top view; +x right, +z toward the back wall):
-    meeting room   x[-9,9]   z[-22,-10]   (built in rooms.js)
-    Line A         conveyor  x[-24,3] at z=0, robots at z=-1.4
-    Press cell     around (12,0)
-    Supermarket    x[20,29]  z[-18,-2]
-    Line B         manual benches at z=11
-    Digital cell   x[20,30]  z[6,20]
-    Town hall      centred (-4,25), house at z≈28.5
+  Plant layout (metres, top view; +x right, +z toward the front wall and main gate).
+  Modelled on the JaP "Picture of Future": NHA on the left half, VE Pump on the right half,
+  main gate in the front wall between them.
+    SCRUM review room   x[-9,9]    z[-22,-10]   (built in rooms.js)
+    Finish goods store  x[-29,-15] z[-21,-12]
+    NHA component mfg   conveyor x[-24,3] at z=0, robots at z=-1.4
+    NHA assembly        manual benches at z=11, x -26..-11
+    VE Pump press cell  around (12,0)
+    ABE store           supermarket x[20,29] z[-18,-2]
+    VE Pump calibration x[20,30] z[6,20]
+    Entrance            x[-6,6] z[18,32]: KPI wall on the left, BPS GO!+ stand on the right (rooms.js)
+    Main gate           x[-4,4] in the front wall z=32; outside is the forecourt
+    Supplier dock       left wall z=-14; customer dock right wall z=-14
 */
 
-const HALL = { x0: -32, x1: 32, z0: -24, z1: 32, h: 11 };
+export const HALL = { x0: -32, x1: 32, z0: -24, z1: 32, h: 11 };
+export const GATE = { w: 8, h: 6.2 };
+let GATE_TEXT = { left: 'NHA', right: 'VE PUMP' };
 const PPM = 32; // floor texture pixels per metre
+const BENCH_X = [-26, -21, -16, -11]; // NHA assembly benches
 
 function roundedRectPath(x0, z0, x1, z1, r, seg = 6) {
   const pts = [];
@@ -26,27 +34,32 @@ function floorTexture() {
   const W = (HALL.x1 - HALL.x0) * PPM, H = (HALL.z1 - HALL.z0) * PPM;
   return new CanvasTex(W, H, (ctx) => {
     const X = x => (x - HALL.x0) * PPM, Z = z => (z - HALL.z0) * PPM;
-    ctx.fillStyle = '#1a1d22'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#7f868e'; ctx.fillRect(0, 0, W, H);
     // concrete mottling
     for (let i = 0; i < 900; i++) {
       const x = Math.random() * W, y = Math.random() * H, r = 20 + Math.random() * 140;
       const g = ctx.createRadialGradient(x, y, 0, x, y, r);
       const l = Math.random() < 0.5 ? 255 : 0;
-      g.addColorStop(0, `rgba(${l},${l},${l},${0.018 + Math.random() * 0.02})`); g.addColorStop(1, 'rgba(0,0,0,0)');
+      g.addColorStop(0, `rgba(${l},${l},${l},${0.012 + Math.random() * 0.014})`); g.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
     }
-    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    ctx.fillStyle = 'rgba(255,255,255,0.04)';
     for (let i = 0; i < 26000; i++) ctx.fillRect(Math.random() * W, Math.random() * H, 1.5, 1.5);
     // expansion joints
-    ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.lineWidth = 2;
     for (let x = HALL.x0; x <= HALL.x1; x += 6) { ctx.beginPath(); ctx.moveTo(X(x), 0); ctx.lineTo(X(x), H); ctx.stroke(); }
     for (let z = HALL.z0; z <= HALL.z1; z += 6) { ctx.beginPath(); ctx.moveTo(0, Z(z)); ctx.lineTo(W, Z(z)); ctx.stroke(); }
+    // mint walkways (as in the Picture of Future)
+    const fill = (x0, z0, x1, z1, col = 'rgba(126,222,190,0.42)') => { ctx.fillStyle = col; ctx.fillRect(X(x0), Z(z0), (x1 - x0) * PPM, (z1 - z0) * PPM); };
+    fill(-30, 4.6, 18, 7.6); fill(4.6, -9.6, 7.4, 4.6); fill(-30, 17, 18, 19.6); fill(-2.2, 7.6, 2.2, 32);
+    fill(-6, 20, 6, 32, 'rgba(126,222,190,0.18)');
     // walkway lines
     const line = (x0, z0, x1, z1, col = 'rgba(225,229,234,0.55)', w = 0.1) => { ctx.strokeStyle = col; ctx.lineWidth = w * PPM; ctx.beginPath(); ctx.moveTo(X(x0), Z(z0)); ctx.lineTo(X(x1), Z(z1)); ctx.stroke(); };
     line(-30, 4.6, 18, 4.6); line(-30, 7.6, 18, 7.6);           // main aisle
     line(4.6, -9.6, 4.6, 4.6); line(7.4, -9.6, 7.4, 4.6);        // cross aisle to meeting room
     line(-30, -4.6, 18, -4.6); line(-30, -7.4, 18, -7.4);
     line(-30, 17, 18, 17); line(-30, 19.6, 18, 19.6);
+    line(-2.2, 19.6, -2.2, 32); line(2.2, 19.6, 2.2, 32);        // gate aisle
     // hazard hatch around press cell and robots
     const hatch = (x0, z0, x1, z1) => {
       ctx.save(); ctx.beginPath(); ctx.rect(X(x0), Z(z0), (x1 - x0) * PPM, (z1 - z0) * PPM); ctx.clip();
@@ -58,16 +71,15 @@ function floorTexture() {
     hatch(8.6, -2.6, 15.6, -2.0); hatch(8.6, 2.0, 15.6, 2.6);
     // 5S outlines at Line B benches and Line A stations
     ctx.strokeStyle = 'rgba(225,229,234,0.45)'; ctx.lineWidth = 0.06 * PPM;
-    for (const x of [-20, -14, -8, -2, 4]) ctx.strokeRect(X(x - 1.1), Z(10.3), 2.2 * PPM, 2.4 * PPM);
+    for (const x of BENCH_X) ctx.strokeRect(X(x - 1.1), Z(10.3), 2.2 * PPM, 2.4 * PPM);
     for (const x of [-18, -11, -4]) ctx.strokeRect(X(x - 1), Z(-2.4), 2 * PPM, 2 * PPM);
     // supermarket lanes
     for (const x of [21, 24.5, 28]) { ctx.strokeStyle = 'rgba(225,229,234,0.35)'; ctx.strokeRect(X(x - 0.8), Z(-17.5), 1.6 * PPM, 15 * PPM); }
-    // town hall circle, painted
-    ctx.strokeStyle = 'rgba(225,229,234,0.18)'; ctx.lineWidth = 0.06 * PPM;
-    ctx.beginPath(); ctx.arc(X(-4), Z(25), 7.4 * PPM, 0, Math.PI * 2); ctx.stroke();
+    // finish goods store lanes
+    for (const z of [-20, -17, -14]) { ctx.strokeStyle = 'rgba(225,229,234,0.4)'; ctx.strokeRect(X(-29), Z(z - 0.6), 14 * PPM, 1.2 * PPM); }
     // stencil text
-    ctx.save(); ctx.fillStyle = 'rgba(225,229,234,0.22)'; ctx.font = `800 ${1.1 * PPM}px ${FONT}`; ctx.textAlign = 'center';
-    ctx.translate(X(-12), Z(6.1)); ctx.fillText('LINE A  ·  LINE B', 0, 0); ctx.restore();
+    const stencil = (t, x, z) => { ctx.save(); ctx.fillStyle = 'rgba(245,247,250,0.5)'; ctx.font = `800 ${1.1 * PPM}px ${FONT}`; ctx.textAlign = 'center'; ctx.translate(X(x), Z(z)); ctx.fillText(t, 0, 0); ctx.restore(); };
+    stencil('NHA', -12, 6.6); stencil('VE PUMP', 12, 6.6); stencil('MAIN GATE', 0, 29.5);
   });
 }
 
@@ -107,7 +119,9 @@ function makeAGV() {
   return g;
 }
 
-export function buildFactory(scene, renderer) {
+export function buildFactory(scene, renderer, data = {}) {
+  const meta = data.meta || {};
+  GATE_TEXT = { left: (meta.gateLeft || 'NHA').toUpperCase(), right: (meta.gateRight || 'VE Pump').toUpperCase() };
   const root = new THREE.Group(); root.name = 'factory'; scene.add(root);
   const anim = [];
   const hotspots = {};
@@ -115,16 +129,20 @@ export function buildFactory(scene, renderer) {
   // ---------- floor ----------
   const ft = floorTexture();
   ft.tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-  const floorMat = new THREE.MeshStandardMaterial({ map: ft.tex, roughness: 0.56, metalness: 0.0, envMapIntensity: 0.8 });
+  const floorMat = new THREE.MeshStandardMaterial({ map: ft.tex, roughness: 0.48, metalness: 0.0, envMapIntensity: 0.9 });
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(HALL.x1 - HALL.x0, HALL.z1 - HALL.z0), floorMat);
   floor.rotation.x = -Math.PI / 2; floor.position.set((HALL.x0 + HALL.x1) / 2, 0, (HALL.z0 + HALL.z1) / 2);
   floor.receiveShadow = true; root.add(floor);
 
   // ---------- shell: walls, columns, roof ----------
-  const wallM = mat(0x1d2128, { rough: 0.85, metal: 0.15 });
-  const wallM2 = mat(0x262b33, { rough: 0.8, metal: 0.2 });
+  const wallM = mat(0xc9ced4, { rough: 0.8, metal: 0.1 });
+  const wallM2 = mat(0xb4bac2, { rough: 0.7, metal: 0.25 });
   const W = HALL.x1 - HALL.x0, D = HALL.z1 - HALL.z0;
-  box(W, HALL.h, 0.3, wallM, 0, HALL.h / 2, HALL.z1, root);
+  // front wall with the main gate opening x[-GATE.w/2, GATE.w/2]
+  const gw = GATE.w / 2, sideW = HALL.x1 - gw;
+  box(sideW, HALL.h, 0.3, wallM, HALL.x0 + sideW / 2, HALL.h / 2, HALL.z1, root);
+  box(sideW, HALL.h, 0.3, wallM, HALL.x1 - sideW / 2, HALL.h / 2, HALL.z1, root);
+  box(GATE.w, HALL.h - GATE.h, 0.3, wallM, 0, GATE.h + (HALL.h - GATE.h) / 2, HALL.z1, root);
   box(W, HALL.h, 0.3, wallM, 0, HALL.h / 2, HALL.z0, root);
   box(0.3, HALL.h, D, wallM, HALL.x0, HALL.h / 2, (HALL.z0 + HALL.z1) / 2, root);
   box(0.3, HALL.h, D, wallM, HALL.x1, HALL.h / 2, (HALL.z0 + HALL.z1) / 2, root);
@@ -132,7 +150,7 @@ export function buildFactory(scene, renderer) {
   const ribGeo = new THREE.BoxGeometry(0.08, HALL.h - 1, 0.12);
   const ribs = [];
   for (let z = HALL.z0 + 1; z < HALL.z1; z += 1.2) { ribs.push([HALL.x0 + 0.2, z, 0]); ribs.push([HALL.x1 - 0.2, z, 0]); }
-  for (let x = HALL.x0 + 1; x < HALL.x1; x += 1.2) { ribs.push([x, HALL.z1 - 0.2, Math.PI / 2]); }
+  for (let x = HALL.x0 + 1; x < HALL.x1; x += 1.2) { if (Math.abs(x) > GATE.w / 2 + 0.3) ribs.push([x, HALL.z1 - 0.2, Math.PI / 2]); }
   const ribIM = new THREE.InstancedMesh(ribGeo, wallM2, ribs.length);
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), s1 = new THREE.Vector3(1, 1, 1);
   ribs.forEach(([x, z, r], i) => { q.setFromEuler(new THREE.Euler(0, r, 0)); m4.compose(V(x, (HALL.h - 1) / 2 + 0.5, z), q, s1); ribIM.setMatrixAt(i, m4); });
@@ -143,16 +161,20 @@ export function buildFactory(scene, renderer) {
   box(0.05, 1.1, D - 4, bandM, HALL.x1 - 0.3, 8.4, 4, root);
   // red base band on walls
   const redBand = glow(C.red, 1.6);
-  box(W, 0.12, 0.05, redBand, 0, 1.2, HALL.z1 - 0.2, root);
+  box(sideW - 0.4, 0.12, 0.05, redBand, HALL.x0 + sideW / 2, 1.2, HALL.z1 - 0.2, root);
+  box(sideW - 0.4, 0.12, 0.05, redBand, HALL.x1 - sideW / 2, 1.2, HALL.z1 - 0.2, root);
   box(0.05, 0.12, D, redBand, HALL.x0 + 0.2, 1.2, 4, root);
   box(0.05, 0.12, D, redBand, HALL.x1 - 0.2, 1.2, 4, root);
-  // big roll-up door (daylight) on left wall
-  box(0.05, 4.6, 4.2, glow(0xf2f6ff, 1.35), HALL.x0 + 0.2, 2.3, 6, root);
-  box(0.2, 0.3, 4.6, mat(0x111316, { rough: 0.5 }), HALL.x0 + 0.25, 4.75, 6, root);
+  // dock doors (daylight): supplier inbound on the left wall, customer outbound on the right wall
+  for (const sx of [-1, 1]) {
+    const x = sx < 0 ? HALL.x0 + 0.2 : HALL.x1 - 0.2;
+    box(0.05, 4.6, 4.2, glow(0xf2f6ff, 1.35), x, 2.3, -14, root);
+    box(0.2, 0.3, 4.6, mat(0x2b313a, { rough: 0.5 }), x - sx * 0.05, 4.75, -14, root);
+  }
 
   // columns (I-beams)
   const colGeo = new THREE.BoxGeometry(0.45, HALL.h, 0.45);
-  const colM = mat(0x30363f, { rough: 0.55, metal: 0.5 });
+  const colM = mat(0xd3d8de, { rough: 0.45, metal: 0.35 });
   const colPos = [];
   for (const x of [-24, -12, 12, 24]) colPos.push([x, 17]);
   for (const z of [-18, -6, 6, 18, 28]) { colPos.push([HALL.x0 + 0.5, z]); colPos.push([HALL.x1 - 0.5, z]); }
@@ -164,20 +186,22 @@ export function buildFactory(scene, renderer) {
   root.add(colRing);
 
   // roof beams + skylights
-  const beamM = mat(0x262b33, { rough: 0.6, metal: 0.4 });
+  const beamM = mat(0xaab1ba, { rough: 0.5, metal: 0.5 });
   const beams = [];
   for (let z = HALL.z0 + 2; z < HALL.z1; z += 6) beams.push([0, 10.2, z, W, 0.5, 0.3]);
   for (let x = HALL.x0 + 4; x < HALL.x1; x += 8) beams.push([x, 10.5, 4, 0.25, 0.25, D]);
   const beamIM = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), beamM, beams.length);
   beams.forEach(([x, y, z, sx, sy, sz], i) => { m4.compose(V(x, y, z), q.identity(), V(sx, sy, sz)); beamIM.setMatrixAt(i, m4); });
   root.add(beamIM);
-  box(W, 0.2, D, mat(0x14171c, { rough: 0.9 }), 0, HALL.h, 4, root);
+  // roof: one-sided, seen from inside only, so the overview camera looks into the plant like a cut-away model
+  const roof = new THREE.Mesh(new THREE.PlaneGeometry(W, D), mat(0xe2e6ea, { rough: 0.9 }));
+  roof.rotation.x = Math.PI / 2; roof.position.set(0, HALL.h, 4); root.add(roof);
   for (const x of [-16, 0, 16]) box(2.4, 0.05, D - 6, glow(0xe8eef8, 1.05), x, HALL.h - 0.12, 4, root);
   // hanging high-bay fixtures
   const fixtures = [];
   for (let x = -24; x <= 24; x += 8) for (let z = -6; z <= 24; z += 6) fixtures.push([x, z]);
   const fixIM = new THREE.InstancedMesh(new THREE.BoxGeometry(2.4, 0.07, 0.24), glow(0xffffff, 1.6), fixtures.length);
-  const fixHousing = new THREE.InstancedMesh(new THREE.BoxGeometry(2.5, 0.12, 0.32), mat(0x15181d, { rough: 0.5, metal: 0.5 }), fixtures.length);
+  const fixHousing = new THREE.InstancedMesh(new THREE.BoxGeometry(2.5, 0.12, 0.32), mat(0x8d949d, { rough: 0.5, metal: 0.5 }), fixtures.length);
   fixtures.forEach(([x, z], i) => { m4.makeTranslation(x, 8.15, z); fixIM.setMatrixAt(i, m4); m4.makeTranslation(x, 8.24, z); fixHousing.setMatrixAt(i, m4); });
   root.add(fixIM, fixHousing);
 
@@ -346,7 +370,7 @@ export function buildFactory(scene, renderer) {
     ctx.fillStyle = '#F4F6F8'; ctx.font = `700 22px ${FONT}`; ctx.fillText('Standard work', 14, 40);
     ctx.fillStyle = '#9AA3AE'; ctx.font = `500 16px ${FONT}`; ['1  Pick housing', '2  Fit seal', '3  Torque 4.5 Nm', '4  Scan and pass'].forEach((s, i) => ctx.fillText(s, 14, 70 + i * 22));
   });
-  for (const x of [-20, -14, -8, -2, 4]) {
+  for (const x of BENCH_X) {
     const st = new THREE.Group(); st.position.set(x, 0, 11); root.add(st);
     box(1.8, 0.06, 0.85, benchTop, 0, 0.92, 0, st);
     for (const [lx, lz] of [[-0.85, -0.38], [0.85, -0.38], [-0.85, 0.38], [0.85, 0.38]]) box(0.05, 0.9, 0.05, benchM, lx, 0.45, lz, st);
@@ -417,7 +441,7 @@ export function buildFactory(scene, renderer) {
   digital.add(dashIM);
   // data streams machine -> cloud node
   const node = V(4, 9.2, 6);
-  const sources = [V(-18, 2.2, -1.45), V(-11, 2.2, -1.45), V(-4, 2.2, -1.45), V(12, 4.2, 0), V(15.9, 2.2, -2.3), V(23, 2.6, 9), V(26.5, 2.2, 10.6), V(-13, 2.8, -8.6), V(-10, 6.2, 3.2), V(24.5, 2.6, -9), V(-8, 1.6, 11), V(4, 1.6, 11)];
+  const sources = [V(-18, 2.2, -1.45), V(-11, 2.2, -1.45), V(-4, 2.2, -1.45), V(12, 4.2, 0), V(15.9, 2.2, -2.3), V(23, 2.6, 9), V(26.5, 2.2, 10.6), V(-13, 2.8, -8.6), V(-10, 6.2, 3.2), V(24.5, 2.6, -9), V(-21, 1.6, 11), V(-11, 1.6, 11)];
   const curves = sources.map(s => new THREE.QuadraticBezierCurve3(s, V((s.x + node.x) / 2, Math.max(s.y, node.y) + 2.5, (s.z + node.z) / 2), node));
   const PER = 14, NP = curves.length * PER;
   const pGeo = new THREE.BufferGeometry(); const pPos = new Float32Array(NP * 3); const pCol = new Float32Array(NP * 3);
@@ -482,8 +506,165 @@ export function buildFactory(scene, renderer) {
   root.add(dust);
   anim.push((dt, t) => { for (let i = 0; i < DUST; i++) { dPos[i * 3 + 1] += dt * 0.05 * Math.sin(t * 0.3 + dSeed[i]); dPos[i * 3] += dt * 0.04 * Math.cos(t * 0.2 + dSeed[i]); } dGeo.attributes.position.needsUpdate = true; });
 
+  // ---------- finish goods store ----------
+  const fgs = new THREE.Group(); root.add(fgs);
+  const palletM = mat(0xb08a5a, { rough: 0.8 }), cartonM = mat(0xc9a77c, { rough: 0.85 });
+  const pallets = [], cartons = [];
+  for (const z of [-20, -17, -14]) for (let x = -28.2; x <= -16; x += 1.4) {
+    pallets.push([x, 0.07, z]);
+    const n = 1 + ((Math.round(x * 3) + Math.round(z)) & 1);
+    for (let k = 0; k < n; k++) cartons.push([x, 0.14 + 0.28 + k * 0.56, z]);
+  }
+  const palIM = new THREE.InstancedMesh(new THREE.BoxGeometry(1.2, 0.14, 1.0), palletM, pallets.length);
+  pallets.forEach(([x, y, z], i) => { m4.makeTranslation(x, y, z); palIM.setMatrixAt(i, m4); });
+  const carIM = new THREE.InstancedMesh(new RoundedBoxGeometry(1.1, 0.54, 0.9, 2, 0.03), cartonM, cartons.length);
+  cartons.forEach(([x, y, z], i) => { m4.makeTranslation(x, y, z); carIM.setMatrixAt(i, m4); });
+  carIM.castShadow = true; fgs.add(palIM, carIM);
+
+  // ---------- anomaly detection (MAS) screen beside the press ----------
+  const masCT = new CanvasTex(512, 300, (ctx, w, h, ph = 0) => {
+    ctx.fillStyle = '#0d1014'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#1E88D9'; ctx.fillRect(0, 0, w, 10);
+    ctx.fillStyle = '#F4F6F8'; ctx.font = `800 34px ${FONT}`; ctx.fillText('Anomaly detection', 22, 56);
+    ctx.fillStyle = '#9AA3AE'; ctx.font = `600 20px ${FONT}`; ctx.fillText('NEXEED MAS · real time data', 22, 86);
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1; for (let y = 120; y < h - 20; y += 40) { ctx.beginPath(); ctx.moveTo(22, y); ctx.lineTo(w - 22, y); ctx.stroke(); }
+    ctx.beginPath(); ctx.strokeStyle = '#7EDEBE'; ctx.lineWidth = 4;
+    for (let i = 0; i <= 60; i++) { const x = 22 + i * (w - 44) / 60, k = i + ph; const spike = (k % 37) > 33 ? 46 : 0; const y = 200 + Math.sin(k * 0.5) * 22 + Math.sin(k * 1.7) * 9 - spike; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+    ctx.stroke();
+  });
+  const mas = new THREE.Group(); mas.position.set(17.6, 0, 3.6); mas.rotation.y = -0.6; root.add(mas);
+  box(1.9, 1.15, 0.08, mat(0x1b2027, { rough: 0.4, metal: 0.5 }), 0, 1.75, -0.05, mas);
+  const masScr = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.05), new THREE.MeshBasicMaterial({ map: masCT.tex, toneMapped: false })); masScr.position.y = 1.75; mas.add(masScr);
+  box(0.08, 1.2, 0.08, railM, 0, 0.6, -0.1, mas); box(0.7, 0.04, 0.5, railM, 0, 0.02, -0.1, mas);
+  let masT = 0, masP = 0; anim.push((dt) => { masT += dt; if (masT > 0.25) { masT = 0; masP += 1; masCT.redraw(masP); } });
+
+  // ---------- zone signs hanging from the roof ----------
+  const signs = [];
+  const zoneSign = (title, sub, x, y, z, ry = 0, color = '#1E88D9', w = 4.6) => {
+    const ct = new CanvasTex(1024, 256, (ctx, W, H) => {
+      ctx.fillStyle = '#F4F6F8'; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = color; ctx.fillRect(0, 0, 22, H);
+      ctx.fillStyle = '#12161C'; const s1 = fitText(ctx, title, W - 90, 104, 800); ctx.font = `800 ${s1}px ${FONT}`; ctx.fillText(title, 56, sub ? 118 : 160);
+      if (sub) { ctx.fillStyle = '#4a525d'; const s2 = fitText(ctx, sub, W - 90, 52, 600); ctx.font = `600 ${s2}px ${FONT}`; ctx.fillText(sub, 58, 196); }
+    });
+    const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; root.add(g);
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(w, w / 4), new THREE.MeshBasicMaterial({ map: ct.tex, toneMapped: false, side: THREE.DoubleSide }));
+    face.material.color.setScalar(0.92); g.add(face);
+    for (const sx of [-w * 0.4, w * 0.4]) box(0.02, HALL.h - y, 0.02, railM, sx, (HALL.h - y) / 2 + w / 8, 0, g);
+    signs.push(g); return g;
+  };
+  zoneSign('NHA', 'Component manufacturing', -16, 6.6, -1.2, 0, '#0E9384');
+  zoneSign('NHA', 'Assembly · standard work', -18.5, 5.4, 9.2, 0, '#0E9384');
+  zoneSign('VE Pump', 'Component manufacturing · SMED', 12, 6.8, -1.6, 0, '#8E2C8C');
+  zoneSign('VE Pump', 'Calibration · AI vision', 25, 5.4, 6.0, 0, '#8E2C8C');
+  zoneSign('ABE Store', 'Inbound · Kanban supermarket', 24.5, 5.4, -1.4, 0, '#1E88D9');
+  zoneSign('Finish Goods Store', 'Outbound', -22, 5.4, -11.2, 0, '#1E88D9');
+  zoneSign('Supplier', 'Inbound dock · AGV milk run', HALL.x0 + 1.2, 6.2, -14, Math.PI / 2, '#E20015', 4.2);
+  zoneSign('Customer', 'Outbound dock · pull / MTO', HALL.x1 - 1.2, 6.2, -14, -Math.PI / 2, '#E20015', 4.2);
+
+  // ---------- outside: forecourt, façade, main gate ----------
+  const out = new THREE.Group(); out.name = 'outside'; root.add(out);
+  const OUT = { x0: -110, x1: 110, z0: HALL.z1 + 0.16, z1: 150 };
+  const groundCT = new CanvasTex(2048, 1024, (ctx, Wc, Hc) => {
+    const X = x => (x - OUT.x0) / (OUT.x1 - OUT.x0) * Wc, Z = z => (z - OUT.z0) / (OUT.z1 - OUT.z0) * Hc;
+    ctx.fillStyle = '#5b8f5f'; ctx.fillRect(0, 0, Wc, Hc); // lawn
+    for (let i = 0; i < 9000; i++) { ctx.fillStyle = `rgba(${Math.random() < 0.5 ? '255,255,255' : '0,40,0'},0.05)`; ctx.fillRect(Math.random() * Wc, Math.random() * Hc, 2, 2); }
+    ctx.fillStyle = '#9ea4aa'; ctx.fillRect(X(-34), Z(OUT.z0), (68) / (OUT.x1 - OUT.x0) * Wc, Z(OUT.z0 + 14) - Z(OUT.z0)); // forecourt
+    ctx.fillStyle = '#4b5056'; ctx.fillRect(0, Z(OUT.z0 + 14), Wc, Z(OUT.z0 + 24) - Z(OUT.z0 + 14)); // road
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.setLineDash([22, 18]); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, Z(OUT.z0 + 19)); ctx.lineTo(Wc, Z(OUT.z0 + 19)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#b9bec3'; ctx.fillRect(X(-2.2), Z(OUT.z0 + 24), X(2.2) - X(-2.2), Hc); // footpath to the gate
+    ctx.fillStyle = 'rgba(126,222,190,0.55)'; ctx.fillRect(X(-2.2), Z(OUT.z0), X(2.2) - X(-2.2), Z(OUT.z0 + 14) - Z(OUT.z0)); // mint path on the forecourt
+    ctx.fillStyle = '#ffffff'; for (let k = 0; k < 6; k++) ctx.fillRect(X(-2.2), Z(OUT.z0 + 15 + k * 1.5), X(2.2) - X(-2.2), Z(0.7) - Z(0)); // zebra crossing
+  });
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(OUT.x1 - OUT.x0, OUT.z1 - OUT.z0), new THREE.MeshStandardMaterial({ map: groundCT.tex, roughness: 0.9 }));
+  ground.rotation.x = -Math.PI / 2; ground.position.set((OUT.x0 + OUT.x1) / 2, -0.01, (OUT.z0 + OUT.z1) / 2); ground.receiveShadow = true; out.add(ground);
+  // ground around the other three sides of the hall
+  const lawnM = mat(0x5b8f5f, { rough: 0.95 });
+  const lawn = (x0, z0, x1, z1) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), lawnM); m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, -0.02, (z0 + z1) / 2); m.receiveShadow = true; out.add(m); };
+  lawn(-110, -110, 110, HALL.z0 - 0.15); lawn(-110, HALL.z0 - 0.15, HALL.x0 - 0.15, HALL.z1 + 0.2); lawn(HALL.x1 + 0.15, HALL.z0 - 0.15, 110, HALL.z1 + 0.2);
+  // trees
+  const trunkM = mat(0x5a4632, { rough: 0.9 }), leafM = mat(0x2f6b45, { rough: 0.85 });
+  const treeSpots = [[-40, 40], [-30, 52], [-18, 58], [18, 58], [30, 52], [40, 40], [-46, 10], [-46, -14], [46, 10], [46, -14], [-24, 60], [24, 60]];
+  for (const [x, z] of treeSpots) {
+    const s = 0.9 + ((x * 7 + z * 3) % 5) * 0.08;
+    const t = new THREE.Group(); t.position.set(x, 0, z); t.scale.setScalar(s); out.add(t);
+    cyl(0.18, 0.24, 1.6, trunkM, 8, t).position.y = 0.8;
+    const c1 = new THREE.Mesh(new THREE.IcosahedronGeometry(1.6, 1), leafM); c1.position.y = 2.8; t.add(c1);
+    const c2 = new THREE.Mesh(new THREE.IcosahedronGeometry(1.15, 1), leafM); c2.position.set(0.4, 3.9, 0.2); t.add(c2);
+    shadows(t, true, false);
+  }
+  // façade: glass band, plant signs left (NHA) and right (VE Pump)
+  const fz = HALL.z1 + 0.16;
+  box(W - 0.4, 1.3, 0.05, glow(0xcfe6ff, 0.75), 0, 9.3, fz + 0.01, out);
+  box(W, 0.18, 0.12, mat(0xE20015, { rough: 0.4 }), 0, HALL.h - 0.1, fz + 0.04, out);
+  const facadeSign = (title, sub, x) => {
+    const ct = new CanvasTex(1024, 320, (ctx, Wc, Hc) => {
+      ctx.clearRect(0, 0, Wc, Hc); ctx.fillStyle = '#12161C'; ctx.textAlign = 'center';
+      const s1 = fitText(ctx, title, Wc * 0.9, 170, 800); ctx.font = `800 ${s1}px ${FONT}`; ctx.fillText(title, Wc / 2, 170);
+      ctx.fillStyle = '#E20015'; ctx.fillRect(Wc / 2 - 80, 205, 160, 12);
+      ctx.fillStyle = '#3c444f'; ctx.font = `600 52px ${FONT}`; ctx.fillText(sub, Wc / 2, 284);
+    });
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(10, 3.125), new THREE.MeshBasicMaterial({ map: ct.tex, transparent: true, toneMapped: false })); m.material.color.setScalar(0.9);
+    m.position.set(x, 6.4, fz + 0.03); out.add(m);
+  };
+  facadeSign(GATE_TEXT.left, 'Plant · JaP', -17);
+  facadeSign(GATE_TEXT.right, 'Plant · JaP', 17);
+  // gate frame and canopy
+  const frameM = glow(C.red, 1.7);
+  box(0.25, GATE.h + 0.25, 0.25, frameM, -GATE.w / 2 - 0.12, (GATE.h + 0.25) / 2, fz + 0.12, out);
+  box(0.25, GATE.h + 0.25, 0.25, frameM, GATE.w / 2 + 0.12, (GATE.h + 0.25) / 2, fz + 0.12, out);
+  box(GATE.w + 0.5, 0.25, 0.25, frameM, 0, GATE.h + 0.12, fz + 0.12, out);
+  const canopy = box(GATE.w + 3, 0.2, 3.2, mat(0x2b313a, { rough: 0.4, metal: 0.6 }), 0, GATE.h + 0.9, fz + 1.6, out); canopy.castShadow = true;
+  box(GATE.w + 3, 0.05, 0.05, glow(0xffffff, 1.6), 0, GATE.h + 0.78, fz + 3.15, out);
+  // "Main gate" sign above the canopy
+  const gateSignCT = new CanvasTex(1024, 192, (ctx, Wc, Hc) => {
+    ctx.fillStyle = '#12161C'; ctx.fillRect(0, 0, Wc, Hc); ctx.fillStyle = CSS.red; ctx.fillRect(0, Hc - 12, Wc, 12);
+    ctx.fillStyle = '#F4F6F8'; ctx.textAlign = 'center'; ctx.font = `800 92px ${FONT}`; ctx.fillText('MAIN GATE', Wc / 2, 118);
+  });
+  const gateSign = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 1.2), new THREE.MeshBasicMaterial({ map: gateSignCT.tex, toneMapped: false }));
+  gateSign.position.set(0, GATE.h + 1.9, fz + 0.03); out.add(gateSign);
+  // sliding door leaves: "2026" | "FLASHBACK"
+  const leafTex = (word, align) => new CanvasTex(512, 800, (ctx, Wc, Hc) => {
+    const g = ctx.createLinearGradient(0, 0, Wc, Hc); g.addColorStop(0, '#2d343e'); g.addColorStop(1, '#1a1f26');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, Wc, Hc);
+    ctx.fillStyle = 'rgba(255,255,255,0.06)'; for (let y = 0; y < Hc; y += 26) ctx.fillRect(0, y, Wc, 2);
+    ctx.fillStyle = CSS.red; ctx.fillRect(0, 300, Wc, 8);
+    ctx.fillStyle = '#F4F6F8'; ctx.textAlign = align; const x = align === 'right' ? Wc - 34 : 34;
+    const s = fitText(ctx, word, Wc - 60, 170, 800); ctx.font = `800 ${s}px ${FONT}`; ctx.fillText(word, x, 430);
+    ctx.fillStyle = '#C3C9D1'; ctx.font = `600 34px ${FONT}`; ctx.fillText(align === 'right' ? 'Reflection' : 'BPS GO!+', x, 500);
+  });
+  const leaves = [['2026', 'right', -1], ['FLASHBACK', 'left', 1]].map(([word, align, sx]) => {
+    const g = new THREE.Group(); g.position.set(sx * GATE.w / 4, 0, fz + 0.4); out.add(g);
+    box(GATE.w / 2, GATE.h, 0.1, mat(0x1a1f26, { rough: 0.35, metal: 0.6 }), 0, GATE.h / 2, 0, g).castShadow = true;
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(GATE.w / 2 - 0.12, GATE.h - 0.2), new THREE.MeshBasicMaterial({ map: leafTex(word, align).tex, toneMapped: false }));
+    face.position.set(0, GATE.h / 2, 0.056); face.material.color.setScalar(1.1); g.add(face);
+    return { g, sx };
+  });
+  // light behind the gate: grows as it opens
+  const gateGlow = new THREE.Mesh(new THREE.PlaneGeometry(GATE.w, GATE.h), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffffff).multiplyScalar(2.2), transparent: true, opacity: 0, depthWrite: false, toneMapped: false }));
+  gateGlow.position.set(0, GATE.h / 2, HALL.z1 - 0.3); out.add(gateGlow);
+  const gateLight = new THREE.PointLight(0xfff4e6, 0, 26, 1.4); gateLight.position.set(0, 3.6, fz + 3); out.add(gateLight);
+  let gateK = 0, gateTarget = 0, glowK = 0, glowTarget = 0;
+  anim.push((dt) => {
+    gateK += (gateTarget - gateK) * (1 - Math.exp(-1.6 * dt));
+    leaves.forEach(({ g, sx }) => { g.position.x = sx * (GATE.w / 4 + gateK * (GATE.w / 2 + 0.2)); });
+    glowK += (glowTarget - glowK) * (1 - Math.exp(-2.4 * dt));
+    gateGlow.material.opacity = glowK * Math.min(1, gateK * 1.6); gateGlow.visible = gateGlow.material.opacity > 0.01;
+    gateLight.intensity = 30 * gateK * (0.35 + 0.65 * glowK);
+  });
+  hotspots.gate = V(0, GATE.h + 1.9, fz);
+  // tour stops
+  Object.assign(hotspots, {
+    supplier: V(HALL.x0 + 1.5, 3.2, -14), inbound: V(24.5, 2.2, -9), nha: V(-11, 2.2, 0), assembly: V(-18.5, 1.8, 11),
+    ve: V(12, 3.4, 0), calibration: V(23, 2.6, 9), scrum: V(0, 3.4, -10), customer: V(HALL.x1 - 1.5, 3.2, -14),
+  });
+
   return {
-    root, hotspots, agvs,
+    root, hotspots, agvs, outside: out,
+    gate: {
+      open(on = true, glowOn = true) { gateTarget = on ? 1 : 0; glowTarget = on && glowOn ? 1 : 0; },
+      snap(on) { gateK = gateTarget = on ? 1 : 0; glowK = glowTarget = 0; },
+      glow(on) { glowTarget = on ? 1 : 0; },
+    },
     setDigital(on) { digitalTarget = on ? 1 : 0; },
     update(dt, t) { for (const f of anim) f(dt, t); },
   };

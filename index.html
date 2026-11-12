@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0B0E13">
-<title>BPS Strategy Workshop 2026</title>
+<title>BPS GO!+ 2026 Flashback</title>
 <!-- Archivo is loaded online when available; the page falls back to Helvetica/Arial when offline. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +19,11 @@
 <script type="application/json" id="workshop-data">__DATA__</script>
 </head>
 <body data-chapter="opening">
-<canvas id="stage" aria-label="3D scene of the plant, the meeting room and the BPS team"></canvas>
+<canvas id="stage" aria-label="3D scene of the JaP plant, its main gate, the KPI wall and the BPS team"></canvas>
+<!-- images (embedded at build time) -->
+<img id="bpsLogoImg" src="__BPS_LOGO__" alt="" hidden>
+<img id="lwwImg" src="__LWW__" alt="" hidden>
+<img id="reflImg" src="__REFL__" alt="" hidden>
 <div id="vignette" aria-hidden="true"></div>
 <div id="grain" aria-hidden="true"></div>
 <div class="letterbox top" aria-hidden="true"></div>
@@ -28,12 +32,14 @@
 <header id="topbar">
   <div class="brand">
     <span class="mark" aria-hidden="true"></span>
-    <div class="brand-text"><strong>BPS Strategy Workshop 2026</strong><span id="plantName"></span></div>
+    <div class="brand-text"><strong>BPS GO!+ 2026 Flashback</strong><span id="plantName"></span></div>
   </div>
+  <button id="btnBpsGo" class="bpsgo-icon" aria-pressed="false" title="BPS GO!+ roadmap (B)" aria-label="Open the BPS GO!+ roadmap"><img src="__BPS_LOGO__" alt=""></button>
   <nav class="tools" aria-label="View options">
     <button id="btnCC" aria-pressed="true" title="Subtitles (C)"><span class="lg">Subtitles</span><span class="sm">CC</span></button>
     <button id="btnRoles" aria-pressed="false" title="Show roles above people (R)"><span class="lg">Roles</span><span class="sm">Roles</span></button>
     <button id="btnExplore" aria-pressed="false" title="Free camera (F)"><span class="lg">Free camera</span><span class="sm">Orbit</span></button>
+    <button id="btnPause" aria-pressed="false" title="Pause animation (K)"><span class="lg">Pause</span><span class="sm">❚❚</span></button>
     <button id="btnAuto" aria-pressed="false" title="Advance chapters automatically (A)"><span class="lg">Autoplay</span><span class="sm">Auto</span></button>
     <button id="btnPresent" aria-pressed="false" title="Presentation mode (P)"><span class="lg">Present</span><span class="sm">Present</span></button>
     <button id="btnHelp" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">?</button>
@@ -47,6 +53,16 @@
 <div id="pins"></div>
 <div id="fade" aria-hidden="true"></div>
 <div id="toast" role="status"></div>
+<button id="pauseBadge" aria-label="Resume animation"><span class="pb-ico" aria-hidden="true">❚❚</span>Paused<small>Press K or click to play</small></button>
+
+<section id="roadmap" aria-label="BPS GO!+ roadmap" hidden>
+  <div class="rm-bar">
+    <div id="rmPills" class="rm-pills" role="group" aria-label="Zoom to a pillar"></div>
+    <p id="rmCrumb" class="rm-crumb"></p>
+    <button id="rmClose" aria-label="Close the roadmap">Close <kbd>Esc</kbd></button>
+  </div>
+  <div id="rmView" class="rm-view"><div id="rmStage" class="rm-stage"></div></div>
+</section>
 
 <aside id="panel" aria-labelledby="panelTitle">
   <div class="panel-head">
@@ -77,7 +93,7 @@
 <section id="intro" aria-labelledby="introTitle">
   <div class="intro-inner">
     <p class="intro-plant"><span class="mark" aria-hidden="true"></span><span id="introPlant"></span></p>
-    <h1 id="introTitle"><span class="ln"><span>BPS Strategy</span></span><span class="ln"><span>Workshop 2026</span></span></h1>
+    <h1 id="introTitle"><span class="ln"><span>BPS GO!+</span></span><span class="ln"><span>2026 Flashback</span></span></h1>
     <i class="stamp" aria-hidden="true"></i>
     <p id="introTag"></p>
     <div class="loader"><span class="load-track"><i id="loadBar"></i></span><span class="load-text">Building the plant</span></div>
@@ -94,7 +110,9 @@
   <dl>
     <dt><kbd>→</kbd> <kbd>Space</kbd> <kbd>Page Down</kbd></dt><dd>Finish the scene, then go to the next chapter</dd>
     <dt><kbd>←</kbd> <kbd>Page Up</kbd></dt><dd>Previous chapter</dd>
-    <dt><kbd>1</kbd>–<kbd>7</kbd></dt><dd>Jump to a chapter</dd>
+    <dt><kbd>1</kbd>–<kbd>5</kbd></dt><dd>Jump to a chapter</dd>
+    <dt><kbd>K</kbd></dt><dd>Pause or play the animation</dd>
+    <dt><kbd>B</kbd></dt><dd>BPS GO!+ roadmap: click a block to zoom, <kbd>Esc</kbd> to zoom out</dd>
     <dt><kbd>S</kbd></dt><dd>Skip the current scene</dd>
     <dt><kbd>H</kbd></dt><dd>Show or hide the details panel</dd>
     <dt><kbd>P</kbd></dt><dd>Presentation mode (full screen)</dd>

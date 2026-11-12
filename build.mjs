@@ -15,7 +15,10 @@ const esc = s => s.replace(/<\/script/gi, '<\\/script');
 let html = fs.readFileSync(src('index.html'), 'utf8');
 const css = fs.readFileSync(src('style.css'), 'utf8');
 const data = fs.readFileSync(src('data.json'), 'utf8');
+const dataUri = (f, type) => `data:${type};base64,${fs.readFileSync(src(f)).toString('base64')}`;
+const images = { __BPS_LOGO__: dataUri('assets/bps-go-logo.png', 'image/png'), __LWW__: dataUri('assets/lead-work-win.jpg', 'image/jpeg'), __REFL__: dataUri('assets/reflection.jpg', 'image/jpeg') };
 JSON.parse(data); // validate
+for (const [k, v] of Object.entries(images)) html = html.replaceAll(k, v);
 html = html.replace('/*__CSS__*/', () => css)
   .replace('__DATA__', () => esc(data))
   .replace('/*__VENDOR__*/', () => esc(vendor.outputFiles[0].text))
