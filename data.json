@@ -1,0 +1,113 @@
+{
+  "_note": "SAMPLE CONTENT. Every figure below is a placeholder. Replace it with your plant's real values. Text and numbers here drive the panels, the 3D screens and the KPI hologram.",
+  "meta": {
+    "org": "Bosch",
+    "event": "BPS Strategy Workshop 2026",
+    "plant": "Plant [Location]",
+    "date": "December 2026",
+    "tagline": "From Lean excellence to digital leadership",
+    "sampleNotice": "Sample figures. Edit the workshop-data block in this file to use your plant's numbers."
+  },
+  "cast": [
+    { "id": "ph",   "role": "Plant Head" },
+    { "id": "bps",  "role": "BPS Lead" },
+    { "id": "prod", "role": "Production Manager" },
+    { "id": "qual", "role": "Quality Manager" },
+    { "id": "dig",  "role": "Digital Lead" },
+    { "id": "log",  "role": "Logistics Lead" }
+  ],
+  "achievements": {
+    "intro": "2026 was the year Lean stopped being a programme and became the way the plant runs.",
+    "headline": [
+      { "label": "Overall equipment effectiveness", "short": "OEE", "value": 82.4, "decimals": 1, "unit": "%", "delta": "+6.1 pts vs 2025", "series": [74.1, 75.0, 76.2, 77.8, 78.5, 79.9, 80.4, 81.2, 81.9, 82.6, 83.1, 82.4] },
+      { "label": "Customer complaints", "short": "Customer ppm", "value": 4.2, "decimals": 1, "unit": " ppm", "delta": "−48% vs 2025", "series": [8.1, 7.6, 7.0, 6.4, 6.1, 5.6, 5.2, 4.9, 4.7, 4.4, 4.3, 4.2] },
+      { "label": "Productivity gain", "short": "Productivity", "value": 7.8, "decimals": 1, "prefix": "+", "unit": "%", "delta": "Year on year", "series": [0.6, 1.3, 2.0, 2.6, 3.4, 4.1, 4.9, 5.6, 6.2, 6.9, 7.4, 7.8] },
+      { "label": "Improvement ideas implemented", "short": "Ideas", "value": 1240, "decimals": 0, "unit": "", "delta": "+35% vs 2025", "series": [72, 160, 255, 350, 455, 560, 660, 770, 880, 990, 1110, 1240] }
+    ],
+    "milestones": [
+      { "q": "Q1", "title": "Value stream redesign, Line 3", "text": "New layout cut lead time from 14.5 to 11 days and freed 640 m² of floor space." },
+      { "q": "Q2", "title": "Zero-defect cell certified", "text": "Final assembly cell ran 90 days without a customer-relevant defect." },
+      { "q": "Q3", "title": "AGV fleet live", "text": "Six automated guided vehicles took over milk-run supply for Lines 1–3." },
+      { "q": "Q4", "title": "BPS assessment level 4", "text": "External assessment confirmed level 4 maturity in 6 of 8 BPS principles." }
+    ],
+    "highlights": [
+      { "title": "210 days", "text": "without a lost-time incident" },
+      { "title": "−12%", "text": "energy per unit produced" },
+      { "title": "96%", "text": "of associates trained in BPS basics" }
+    ]
+  },
+  "lean": {
+    "intro": "Eight BPS principles, assessed on a five-level maturity scale. The gap between the two bars is the year's work.",
+    "principles": [
+      { "name": "Process orientation", "y2025": 3.1, "y2026": 3.9, "action": "Value streams mapped end to end for all three product families." },
+      { "name": "Pull system", "y2025": 2.6, "y2026": 3.7, "action": "Kanban supermarket replaces push scheduling on Lines 1–3." },
+      { "name": "Perfect quality", "y2025": 3.4, "y2026": 4.2, "action": "Poka-yoke on 38 failure modes; AI inspection at end of line." },
+      { "name": "Flexibility", "y2025": 2.8, "y2026": 3.6, "action": "SMED workshops on every bottleneck machine." },
+      { "name": "Standardisation", "y2025": 3.5, "y2026": 4.1, "action": "Standard work sheets digitised and versioned at each station." },
+      { "name": "Transparency", "y2025": 3.2, "y2026": 4.3, "action": "Live shop floor boards in three tiers, refreshed every 15 minutes." },
+      { "name": "Continuous improvement", "y2025": 3.6, "y2026": 4.4, "action": "1,240 ideas implemented; weekly kaizen events per line." },
+      { "name": "Personal responsibility", "y2025": 3.0, "y2026": 3.8, "action": "Team leaders own their KPIs and run their own problem solving." }
+    ],
+    "metrics": [
+      { "label": "Lead time", "unit": " days", "before": 14.5, "after": 9.2, "decimals": 1 },
+      { "label": "Work in progress", "unit": " pcs", "before": 3800, "after": 2350, "decimals": 0 },
+      { "label": "Changeover time", "unit": " min", "before": 42, "after": 18, "decimals": 0 },
+      { "label": "Walking distance per shift", "unit": " km", "before": 6.8, "after": 4.9, "decimals": 1 }
+    ],
+    "stations": [
+      { "id": "vsm", "title": "Value stream, Line A", "text": "One-piece flow across four stations. Takt 42 s, buffer between stations capped at two parts." },
+      { "id": "smed", "title": "SMED at the press cell", "text": "Changeover cut from 42 to 18 minutes by moving 70% of setup work outside machine stop time." },
+      { "id": "kanban", "title": "Kanban supermarket", "text": "Two-bin system with 412 part numbers. Supply is pulled by consumption, not by forecast." },
+      { "id": "andon", "title": "Andon and escalation", "text": "Every stop raises the Andon. Team leader responds within 3 minutes, shift lead within 10." },
+      { "id": "sfm", "title": "Shop floor management board", "text": "Tier-2 board: safety, quality, delivery, cost and people, reviewed daily at 08:30." }
+    ]
+  },
+  "digital": {
+    "intro": "Six projects connect machines, materials and people. Pick a project to fly to it on the shop floor.",
+    "projects": [
+      { "id": "pdm", "name": "Predictive maintenance", "status": "Live", "progress": 100, "impact": "−31% unplanned downtime", "owner": "Digital Lead", "text": "Vibration and temperature sensors on 46 critical assets feed a failure-prediction model. Maintenance is planned before a breakdown happens." },
+      { "id": "aoi", "name": "AI visual inspection", "status": "Live", "progress": 100, "impact": "−70% defect escapes", "owner": "Quality Manager", "text": "Camera stations at end of line classify surface defects in 180 ms per part and feed results back to the line." },
+      { "id": "dsfm", "name": "Digital shop floor management", "status": "Live", "progress": 100, "impact": "15-minute KPI refresh", "owner": "BPS Lead", "text": "Paper boards replaced by live screens across three tiers, with problem-solving tracked to closure." },
+      { "id": "agv", "name": "AGV intralogistics", "status": "Scaling", "progress": 72, "impact": "1,900 km/month walking removed", "owner": "Logistics Lead", "text": "Six AGVs run the milk run between supermarket and lines. Four more vehicles join in Q1 2027." },
+      { "id": "energy", "name": "Energy monitoring", "status": "Pilot", "progress": 45, "impact": "−12% energy per unit", "owner": "Production Manager", "text": "Sub-metering on compressors, ovens and HVAC, with a live CO₂ dashboard per line." },
+      { "id": "twin", "name": "Digital twin, Line B", "status": "Planned", "progress": 15, "impact": "Layout changes simulated before build", "owner": "Digital Lead", "text": "A simulation model of Line B to test cycle time, staffing and layout options before touching the floor." }
+    ]
+  },
+  "kpis": {
+    "intro": "Twelve months of the plant's eight steering KPIs against their 2026 targets.",
+    "months": ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+    "items": [
+      { "id": "oee", "name": "OEE", "unit": "%", "target": 80, "higherBetter": true, "decimals": 1, "monthly": [74.1, 75.0, 76.2, 77.8, 78.5, 79.9, 80.4, 81.2, 81.9, 82.6, 83.1, 82.4] },
+      { "id": "fpy", "name": "First pass yield", "unit": "%", "target": 97, "higherBetter": true, "decimals": 1, "monthly": [95.2, 95.6, 95.9, 96.3, 96.8, 97.1, 97.4, 97.2, 97.6, 97.9, 98.1, 98.0] },
+      { "id": "ppm", "name": "Customer ppm", "unit": " ppm", "target": 5, "higherBetter": false, "decimals": 1, "monthly": [8.1, 7.6, 7.0, 6.4, 6.1, 5.6, 5.2, 4.9, 4.7, 4.4, 4.3, 4.2] },
+      { "id": "otd", "name": "On-time delivery", "unit": "%", "target": 98, "higherBetter": true, "decimals": 1, "monthly": [95.8, 96.1, 96.9, 97.2, 97.0, 97.8, 98.2, 98.4, 98.1, 98.6, 98.9, 99.0] },
+      { "id": "prod", "name": "Productivity", "unit": "%", "target": 7, "higherBetter": true, "decimals": 1, "monthly": [0.6, 1.3, 2.0, 2.6, 3.4, 4.1, 4.9, 5.6, 6.2, 6.9, 7.4, 7.8] },
+      { "id": "ltir", "name": "Accident rate (LTIR)", "unit": "", "target": 0.5, "higherBetter": false, "decimals": 2, "monthly": [0.82, 0.78, 0.74, 0.70, 0.66, 0.60, 0.55, 0.50, 0.46, 0.42, 0.40, 0.38] },
+      { "id": "energy", "name": "Energy per unit", "unit": " kWh", "target": 1.9, "higherBetter": false, "decimals": 2, "monthly": [2.21, 2.18, 2.14, 2.10, 2.06, 2.02, 1.99, 1.97, 1.95, 1.93, 1.94, 1.95] },
+      { "id": "inv", "name": "Inventory days", "unit": " days", "target": 18, "higherBetter": false, "decimals": 1, "monthly": [24.5, 24.0, 23.1, 22.4, 21.6, 20.9, 20.2, 19.6, 19.1, 18.8, 18.6, 18.9] }
+    ]
+  },
+  "strategy": {
+    "intro": "One vision, four pillars, one foundation. Pick a part of the house to see its 2027 commitments.",
+    "vision": { "title": "Vision 2027", "text": "The benchmark plant in our network for quality, flow and digital operations." },
+    "pillars": [
+      { "id": "q", "name": "Zero-defect quality", "target": "Customer ppm below 2", "initiatives": ["AI inspection on every end-of-line station", "Poka-yoke for the top 50 failure modes", "Supplier quality gates for critical parts"] },
+      { "id": "f", "name": "End-to-end flow", "target": "Lead time −25%, OTD ≥ 98.5%", "initiatives": ["Pull system extended to Lines 4 and 5", "Ten AGVs running milk-run supply", "Daily sales and operations sync"] },
+      { "id": "c", "name": "Productivity and cost", "target": "+6% productivity", "initiatives": ["SMED on all bottleneck machines", "Line balancing with the digital twin", "Energy cost −8% per unit"] },
+      { "id": "d", "name": "Digital and data", "target": "100% critical assets connected", "initiatives": ["Predictive maintenance plant-wide", "Digital twin for Lines A and B", "One data platform for all shop floor KPIs"] }
+    ],
+    "foundation": { "name": "BPS principles and people", "target": "40 training hours per associate", "initiatives": ["BPS academy for team leaders", "Problem solving certification for all engineers", "Safety culture programme: zero harm"] },
+    "roadmap": [
+      { "item": "Pull system on Lines 4–5", "pillar": "f", "start": 0, "end": 2 },
+      { "item": "AI inspection rollout", "pillar": "q", "start": 0, "end": 3 },
+      { "item": "AGV fleet to 10 vehicles", "pillar": "f", "start": 1, "end": 2 },
+      { "item": "SMED on bottlenecks", "pillar": "c", "start": 1, "end": 4 },
+      { "item": "Digital twin, Line B", "pillar": "d", "start": 2, "end": 4 },
+      { "item": "BPS academy, cohort 1–2", "pillar": "base", "start": 0, "end": 4 }
+    ]
+  },
+  "closing": {
+    "title": "One team. One BPS. 2027.",
+    "commitments": ["Every KPI has an owner and a weekly review", "Every team runs one improvement per week", "Every project shows its result on the shop floor board"]
+  }
+}

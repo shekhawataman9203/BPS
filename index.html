@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B0E13">
+<title>BPS Strategy Workshop 2026</title>
+<!-- Archivo is loaded online when available; the page falls back to Helvetica/Arial when offline. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>/*__CSS__*/</style>
+<!--
+  ============================================================================
+  WORKSHOP DATA — edit this block to change every figure, label and text.
+  All numbers below are SAMPLE placeholders. Keep it valid JSON.
+  ============================================================================
+-->
+<script type="application/json" id="workshop-data">__DATA__</script>
+</head>
+<body data-chapter="opening">
+<canvas id="stage" aria-label="3D scene of the plant, the meeting room and the BPS team"></canvas>
+<div id="vignette" aria-hidden="true"></div>
+<div id="grain" aria-hidden="true"></div>
+<div class="letterbox top" aria-hidden="true"></div>
+<div class="letterbox bottom" aria-hidden="true"></div>
+
+<header id="topbar">
+  <div class="brand">
+    <span class="mark" aria-hidden="true"></span>
+    <div class="brand-text"><strong>BPS Strategy Workshop 2026</strong><span id="plantName"></span></div>
+  </div>
+  <nav class="tools" aria-label="View options">
+    <button id="btnCC" aria-pressed="true" title="Subtitles (C)"><span class="lg">Subtitles</span><span class="sm">CC</span></button>
+    <button id="btnRoles" aria-pressed="false" title="Show roles above people (R)"><span class="lg">Roles</span><span class="sm">Roles</span></button>
+    <button id="btnExplore" aria-pressed="false" title="Free camera (F)"><span class="lg">Free camera</span><span class="sm">Orbit</span></button>
+    <button id="btnAuto" aria-pressed="false" title="Advance chapters automatically (A)"><span class="lg">Autoplay</span><span class="sm">Auto</span></button>
+    <button id="btnPresent" aria-pressed="false" title="Presentation mode (P)"><span class="lg">Present</span><span class="sm">Present</span></button>
+    <button id="btnHelp" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">?</button>
+  </nav>
+</header>
+
+<p id="marker" aria-hidden="true"></p>
+<div id="titlecard" aria-live="polite"><div class="tc-num"></div><h2 class="tc-title"></h2><p class="tc-sub"></p></div>
+<div id="bigtitle" aria-live="polite"></div>
+<div id="captions" aria-live="polite"></div>
+<div id="pins"></div>
+<div id="fade" aria-hidden="true"></div>
+<div id="toast" role="status"></div>
+
+<aside id="panel" aria-labelledby="panelTitle">
+  <div class="panel-head">
+    <span id="panelNum"></span>
+    <h3 id="panelTitle"></h3>
+    <button id="panelToggle" aria-pressed="false">Hide</button>
+  </div>
+  <div id="panelBody" class="panel-body"></div>
+  <footer id="panelFoot" class="p-foot"></footer>
+</aside>
+<button id="panelTab">Show details</button>
+
+<div id="scenebar">
+  <button id="btnSkip" hidden>Skip scene <kbd>S</kbd></button>
+  <button id="btnReset" hidden>Back to scene view</button>
+</div>
+
+<footer id="rail">
+  <button id="btnPrev" class="arrow" aria-label="Previous chapter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg></button>
+  <div class="track">
+    <div id="railLine"><i id="railFill"></i><b id="railPart"></b></div>
+    <div id="railStations"></div>
+  </div>
+  <button id="btnNext" class="arrow" aria-label="Next chapter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg></button>
+  <div id="hud"><span id="hudChapter"></span><span id="hudTitle"></span><span id="hudTime">00:00</span></div>
+</footer>
+
+<section id="intro" aria-labelledby="introTitle">
+  <div class="intro-inner">
+    <p class="intro-plant"><span class="mark" aria-hidden="true"></span><span id="introPlant"></span></p>
+    <h1 id="introTitle"><span class="ln"><span>BPS Strategy</span></span><span class="ln"><span>Workshop 2026</span></span></h1>
+    <i class="stamp" aria-hidden="true"></i>
+    <p id="introTag"></p>
+    <div class="loader"><span class="load-track"><i id="loadBar"></i></span><span class="load-text">Building the plant</span></div>
+    <div class="intro-actions">
+      <button id="enter" class="primary">Enter the workshop</button>
+      <button id="enterPresent">Present full screen</button>
+    </div>
+    <p class="silent"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l4 6M21 9l-4 6"/></svg>No audio. The story is told through movement and subtitles.</p>
+  </div>
+</section>
+
+<div id="help" role="dialog" aria-modal="false" aria-labelledby="helpTitle" hidden>
+  <div class="help-head"><h3 id="helpTitle">Keyboard and clicker</h3><button id="helpClose" aria-label="Close">Close</button></div>
+  <dl>
+    <dt><kbd>→</kbd> <kbd>Space</kbd> <kbd>Page Down</kbd></dt><dd>Finish the scene, then go to the next chapter</dd>
+    <dt><kbd>←</kbd> <kbd>Page Up</kbd></dt><dd>Previous chapter</dd>
+    <dt><kbd>1</kbd>–<kbd>7</kbd></dt><dd>Jump to a chapter</dd>
+    <dt><kbd>S</kbd></dt><dd>Skip the current scene</dd>
+    <dt><kbd>H</kbd></dt><dd>Show or hide the details panel</dd>
+    <dt><kbd>P</kbd></dt><dd>Presentation mode (full screen)</dd>
+    <dt><kbd>A</kbd></dt><dd>Autoplay through all chapters</dd>
+    <dt><kbd>F</kbd></dt><dd>Free camera: drag to orbit, scroll to zoom</dd>
+    <dt><kbd>C</kbd> / <kbd>R</kbd></dt><dd>Subtitles / role labels</dd>
+  </dl>
+</div>
+
+<script>/*__VENDOR__*/</script>
+<script>/*__APP__*/</script>
+</body>
+</html>
