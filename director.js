@@ -329,7 +329,10 @@ export class Director {
     await ctx.wait(1.8);
     ph.gesture('nod', 1.3); ctx.later(0.9, () => ph.gesture('explain', 3));
     ctx.cap('A nod, an open hand: every gap gets an owner and a date.');
-    await ctx.wait(3.4);
+    await ctx.wait(3.0);
+    ph.faceTo(wall.spot(0.5, 0.5)); ph.lookAt(null); team.forEach(m => m.lookAt(wall.spot(0.5, 0.5)));
+    ctx.cam(SHOT.k_wall, 2.6);
+    await ctx.wait(2.0);
   }
 
   async plant(ctx) {
