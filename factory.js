@@ -615,14 +615,14 @@ export function buildFactory(scene, renderer, data = {}) {
   box(0.25, GATE.h + 0.25, 0.25, frameM, GATE.w / 2 + 0.12, (GATE.h + 0.25) / 2, fz + 0.12, out);
   box(GATE.w + 0.5, 0.25, 0.25, frameM, 0, GATE.h + 0.12, fz + 0.12, out);
   const canopy = box(GATE.w + 3, 0.2, 3.2, mat(0x2b313a, { rough: 0.4, metal: 0.6 }), 0, GATE.h + 0.9, fz + 1.6, out); canopy.castShadow = true;
-  box(GATE.w + 3, 0.05, 0.05, glow(0xffffff, 1.6), 0, GATE.h + 0.78, fz + 3.15, out);
+  box(GATE.w + 3, 0.05, 0.05, glow(0xffffff, 1.6), 0, GATE.h + 0.42, fz + 3.15, out);
   // "Main gate" sign above the canopy
   const gateSignCT = new CanvasTex(1024, 192, (ctx, Wc, Hc) => {
     ctx.fillStyle = '#12161C'; ctx.fillRect(0, 0, Wc, Hc); ctx.fillStyle = CSS.red; ctx.fillRect(0, Hc - 12, Wc, 12);
     ctx.fillStyle = '#F4F6F8'; ctx.textAlign = 'center'; ctx.font = `800 92px ${FONT}`; ctx.fillText('MAIN GATE', Wc / 2, 118);
   });
   const gateSign = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 1.2), new THREE.MeshBasicMaterial({ map: gateSignCT.tex, toneMapped: false }));
-  gateSign.position.set(0, GATE.h + 1.9, fz + 0.03); out.add(gateSign);
+  gateSign.scale.setScalar(0.62); gateSign.position.set(0, GATE.h + 0.9, fz + 3.22); out.add(gateSign); // on the canopy's front edge
   // sliding door leaves: "2026" | "FLASHBACK"
   const leafTex = (word, align) => new CanvasTex(512, 800, (ctx, Wc, Hc) => {
     const g = ctx.createLinearGradient(0, 0, Wc, Hc); g.addColorStop(0, '#2d343e'); g.addColorStop(1, '#1a1f26');
@@ -652,7 +652,7 @@ export function buildFactory(scene, renderer, data = {}) {
     gateGlow.material.opacity = glowK * Math.min(1, gateK * 1.6); gateGlow.visible = gateGlow.material.opacity > 0.01;
     gateLight.intensity = 30 * gateK * (0.35 + 0.65 * glowK);
   });
-  hotspots.gate = V(0, GATE.h + 1.9, fz);
+  hotspots.gate = V(0, GATE.h + 0.9, fz + 3.2);
   // tour stops
   Object.assign(hotspots, {
     supplier: V(HALL.x0 + 1.5, 3.2, -14), inbound: V(24.5, 2.2, -9), nha: V(-11, 2.2, 0), assembly: V(-18.5, 1.8, 11),
