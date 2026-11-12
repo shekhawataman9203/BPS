@@ -196,7 +196,8 @@ export function buildFactory(scene, renderer, data = {}) {
   // roof: one-sided, seen from inside only, so the overview camera looks into the plant like a cut-away model
   const roof = new THREE.Mesh(new THREE.PlaneGeometry(W, D), mat(0xe2e6ea, { rough: 0.9 }));
   roof.rotation.x = Math.PI / 2; roof.position.set(0, HALL.h, 4); root.add(roof);
-  for (const x of [-16, 0, 16]) box(2.4, 0.05, D - 6, glow(0xe8eef8, 1.05), x, HALL.h - 0.12, 4, root);
+  // skylights: face down only, so they light the hall but do not hide it from the overview camera
+  for (const x of [-16, 0, 16]) { const sk = new THREE.Mesh(new THREE.PlaneGeometry(2.4, D - 6), glow(0xe8eef8, 1.05)); sk.rotation.x = Math.PI / 2; sk.position.set(x, HALL.h - 0.12, 4); root.add(sk); }
   // hanging high-bay fixtures
   const fixtures = [];
   for (let x = -24; x <= 24; x += 8) for (let z = -6; z <= 24; z += 6) fixtures.push([x, z]);
