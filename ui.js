@@ -401,6 +401,10 @@ export class UI {
     else if (id === this.data.reflection.id) els = [refl];
     else els = [...stage.querySelectorAll(`[data-zone~="${id}"]`)];
     if (!els.length) els = [sheet];
+    // a single block (e.g. "Waste free stable flow") also grows its rows, because the table is wider than it is tall
+    const isGroup = !!id && this.data.roadmap.pillars.some(p => p.groups.some(g => g.id === id));
+    stage.querySelectorAll('tr.big').forEach(r => r.classList.remove('big'));
+    if (isGroup) els.forEach(el => el.classList.add('big'));
     // bounding box in stage coordinates (unscaled)
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (const el of els) { let x = 0, y = 0, n = el; while (n && n !== stage) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; } x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x + el.offsetWidth); y1 = Math.max(y1, y + el.offsetHeight); }
