@@ -308,7 +308,7 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover) {
   hits.push({ type: 'house', id: 'h-house', x: x0, y: top, w: x1 - x0, h: 332 }); L['h-house'] = { u: 0.5, v: (top + 200) / H };
   ctx.textAlign = 'left';
   // four pillars
-  const py = top + 360, ph = 760, gap = 30, pw = (x1 - x0 - gap * 3) / 4, headH = 270;
+  const py = top + 360, ph = 690, gap = 30, pw = (x1 - x0 - gap * 3) / 4, headH = 270;
   h.pillars.forEach((pl, i) => {
     const x = x0 + i * (pw + gap), hov = isHover('house', pl.id), on = hl.pillar === pl.id;
     ctx.globalAlpha = k(i + 1) * dim(pl.id);
@@ -327,7 +327,7 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover) {
     hits.push({ type: 'house', id: pl.id, x, y: py, w: pw, h: ph }); L[pl.id] = { u: (x + pw / 2) / W, v: (py + ph / 2) / H };
   });
   // system boosters
-  const by = py + ph + 40, bh = 300;
+  const by = py + ph + 36, bh = 250;
   ctx.globalAlpha = k(5);
   ctx.fillStyle = '#eceef1'; ctx.fillRect(x0 - 40, by, x1 - x0 + 80, bh);
   ctx.fillStyle = '#1E88D9'; ctx.fillRect(x0 - 40, by, x1 - x0 + 80, 8);
@@ -336,15 +336,15 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover) {
   ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.fillText('System Boosters', W / 2, by + 16); ctx.textAlign = 'left';
   const bw = (x1 - x0 - 60) / 2;
   h.boosters.forEach((b, i) => {
-    const x = x0 + i * (bw + 60), y = by + 60, hov = isHover('house', b.id), on = hl.pillar === b.id;
+    const x = x0 + i * (bw + 60), y = by + 48, hov = isHover('house', b.id), on = hl.pillar === b.id, ch = bh - 66;
     ctx.globalAlpha = k(5 + i) * dim(b.id);
-    ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, bw, bh - 90);
-    ctx.strokeStyle = on || hov ? '#1E88D9' : '#d6d9de'; ctx.lineWidth = on || hov ? 10 : 4; ctx.strokeRect(x, y, bw, bh - 90);
-    ctx.fillStyle = '#1E88D9'; ctx.beginPath(); ctx.arc(x + 150, y + (bh - 90) / 2, 62, 0, Math.PI * 2); ctx.fill();
-    icon(ctx, b.icon, x + 150, y + (bh - 90) / 2, 34, '#ffffff');
-    ctx.fillStyle = '#12161C'; ctx.font = `800 54px ${FONT}`; ctx.fillText(b.name, x + 250, y + 92);
-    ctx.fillStyle = '#4a525d'; ctx.font = `500 40px ${FONT}`; ctx.fillText(b.text, x + 250, y + 150);
-    hits.push({ type: 'house', id: b.id, x, y, w: bw, h: bh - 90 }); L[b.id] = { u: (x + bw / 2) / W, v: (y + (bh - 90) / 2) / H };
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, bw, ch);
+    ctx.strokeStyle = on || hov ? '#1E88D9' : '#d6d9de'; ctx.lineWidth = on || hov ? 10 : 4; ctx.strokeRect(x, y, bw, ch);
+    ctx.fillStyle = '#1E88D9'; ctx.beginPath(); ctx.arc(x + 150, y + ch / 2, 60, 0, Math.PI * 2); ctx.fill();
+    icon(ctx, b.icon, x + 150, y + ch / 2, 33, '#ffffff');
+    ctx.fillStyle = '#12161C'; ctx.font = `800 54px ${FONT}`; ctx.fillText(b.name, x + 250, y + 80);
+    ctx.fillStyle = '#4a525d'; ctx.font = `500 40px ${FONT}`; ctx.fillText(b.text, x + 250, y + 140);
+    hits.push({ type: 'house', id: b.id, x, y, w: bw, h: ch }); L[b.id] = { u: (x + bw / 2) / W, v: (y + ch / 2) / H };
   });
   // statement
   ctx.globalAlpha = k(7);
