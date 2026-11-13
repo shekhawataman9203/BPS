@@ -144,7 +144,7 @@ export class Character {
     const chest = j.chest = new THREE.Group(); chest.position.y = 0.24; spine.add(chest);
     const ribs = add(chest, lathe('ribs', [[0.001, -0.01], [0.158, -0.01], [0.17, 0.06], [0.172, 0.12], [0.158, 0.17], [0.11, 0.2], [0.055, 0.215], [0.001, 0.215]]), top); ribs.scale.set(1.06, 1, 0.68);
     // trapezius / shoulder line
-    const traps = add(chest, capsule(0.065, 0.24), top, 0, 0.15, -0.01); traps.rotation.z = Math.PI / 2; traps.scale.set(1, 1, 0.85);
+    const traps = add(chest, capsule(0.056, 0.22), top, 0, 0.152, -0.012); traps.rotation.z = Math.PI / 2; traps.scale.set(1, 1, 0.85);
     if (o.jacket) {
       // open jacket: white shirt V, lapels, tie, buttons
       const v = add(chest, geo('shirtV', () => { const s = new THREE.Shape(); s.moveTo(-0.055, 0.2); s.lineTo(0.055, 0.2); s.lineTo(0, -0.02); s.closePath(); return new THREE.ShapeGeometry(s); }), shirt, 0, 0.0, 0.118); v.rotation.x = -0.1;
@@ -222,10 +222,10 @@ export class Character {
     const arm = (side) => {
       const sx = side === 'l' ? 1 : -1;
       const shJ = j[side + 'Sh'] = new THREE.Group(); shJ.position.set(0.19 * sx, 0.15, 0); chest.add(shJ);
-      const delt = add(shJ, sphere(0.062), top, 0.006 * sx, -0.01, 0); delt.scale.set(1, 1.05, 0.95);
+      const delt = add(shJ, sphere(0.054), top, -0.006 * sx, -0.012, 0); delt.scale.set(0.95, 1.1, 0.95);
       // upper arm: sleeve over the top, skin below for short sleeves
-      if (longSleeve) add(shJ, taper(0.055, 0.046, 0.28), top, 0, -0.14, 0);
-      else { add(shJ, taper(0.058, 0.054, 0.15), top, 0, -0.07, 0); add(shJ, taper(0.047, 0.042, 0.16), skin, 0, -0.2, 0); }
+      if (longSleeve) add(shJ, taper(0.05, 0.044, 0.28), top, 0, -0.14, 0);
+      else { add(shJ, taper(0.053, 0.05, 0.15), top, 0, -0.07, 0); add(shJ, taper(0.047, 0.042, 0.16), skin, 0, -0.2, 0); }
       const el = j[side + 'El'] = new THREE.Group(); el.position.y = -0.29; shJ.add(el);
       add(el, sphere(0.044), longSleeve ? top : skin, 0, 0, 0);
       add(el, taper(0.043, 0.034, 0.24), longSleeve ? top : skin, 0, -0.12, 0);
