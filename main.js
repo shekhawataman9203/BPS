@@ -104,6 +104,7 @@ async function boot() {
     const hit = ray.intersectObject(app.entrance.wall.mesh, false)[0];
     return hit && hit.uv ? app.entrance.wall.hitTest(hit.uv) : null;
   };
+  app.screenHitAt = (x, y) => screenHit({ clientX: x, clientY: y }); // used by automated checks
   let downAt = null, hoverQueued = null;
   canvas.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; });
   canvas.addEventListener('pointerup', e => {
