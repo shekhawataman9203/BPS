@@ -225,7 +225,7 @@ class KpiWall {
         const rows = pl.groups.flatMap(g => g.rows);
         const ok = rows.filter(r => r.status === 'ok').length;
         ctx.textAlign = 'right'; ctx.fillStyle = '#ffffff'; ctx.font = `800 40px ${FONT}`; ctx.fillText(`${ok}/${rows.length} on track`, x + colW - 30, top + 78); ctx.textAlign = 'left';
-        const rh = Math.min(170, avail / rows.length);
+        const rh = Math.min(205, avail / rows.length);
         rows.forEach((r, i) => {
           const y = y0 + i * rh, on = hl.row === r.id, hov = isHover('kpi', r.id);
           const rk = clamp(p * 1.8 - ci * 0.12 - i * 0.04, 0, 1);
@@ -233,7 +233,7 @@ class KpiWall {
           ctx.fillStyle = on ? pl.light : hov ? '#e3eef8' : '#ffffff'; ctx.fillRect(x, y, colW, rh - 12);
           ctx.fillStyle = on || hov ? pl.color : 'rgba(18,22,28,0.08)'; ctx.fillRect(x, y, on || hov ? 14 : 4, rh - 12);
           ctx.fillStyle = STATUS_COL[r.status] || '#9AA3AE'; ctx.beginPath(); ctx.arc(x + colW - 44, y + 46, 20, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#12161C'; const fs = fitText(ctx, r.kpi, colW - 140, 46, 800); ctx.font = `800 ${fs}px ${FONT}`; ctx.fillText(r.kpi, x + 36, y + 58);
+          ctx.fillStyle = '#12161C'; const fs = fitText(ctx, r.kpi, colW - 140, 54, 800); ctx.font = `800 ${fs}px ${FONT}`; ctx.fillText(r.kpi, x + 36, y + 58);
           ctx.fillStyle = '#6b737e'; ctx.font = `600 34px ${FONT}`; ctx.fillText('Target', x + 36, y + rh - 46);
           ctx.fillStyle = '#12161C'; ctx.font = `700 40px ${FONT}`; const tw = ctx.measureText('Target ').width; ctx.fillText(fitLine(ctx, r.target, colW * 0.5 - tw - 40), x + 36 + tw + 6, y + rh - 46);
           ctx.textAlign = 'right'; ctx.fillStyle = '#6b737e'; ctx.font = `600 34px ${FONT}`; const yl = `${rm.ytdLabel} `;
