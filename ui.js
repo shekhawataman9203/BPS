@@ -222,13 +222,39 @@ export class UI {
   // ------------------------------------------------------------ details tile (opened by clicking the KPI screen)
   showDetail(hit) {
     if (!hit) return;
+    if (hit.type === 'mode') { this.app.entrance.wall.setMode(hit.id); return; } // screen tabs: House · Roadmap · KPI wall
     const d = this.data, rm = d.roadmap, rf = d.reflection, body = $('#detailBody'), el = $('#detail');
     const rows = allRows(d);
     body.innerHTML = ''; body.scrollTop = 0;
     let color = '#1E88D9', kicker = '', title = '';
     const btn = (label, fn, primary) => h('button', { class: primary ? 'primary' : '', onclick: fn }, label);
     const statusBadge = s => h('span', { class: 'badge st-' + s }, STATUS_LABEL[s]);
-    if (hit.type === 'kpi') {
+    if (hit.type === 'house' || hit.type === 'group') {
+      // a house element (or roadmap block): its drivers and the linked roadmap rows
+      const H = d.house, el = [...H.pillars, ...H.boosters].find(x => x.id === hit.id);
+      const gid = hit.type === 'group' ? hit.id : el?.roadmap;
+      const pl = rm.pillars.find(p => p.groups.some(g => g.id === gid)), g = pl?.groups.find(x => x.id === gid);
+      if (hit.id === 'h-house') {
+        color = '#E8101E'; kicker = H.heading; title = H.title;
+        body.append(h('p', { class: 'dt-motto', style: '--c:#E8101E' }, h('em', {}, H.band), ' ', h('b', {}, H.statement)));
+        body.append(h('h4', {}, 'Pillars'));
+        H.pillars.forEach(x => body.append(h('button', { class: 'dt-link', style: `--c:${x.color}`, onclick: () => this.showDetail({ type: 'house', id: x.id }) }, h('span', {}, x.name, h('small', {}, x.driver)))));
+        body.append(h('h4', {}, 'System boosters'));
+        H.boosters.forEach(x => body.append(h('button', { class: 'dt-link', onclick: () => this.showDetail({ type: 'house', id: x.id }) }, h('span', {}, x.name, h('small', {}, x.text)))));
+      } else {
+        color = el?.color || pl?.color || '#1E88D9'; kicker = hit.type === 'house' ? (H.pillars.includes(el) ? 'House of BPS GO!+ · pillar' : 'House of BPS GO!+ · system booster') : `Roadmap 2026 › ${pl?.name ?? ''}`; title = el?.name || g?.name || '';
+        if (el && el.driver) { body.append(h('h4', {}, el.driver)); const ul = h('ul', { class: 'dt-list' }); el.items.forEach(it => ul.append(h('li', {}, it))); body.append(ul); }
+        else if (el) body.append(h('p', { class: 'dt-el' }, el.text));
+        if (g) {
+          body.append(h('h4', {}, `In the roadmap: ${pl.name} › ${g.name}`));
+          g.rows.forEach(r => body.append(h('button', { class: 'dt-link', style: `--c:${pl.color}`, onclick: () => this.showDetail({ type: 'kpi', id: r.id }) }, h('span', {}, r.kpi, h('small', {}, `${r.element} · Target ${r.target} · ${rm.ytdLabel} ${r.ytd}`)), statusBadge(r.status))));
+          body.append(h('div', { class: 'actions' },
+            btn('Show it in the roadmap', () => { this.app.entrance.wall.setMode('roadmap'); this.app.director.select('group', g.id); }, true),
+            btn('Zoom in the full roadmap', () => this.openRoadmap(g.id))));
+        }
+      }
+      this.app.director.select(hit.type, hit.id);
+    } else if (hit.type === 'kpi') {
       const r = rows.find(x => x.id === hit.id); if (!r) return;
       color = r.color; kicker = `${r.pillarName} › ${r.groupName}`; title = r.kpi;
       body.append(h('p', { class: 'dt-el' }, r.element));
@@ -355,16 +381,28 @@ export class UI {
     b.append(sw, h('p', { class: 'hint' }, 'Pick a zone, or a marker in the scene, to fly there.'));
   }
 
-  panel_bpsgo(b) {
+  panel_house(b) {
+    const H = this.data.house;
+    b.append(h('p', { class: 'lede' }, `${H.heading}. ${H.statement}.`));
+    b.append(h('h4', {}, 'Pillars'));
+    const grid = h('div', { class: 'pillar-btns' });
+    H.pillars.forEach(p => grid.append(h('button', { style: `--c:${p.color}`, onclick: () => this.showDetail({ type: 'house', id: p.id }) }, h('span', { class: 'pb-name' }, p.name), h('small', {}, p.driver))));
+    b.append(grid, h('h4', {}, 'System boosters'));
+    const bs = h('div', { class: 'pillar-btns' });
+    H.boosters.forEach(p => bs.append(h('button', { style: '--c:#1E88D9', onclick: () => this.showDetail({ type: 'house', id: p.id }) }, h('span', { class: 'pb-name' }, p.name), h('small', {}, p.text))));
+    b.append(bs, h('p', { class: 'hint' }, 'Click any element here or on the screen: the camera zooms in and its details open on the right.'));
+  }
+
+  panel_roadmap(b) {
     const d = this.data;
     b.append(h('div', { class: 'logo-card' }, h('img', { src: $('#bpsLogoImg').src, alt: 'BPS GO!+ Creating value. Together.' })));
-    b.append(h('p', { class: 'lede' }, 'Three pillars carry the 2026 roadmap. The fourth looks back: what we learned.'));
+    b.append(h('p', { class: 'lede' }, 'Aligned with the House of BPS GO!+, the roadmap plans every element quarter by quarter. Three pillars carry it; the fourth looks back on what we learned.'));
     b.append(this.pillarButtons());
     b.append(h('div', { class: 'actions' }, h('button', { class: 'primary', onclick: () => this.openRoadmap() }, 'Open the full roadmap')));
     b.append(h('h4', {}, 'Zoom into a block'));
     const blocks = h('div', { class: 'stations' });
-    d.roadmap.pillars.forEach(p => p.groups.forEach(g => blocks.append(h('button', { style: `--c:${p.color}`, onclick: () => this.openRoadmap(g.id) }, g.name))));
-    b.append(blocks, h('p', { class: 'hint' }, 'In the roadmap, click any block to zoom in. Esc zooms out.'));
+    d.roadmap.pillars.forEach(p => p.groups.forEach(g => blocks.append(h('button', { style: `--c:${p.color}`, onclick: () => this.showDetail({ type: 'group', id: g.id }) }, g.name))));
+    b.append(blocks, h('p', { class: 'hint' }, 'Click a block here or on the screen: the camera zooms in and the details open on the right. The BPS GO!+ icon opens the full roadmap.'));
   }
 
   panel_closing(b) {

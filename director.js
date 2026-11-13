@@ -41,9 +41,10 @@ export const ZONE_SHOT = {
 export const CHAPTERS = [
   { id: 'opening', title: 'Opening', loc: 'overview', dur: 20 },
   { id: 'flashback', title: '2026 Flashback', sub: 'Through the main gate, between NHA and VE Pump', loc: 'gate', dur: 24 },
-  { id: 'kpis', title: 'KPI wall', sub: 'Every BPS GO!+ KPI, target against YTD', loc: 'wall', dur: 28 },
+  { id: 'house', title: 'House of BPS GO!+', sub: 'Where 2026 started: one operating system', loc: 'wall', dur: 30 },
+  { id: 'roadmap', title: 'BPS GO!+ Roadmap 2026', sub: 'Aligned with the house, quarter by quarter', loc: 'wall', dur: 22 },
+  { id: 'kpis', title: 'KPI wall', sub: 'The KPIs of the roadmap, target against YTD', loc: 'wall', dur: 28 },
   { id: 'plant', title: 'Picture of Future', sub: 'A walk through the modern plant', loc: 'floor', dur: 36 },
-  { id: 'bpsgo', title: 'BPS GO!+ Roadmap 2026', sub: 'People, Process, System and Reflection', loc: 'wall', dur: 22 },
   { id: 'closing', title: 'Lead. Work. Win.', sub: 'Creating value. Together.', loc: 'close', dur: 18 },
 ];
 
@@ -111,8 +112,9 @@ export class Director {
   wallCenter() { return V(KPI_WALL.x, KPI_WALL.y, KPI_WALL.z); }
   yawTo(px, pz) { return (x, z) => Math.atan2(px - x, pz - z); }
 
-  setWorld({ digital = false, gate = false, build = 1 } = {}) {
+  setWorld({ digital = false, gate = false, build = 1, screen = 'kpi' } = {}) {
     const a = this.app;
+    a.entrance.wall.setMode(screen);
     a.factory.setDigital(digital);
     a.factory.gate.snap(gate);
     a.entrance.snapBuild(build); a.entrance.highlight(null); a.entrance.hideConfetti();
@@ -127,16 +129,15 @@ export class Director {
     const W = this.wallCenter();
     switch (id) {
       case 'opening':
-        this.placeGroup(WAIT, () => 0); c.ph.place(0, 48, PI); this.setWorld({ gate: false, build: 1 });
+        this.placeGroup(WAIT, () => 0); c.ph.place(0, 48, PI); this.setWorld({ gate: false, build: 1, screen: 'house' });
         a.rig.orbit([0, 0, 4], 62, 44, 0.03, 1.1); break;
       case 'flashback':
-        this.placeGroup(WAIT, () => 0); c.ph.place(0, 48, PI); this.setWorld({ gate: false, build: 1 }); a.rig.cut(SHOT.g_far); break;
-      case 'kpis':
-        this.placeGroup(WALLTEAM, this.yawTo(W.x, W.z)); c.ph.place(-4.6, 24.4, Math.atan2(W.x + 4.6, W.z - 24.4)); this.setWorld({ gate: true }); a.rig.cut(SHOT.k_wall); break;
+        this.placeGroup(WAIT, () => 0); c.ph.place(0, 48, PI); this.setWorld({ gate: false, build: 1, screen: 'house' }); a.rig.cut(SHOT.g_far); break;
+      case 'house': case 'roadmap': case 'kpis':
+        this.placeGroup(WALLTEAM, this.yawTo(W.x, W.z)); c.ph.place(-4.6, 24.4, Math.atan2(W.x + 4.6, W.z - 24.4));
+        this.setWorld({ gate: true, screen: { house: 'house', roadmap: 'roadmap', kpis: 'kpi' }[id] }); a.rig.cut(SHOT.k_wall); break;
       case 'plant':
         this.placeGroup(WAIT, () => PI); c.qual.place(23.4, 5.7, -PI * 0.75); c.ph.place(0, 21.5, PI); c.bps.place(0.9, 22.2, PI); this.setWorld({ gate: true, digital: true }); a.rig.cut(SHOT.p_high); break;
-      case 'bpsgo':
-        this.placeGroup(WALLTEAM, this.yawTo(W.x, W.z)); c.ph.place(-4.6, 24.4, Math.atan2(W.x + 4.6, W.z - 24.4)); this.setWorld({ gate: true }); a.rig.cut(SHOT.s_stand); break;
       case 'closing':
         this.placeGroup(WAIT, () => PI); c.ph.place(-0.6, 26.8, PI); this.setWorld({ gate: true }); a.rig.cut(SHOT.c_low); break;
     }
@@ -147,9 +148,8 @@ export class Director {
     this.stage(id);
     switch (id) {
       case 'flashback': a.factory.gate.snap(true); this.placeGroup(WAIT, () => 0); c.ph.place(0, 27.4, PI); c.bps.place(-0.6, 26.3, PI * 0.75); lookAll(c.ph); a.rig.cut(SHOT.in_both); break;
-      case 'kpis': a.rig.cut(SHOT.k_wall); lookAll(this.wallCenter()); break;
+      case 'house': case 'roadmap': case 'kpis': a.rig.cut(SHOT.k_wall); lookAll(this.wallCenter()); break;
       case 'plant': c.ph.place(22.2, 5.0, 0.6); c.bps.place(21.1, 4.6, 0.6); c.qual.place(23.4, 5.7, -2.4); a.rig.cut(SHOT.p_cell); break;
-      case 'bpsgo': lookAll(this.wallCenter()); a.rig.cut(SHOT.s_stand); break;
       case 'closing': this.rowTeam(true); a.rig.cut(SHOT.c_crane); break;
     }
   }
@@ -205,7 +205,7 @@ export class Director {
     // the KPI screen itself is clickable, so it needs no markers; pillar markers sit just above it
     const above = pid => () => { const l = E.wall.layout[pid]; return l ? E.wall.spot(l.u, -0.05) : null; };
     if (id === 'plant') return d.plant.zones.map(z => ({ id: z.id, type: 'zone', label: z.name, pos: H[z.id] })).filter(p => p.pos);
-    if (id === 'bpsgo' || id === 'closing') return [{ id: 'logo', type: 'logo', label: 'BPS GO!+ roadmap', pos: () => E.wall.spot(0.09, -0.05) }, ...E.pillarIds.map(pid => ({ id: pid, type: 'pillar', label: pid === d.reflection.id ? d.reflection.name : d.roadmap.pillars.find(p => p.id === pid).name, pos: above(pid) }))];
+    if (id === 'closing') return [{ id: 'logo', type: 'logo', label: 'BPS GO!+ roadmap', pos: () => E.wall.spot(0.09, -0.05) }, ...E.pillarIds.map(pid => ({ id: pid, type: 'pillar', label: pid === d.reflection.id ? d.reflection.name : d.roadmap.pillars.find(p => p.id === pid).name, pos: above(pid) }))];
     return [];
   }
 
@@ -219,6 +219,13 @@ export class Director {
       E.wall.highlight(r.pillar, id); const s = E.wall.rowSpot(id); pointAt(s); this.all().forEach(m => near(s) && m.lookAt(s));
       if (fly && !near(s)) this.fly(SHOT.k_wall);
     }
+    if (type === 'house' || type === 'group') {
+      if (type === 'house' && E.wall.mode !== 'house') E.wall.setMode('house');
+      if (type === 'group' && E.wall.mode !== 'roadmap') E.wall.setMode('roadmap');
+      E.wall.highlight(id, null);
+      const sp = E.wall.rowSpot(id); pointAt(sp); this.all().forEach(m => near(sp) && m.lookAt(sp));
+      if (fly) this.zoomScreen(id, id === 'h-house' ? 7.5 : 5.2);
+    }
     if (type === 'reflection') { E.wall.highlight(a.data.reflection.id, id); pointAt(E.wall.rowSpot(id)); }
     if (type === 'kpiPillar') { E.wall.highlight(id, null); pointAt(E.wall.pillarSpot(id)); if (fly && !near(E.wall.pillarSpot(id))) this.fly(SHOT.k_wall); }
     if (type === 'pillar') { E.highlight(id); pointAt(E.anchor(id)); E.pulse(); }
@@ -229,10 +236,16 @@ export class Director {
     }
   }
   fly(shot) { this.userCam = true; this.app.rig.moveTo(shot, 2.4); this.app.ui.showResetView(true); }
+  // camera moves in front of an element on the big screen
+  zoomScreen(key, dist = 5) {
+    const w = this.app.entrance.wall, l = w.layout[key]; if (!l) return;
+    const sp = w.spot(l.u, l.v), ry = KPI_WALL.ry, nx = Math.sin(ry), nz = Math.cos(ry);
+    this.fly({ pos: [sp.x + nx * dist, sp.y + 0.15, sp.z + nz * dist], target: [sp.x, sp.y, sp.z], fov: 42 });
+  }
   resetView() {
     this.userCam = false; this.app.ui.showResetView(false);
     const id = CHAPTERS[this.index]?.id;
-    const shot = { flashback: SHOT.in_both, kpis: SHOT.k_wall, plant: SHOT.p_cell, bpsgo: SHOT.s_stand, closing: SHOT.c_crane }[id];
+    const shot = { flashback: SHOT.in_both, house: SHOT.k_wall, roadmap: SHOT.k_wall, kpis: SHOT.k_wall, plant: SHOT.p_cell, closing: SHOT.c_crane }[id];
     if (shot) this.app.rig.moveTo(shot, 2.2);
   }
 
@@ -299,13 +312,58 @@ export class Director {
     await ctx.wait(3.2);
   }
 
+  async house(ctx) {
+    const { ph } = this.cast, a = this.app, h = a.data.house, team = this.all(), wall = a.entrance.wall;
+    ctx.cam(SHOT.k_wall, 2.2);
+    wall.replay();
+    const c = wall.spot(0.5, 0.4); team.forEach(m => m.lookAt(c)); ph.lookAt(c);
+    await ctx.wait(1.2);
+    ctx.cap('At the start of 2026, we built the House of BPS GO!+: one operating system for the value stream.');
+    ph.gesture('present', 2.8);
+    await ctx.wait(3.6);
+    for (const p of h.pillars) {
+      const s = wall.rowSpot(p.id);
+      wall.highlight(p.id, null); ph.lookAt(s); ph.gesture('point', 2.6, { target: s }); team.forEach(m => m.lookAt(s));
+      ctx.cap(`${p.name}. ${p.driver}: ${p.items.slice(0, 2).join(', ')}.`);
+      await ctx.wait(3.4);
+    }
+    wall.highlight('h-digi', null); const sb = wall.rowSpot('h-digi'); ph.lookAt(sb); ph.gesture('point', 2.4, { target: sb });
+    ctx.cap(`System boosters: ${h.boosters.map(b => b.name).join(' and ')}.`);
+    await ctx.wait(3.2);
+    wall.highlight(null, null); ph.lookAt(null); ph.faceYaw(PI * 0.6); team.forEach(m => m.lookAt(ph));
+    ph.gesture('armsOpen', 2.6);
+    ctx.cap(h.statement + '.');
+    await ctx.wait(3.6);
+  }
+
+  async roadmap(ctx) {
+    const { ph } = this.cast, a = this.app, rm = a.data.roadmap, team = this.all(), wall = a.entrance.wall;
+    ctx.cam(SHOT.k_wall, 2.0);
+    wall.replay();
+    const c = wall.spot(0.5, 0.5); team.forEach(m => m.lookAt(c)); ph.lookAt(c);
+    await ctx.wait(1.0);
+    ctx.cap('Aligned with the house, we built the BPS GO!+ Roadmap 2026: every element, quarter by quarter.');
+    await ctx.wait(3.4);
+    for (const p of rm.pillars) {
+      const s = wall.rowSpot(p.id);
+      wall.highlight(p.id, null); ph.lookAt(s); ph.gesture('point', 2.4, { target: s });
+      ctx.cap(`${p.name}: ${p.motto} ${p.tag}.`);
+      await ctx.wait(2.9);
+    }
+    wall.highlight(null, null); ph.lookAt(null);
+    ctx.cap('Click any block on the screen to zoom in, or the BPS GO!+ icon for the full roadmap.');
+    await ctx.wait(3.0);
+  }
+
   async kpis(ctx) {
     const { ph, prod } = this.cast, a = this.app, d = a.data, team = this.all(), wall = a.entrance.wall;
     const rows = allRows(d);
     ctx.cam(SHOT.k_wall, 2.2);
     wall.replay();
     const c = wall.spot(0.5, 0.5); team.forEach(m => m.lookAt(c)); ph.lookAt(c);
-    await ctx.wait(1.4);
+    await ctx.wait(1.0);
+    ctx.cap('And this is the KPI wall of the roadmap: target against year to date.');
+    await ctx.wait(3.0);
     ctx.cap(`${rows.length} KPIs on one wall: ${rows.filter(r => r.status === 'ok').length} on track, ${rows.filter(r => r.status === 'watch').length} to watch, ${rows.filter(r => r.status === 'behind').length} behind.`);
     await ctx.wait(3.2);
     for (const p of d.roadmap.pillars) {
@@ -376,27 +434,6 @@ export class Director {
     ph.gesture('handshake', 2.2); dig.gesture('handshake', 2.2);
     ctx.cap('Pick a zone to fly to it, from supplier to customer.');
     await ctx.wait(2.6);
-  }
-
-  async bpsgo(ctx) {
-    const { ph } = this.cast, a = this.app, d = a.data, E = a.entrance, team = this.all();
-    ctx.cam(SHOT.s_stand, 2.0);
-    const logo = E.logoAnchor();
-    [...team, ph].forEach(m => m.lookAt(logo));
-    ph.gesture('point', 2.2, { target: logo }); E.pulse();
-    ctx.cap('BPS GO!+ Creating value. Together.');
-    await ctx.wait(2.6);
-    for (const pid of E.pillarIds) {
-      const s = E.anchor(pid), pd = d.roadmap.pillars.find(x => x.id === pid);
-      E.highlight(pid); ph.lookAt(s); ph.gesture('point', 2.4, { target: s }); team.forEach(m => m.lookAt(s));
-      ctx.cap(pd ? `${pd.name}: ${pd.motto} ${pd.tag}.` : `${d.reflection.name}: what went well, the gaps and what we learned in 2026.`);
-      await ctx.wait(2.8);
-    }
-    E.highlight(null);
-    ph.faceYaw(PI * 0.6); ph.lookAt(null); team.forEach(m => m.lookAt(ph));
-    ph.gesture('armsOpen', 2.6);
-    ctx.cap('Click a pillar or any tile on the screen for details, or the BPS GO!+ icon to zoom into the roadmap.');
-    await ctx.wait(3.0);
   }
 
   async closing(ctx) {

@@ -161,14 +161,17 @@ function wrap(ctx, text, maxW) {
 class KpiWall {
   constructor(data, logoImg) {
     this.data = data; this.logoImg = logoImg; this.p = 1; this.animating = false;
-    this.hl = { pillar: null, row: null }; this.layout = {}; this.hits = []; this.hover = null;
+    this.hl = { pillar: null, row: null }; this.layouts = { house: {}, roadmap: {}, kpi: {} }; this.mode = 'kpi'; this.hits = []; this.hover = null;
     this.ct = new CanvasTex(TEX_W, TEX_H, (ctx, W, H) => this.draw(ctx, W, H));
     this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(KPI_WALL.w, KPI_WALL.h), new THREE.MeshBasicMaterial({ map: this.ct.tex, toneMapped: false }));
     this.mesh.userData.kpiWall = true;
     if (logoImg && !logoImg.complete) logoImg.addEventListener('load', () => this.ct.redraw());
   }
   setAnisotropy(a) { this.ct.tex.anisotropy = a; this.ct.tex.needsUpdate = true; }
+  get layout() { return this.layouts[this.mode]; }
   replay() { this.p = 0; this.animating = true; }
+  // screen views: 'house' (House of BPS GO!+), 'roadmap' (Roadmap 2026), 'kpi' (KPI wall)
+  setMode(m) { if (m === this.mode) return; this.mode = m; this.hl = { pillar: null, row: null }; this.replay(); this.onMode?.(m); }
   highlight(pillar = null, row = null) { this.hl = { pillar, row }; this.ct.redraw(); }
   setHover(h) { const k = h ? h.type + h.id : null; if (k === this.hoverKey) return; this.hoverKey = k; this.hover = h; this.ct.redraw(); }
   update(dt) { if (!this.animating) return; this.p = Math.min(1, this.p + dt / 2.2); this.ct.redraw(); if (this.p >= 1) this.animating = false; }
@@ -196,12 +199,27 @@ class KpiWall {
       const lh = 150, lw = this.logoImg.naturalWidth * lh / this.logoImg.naturalHeight;
       ctx.drawImage(this.logoImg, 60, (HH - lh) / 2, lw, lh); hits.push({ type: 'logo', id: 'logo', x: 40, y: 20, w: lw + 40, h: HH - 40 }); lx0 = 60 + lw + 60;
     }
-    ctx.fillStyle = '#0A6EBD'; ctx.font = `800 96px ${FONT}`; ctx.fillText('KPI wall 2026', lx0, 118);
-    ctx.fillStyle = '#4a525d'; ctx.font = `600 44px ${FONT}`; ctx.fillText(`Target against ${rm.ytdLabel} · click any tile for details`, lx0, 176);
-    let lx = W - 70; ctx.textAlign = 'right'; ctx.font = `700 42px ${FONT}`;
-    for (const k of ['behind', 'watch', 'ok']) { const t = STATUS_LABEL[k]; ctx.fillStyle = '#12161C'; ctx.fillText(t, lx, 122); lx -= ctx.measureText(t).width + 22; ctx.fillStyle = STATUS_COL[k]; ctx.beginPath(); ctx.arc(lx - 16, 108, 17, 0, Math.PI * 2); ctx.fill(); lx -= 70; }
-    ctx.textAlign = 'left';
+    const TITLES = { house: ['House of BPS GO!+', 'Strategy 2026 · click any element to zoom in'], roadmap: ['BPS GO!+ Roadmap 2026', 'Aligned with the house · click a row for its plan'], kpi: ['KPI wall 2026', `Target against ${rm.ytdLabel} · click any tile for details`] };
+    const [tt, ts] = TITLES[this.mode];
+    ctx.fillStyle = '#0A6EBD'; ctx.font = `800 96px ${FONT}`; ctx.fillText(tt, lx0, 118);
+    ctx.fillStyle = '#4a525d'; ctx.font = `600 44px ${FONT}`; ctx.fillText(ts, lx0, 176);
+    // view tabs: House · Roadmap · KPI wall
+    let lx = W - 60;
+    for (const [m, label] of [['kpi', 'KPI wall'], ['roadmap', 'Roadmap'], ['house', 'House']]) {
+      ctx.font = `700 44px ${FONT}`; const tw = ctx.measureText(label).width + 70, on = this.mode === m, hov = isHover('mode', m);
+      ctx.fillStyle = on ? '#0A6EBD' : hov ? '#dfe9f4' : '#eef1f4'; ctx.fillRect(lx - tw, 50, tw, 100);
+      ctx.fillStyle = on ? '#ffffff' : '#12161C'; ctx.textAlign = 'center'; ctx.fillText(label, lx - tw / 2, 116); ctx.textAlign = 'left';
+      hits.push({ type: 'mode', id: m, x: lx - tw, y: 50, w: tw, h: 100 }); lx -= tw + 16;
+    }
+    if (this.mode === 'kpi') {
+      lx -= 40; ctx.textAlign = 'right'; ctx.font = `700 40px ${FONT}`;
+      for (const k of ['behind', 'watch', 'ok']) { const t = STATUS_LABEL[k]; ctx.fillStyle = '#12161C'; ctx.fillText(t, lx, 114); lx -= ctx.measureText(t).width + 20; ctx.fillStyle = STATUS_COL[k]; ctx.beginPath(); ctx.arc(lx - 16, 100, 16, 0, Math.PI * 2); ctx.fill(); lx -= 64; }
+      ctx.textAlign = 'left';
+    }
     ctx.fillStyle = CSS.red; ctx.fillRect(0, HH - 8, W, 8);
+    const L = this.layouts[this.mode];
+    if (this.mode === 'house') { drawHouse(this, ctx, W, H, HH, p, L, hits, isHover); return; }
+    if (this.mode === 'roadmap') { drawRoadmap(this, ctx, W, H, HH, p, L, hits, isHover); return; }
     // four columns: People, Process, System, Reflection
     const cols = [...rm.pillars, { ...rf, reflection: true }];
     const gap = 36, colW = (W - 120 - gap * 3) / 4, top = HH + 40;
@@ -219,7 +237,7 @@ class KpiWall {
       const sub = pl.reflection ? 'What went well · gaps · learnings' : `${pl.motto} ${pl.tag}`;
       ctx.fillText(fitLine(ctx, sub, colW - 68), x + 34, top + 126);
       hits.push({ type: 'pillar', id: pl.id, x, y: top, w: colW, h: hh });
-      this.layout[pl.id] = { u: (x + colW / 2) / W, v: (top + hh / 2) / H };
+      L[pl.id] = { u: (x + colW / 2) / W, v: (top + hh / 2) / H };
       const y0 = top + hh + 18, avail = H - y0 - 40;
       if (!pl.reflection) {
         const rows = pl.groups.flatMap(g => g.rows);
@@ -241,7 +259,7 @@ class KpiWall {
           const vw = ctx.measureText(yv).width; ctx.fillStyle = '#6b737e'; ctx.font = `600 34px ${FONT}`; ctx.fillText(yl, x + colW - 40 - vw, y + rh - 46);
           ctx.textAlign = 'left';
           hits.push({ type: 'kpi', id: r.id, x, y, w: colW, h: rh - 12 });
-          this.layout[r.id] = { u: (x + colW / 2) / W, v: (y + rh / 2) / H };
+          L[r.id] = { u: (x + colW / 2) / W, v: (y + rh / 2) / H };
         });
       } else {
         const bh = avail / pl.boxes.length;
@@ -255,7 +273,7 @@ class KpiWall {
           let ty = y + 112; const maxY = y + bh - 30;
           for (const it of b.items) { for (const ln of wrap(ctx, '• ' + plain(it), colW - 70)) { if (ty > maxY) break; ctx.fillText(ln, x + 36, ty); ty += 40; } ty += 6; }
           hits.push({ type: 'reflection', id: b.id, x, y, w: colW, h: bh - 14 });
-          this.layout[b.id] = { u: (x + colW / 2) / W, v: (y + bh / 2) / H };
+          L[b.id] = { u: (x + colW / 2) / W, v: (y + bh / 2) / H };
         });
       }
       ctx.globalAlpha = 1;
@@ -263,6 +281,130 @@ class KpiWall {
     ctx.fillStyle = CSS.red; ctx.fillRect(0, H - 14, W * p, 14);
   }
 }
+
+// ---------- House of BPS GO!+ (drawn like the strategy slide) ----------
+function icon(ctx, kind, cx, cy, r, col) {
+  ctx.save(); ctx.fillStyle = col; ctx.strokeStyle = col; ctx.lineWidth = r * 0.16; ctx.lineCap = 'round';
+  if (kind === 'lines') { for (const k of [-1, 0, 1]) { ctx.beginPath(); ctx.moveTo(cx - r * 0.8 + (k === 0 ? r * 0.25 : 0), cy + k * r * 0.45); ctx.lineTo(cx + r * 0.8, cy + k * r * 0.45); ctx.stroke(); } }
+  else if (kind === 'pie') { ctx.beginPath(); ctx.moveTo(cx - r * 0.06, cy + r * 0.06); ctx.arc(cx - r * 0.06, cy + r * 0.06, r * 0.82, -Math.PI / 2, Math.PI); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(cx + r * 0.08, cy - r * 0.08); ctx.arc(cx + r * 0.08, cy - r * 0.08, r * 0.82, Math.PI, Math.PI * 1.5); ctx.closePath(); ctx.fill(); }
+  else if (kind === 'people') { for (const [dx, s] of [[-0.65, 0.75], [0.65, 0.75], [0, 1]]) { ctx.beginPath(); ctx.arc(cx + dx * r, cy - r * 0.35 * s, r * 0.28 * s, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(cx + dx * r, cy + r * 0.45, r * 0.45 * s, r * 0.32 * s, 0, Math.PI, 0); ctx.fill(); } }
+  else if (kind === 'person') { ctx.beginPath(); ctx.arc(cx, cy - r * 0.38, r * 0.36, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(cx, cy + r * 0.62, r * 0.7, r * 0.5, 0, Math.PI, 0); ctx.fill(); }
+  else if (kind === 'network') { ctx.strokeRect(cx - r * 0.25, cy - r * 0.75, r * 0.5, r * 0.4); for (const dx of [-0.6, 0, 0.6]) ctx.strokeRect(cx + dx * r - r * 0.2, cy + r * 0.35, r * 0.4, r * 0.35); ctx.beginPath(); ctx.moveTo(cx, cy - r * 0.35); ctx.lineTo(cx, cy + r * 0.35); ctx.moveTo(cx - r * 0.6, cy + r * 0.35); ctx.lineTo(cx - r * 0.6, cy); ctx.lineTo(cx + r * 0.6, cy); ctx.lineTo(cx + r * 0.6, cy + r * 0.35); ctx.stroke(); }
+  else if (kind === 'doc') { ctx.strokeRect(cx - r * 0.5, cy - r * 0.75, r, r * 1.5); for (const k of [-0.3, 0, 0.3]) { ctx.beginPath(); ctx.moveTo(cx - r * 0.28, cy + k * r); ctx.lineTo(cx + r * 0.28, cy + k * r); ctx.stroke(); } }
+  ctx.restore();
+}
+function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover) {
+  const h = w.data.house, hl = w.hl;
+  const x0 = 520, x1 = W - 520, top = HH + 40;
+  const k = i => clamp(p * 1.6 - i * 0.12, 0, 1);
+  const dim = id => (hl.pillar && hl.pillar !== id ? 0.3 : 1);
+  // roof
+  ctx.globalAlpha = k(0) * (hl.pillar && hl.pillar !== 'h-house' ? 0.45 : 1);
+  ctx.fillStyle = '#E8101E'; ctx.beginPath(); ctx.moveTo(x0 - 40, top + 210); ctx.lineTo(W / 2, top); ctx.lineTo(x1 + 40, top + 210); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#ffffff'; ctx.font = `800 76px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText(h.title, W / 2, top + 160);
+  // operating system band
+  ctx.fillStyle = '#3a3a3c'; ctx.fillRect(x0, top + 228, x1 - x0, 104);
+  ctx.fillStyle = '#ffffff'; ctx.font = `800 58px ${FONT}`; ctx.fillText(h.band.split('').join(String.fromCharCode(8202)), W / 2, top + 300);
+  hits.push({ type: 'house', id: 'h-house', x: x0, y: top, w: x1 - x0, h: 332 }); L['h-house'] = { u: 0.5, v: (top + 200) / H };
+  ctx.textAlign = 'left';
+  // four pillars
+  const py = top + 360, ph = 760, gap = 30, pw = (x1 - x0 - gap * 3) / 4, headH = 270;
+  h.pillars.forEach((pl, i) => {
+    const x = x0 + i * (pw + gap), hov = isHover('house', pl.id), on = hl.pillar === pl.id;
+    ctx.globalAlpha = k(i + 1) * dim(pl.id);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(x, py, pw, ph);
+    ctx.strokeStyle = on || hov ? pl.color : '#d6d9de'; ctx.lineWidth = on || hov ? 10 : 4; ctx.strokeRect(x, py, pw, ph);
+    ctx.fillStyle = pl.color; ctx.fillRect(x, py, pw, headH);
+    icon(ctx, pl.icon, x + pw / 2, py + 80, 44, '#ffffff');
+    ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.font = `800 54px ${FONT}`;
+    const words = pl.name.split(' '), mid = Math.ceil(words.length / 2), l1 = words.slice(0, mid).join(' '), l2 = words.slice(mid).join(' ');
+    ctx.fillText(l1, x + pw / 2, py + 180); if (l2) ctx.fillText(l2, x + pw / 2, py + 240);
+    ctx.fillStyle = '#12161C'; ctx.font = `700 46px ${FONT}`; ctx.fillText(pl.driver, x + pw / 2, py + headH + 80);
+    ctx.textAlign = 'left'; ctx.font = `500 38px ${FONT}`; ctx.fillStyle = '#2a2f36';
+    let ty = py + headH + 160;
+    for (const it of pl.items) { const lines = wrap(ctx, it, pw - 110); lines.forEach((ln, li) => { if (li === 0) { ctx.beginPath(); ctx.arc(x + 46, ty - 12, 7, 0, Math.PI * 2); ctx.fill(); } ctx.fillText(ln, x + 70, ty); ty += 48; }); ty += 10; }
+    if (hov || on) { ctx.fillStyle = pl.color; ctx.font = `700 34px ${FONT}`; ctx.fillText('Click for details ›', x + 40, py + ph - 30); }
+    hits.push({ type: 'house', id: pl.id, x, y: py, w: pw, h: ph }); L[pl.id] = { u: (x + pw / 2) / W, v: (py + ph / 2) / H };
+  });
+  // system boosters
+  const by = py + ph + 40, bh = 300;
+  ctx.globalAlpha = k(5);
+  ctx.fillStyle = '#eceef1'; ctx.fillRect(x0 - 40, by, x1 - x0 + 80, bh);
+  ctx.fillStyle = '#1E88D9'; ctx.fillRect(x0 - 40, by, x1 - x0 + 80, 8);
+  ctx.font = `800 40px ${FONT}`; const lw = ctx.measureText('System Boosters').width + 80;
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(W / 2 - lw / 2, by - 30, lw, 66, 33) : ctx.rect(W / 2 - lw / 2, by - 30, lw, 66); ctx.fill();
+  ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.fillText('System Boosters', W / 2, by + 16); ctx.textAlign = 'left';
+  const bw = (x1 - x0 - 60) / 2;
+  h.boosters.forEach((b, i) => {
+    const x = x0 + i * (bw + 60), y = by + 60, hov = isHover('house', b.id), on = hl.pillar === b.id;
+    ctx.globalAlpha = k(5 + i) * dim(b.id);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, bw, bh - 90);
+    ctx.strokeStyle = on || hov ? '#1E88D9' : '#d6d9de'; ctx.lineWidth = on || hov ? 10 : 4; ctx.strokeRect(x, y, bw, bh - 90);
+    ctx.fillStyle = '#1E88D9'; ctx.beginPath(); ctx.arc(x + 150, y + (bh - 90) / 2, 62, 0, Math.PI * 2); ctx.fill();
+    icon(ctx, b.icon, x + 150, y + (bh - 90) / 2, 34, '#ffffff');
+    ctx.fillStyle = '#12161C'; ctx.font = `800 54px ${FONT}`; ctx.fillText(b.name, x + 250, y + 92);
+    ctx.fillStyle = '#4a525d'; ctx.font = `500 40px ${FONT}`; ctx.fillText(b.text, x + 250, y + 150);
+    hits.push({ type: 'house', id: b.id, x, y, w: bw, h: bh - 90 }); L[b.id] = { u: (x + bw / 2) / W, v: (y + (bh - 90) / 2) / H };
+  });
+  // statement
+  ctx.globalAlpha = k(7);
+  ctx.fillStyle = '#18A8E0'; ctx.fillRect(0, H - 150, W, 150);
+  ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; const fs = fitText(ctx, h.statement, W - 200, 66, 600); ctx.font = `600 ${fs}px ${FONT}`; ctx.fillText(h.statement, W / 2, H - 52); ctx.textAlign = 'left';
+  ctx.globalAlpha = 1;
+}
+// ---------- Roadmap 2026 (rows grouped by pillar, quarters with ticks) ----------
+function drawRoadmap(w, ctx, W, H, HH, p, L, hits, isHover) {
+  const rm = w.data.roadmap, hl = w.hl;
+  const x0 = 50, top = HH + 30, cols = [380, 520, 470, 470, 470, 470, 560, 300, 330];
+  const cx = []; let acc = x0; for (const c of cols) { cx.push(acc); acc += c; }
+  const rows = []; rm.pillars.forEach(pl => { rows.push({ band: pl }); pl.groups.forEach(g => g.rows.forEach((r, i) => rows.push({ pl, g, r, first: i === 0, n: g.rows.length }))); });
+  const headH = 76, rh = (H - top - headH - 20) / rows.length;
+  // header
+  ctx.fillStyle = '#a6a6a6'; ctx.fillRect(cx[2], top, acc - cx[2], headH);
+  ctx.fillStyle = '#ffffff'; ctx.font = `800 40px ${FONT}`; ctx.textAlign = 'center';
+  [...rm.quarters, 'KPI', 'Target', rm.ytdLabel].forEach((t, i) => ctx.fillText(t, cx[i + 2] + cols[i + 2] / 2, top + 52));
+  let y = top + headH;
+  rows.forEach((row, ri) => {
+    const k = clamp(p * 1.8 - ri * 0.03, 0, 1);
+    if (row.band) {
+      const pl = row.band, dim = hl.pillar && hl.pillar !== pl.id && !pl.groups.some(g => g.id === hl.pillar) ? 0.3 : 1;
+      ctx.globalAlpha = k * dim; ctx.fillStyle = pl.color; ctx.fillRect(x0, y, acc - x0, rh - 4);
+      ctx.fillStyle = '#ffffff'; ctx.font = `800 ${Math.min(46, rh * 0.6)}px ${FONT}`; ctx.fillText(pl.name.toUpperCase(), cx[0] + (cols[0] + cols[1]) / 2, y + rh * 0.68);
+      ctx.font = `600 ${Math.min(38, rh * 0.5)}px ${FONT}`; ctx.fillText(`${pl.motto}  ${pl.tag}`, cx[2] + (acc - cx[2]) / 2, y + rh * 0.66);
+      hits.push({ type: 'pillar', id: pl.id, x: x0, y, w: acc - x0, h: rh }); L[pl.id] = { u: (cx[2] + (acc - cx[2]) / 2) / W, v: (y + rh / 2) / H };
+    } else {
+      const { pl, g, r } = row, on = hl.row === r.id, gOn = hl.pillar === g.id || hl.pillar === pl.id, hov = isHover('kpi', r.id);
+      const dim = hl.pillar && !gOn ? 0.3 : 1;
+      ctx.globalAlpha = k * dim;
+      if (row.first) {
+        const gh = rh * row.n, gHov = isHover('group', g.id);
+        ctx.fillStyle = gHov || hl.pillar === g.id ? pl.light : '#e8e8e8'; ctx.fillRect(x0, y, cols[0] - 4, gh - 4);
+        ctx.fillStyle = '#12161C'; ctx.font = `800 ${Math.min(40, rh * 0.5)}px ${FONT}`; ctx.textAlign = 'center';
+        const lines = wrap(ctx, g.name, cols[0] - 40); lines.forEach((ln, i) => ctx.fillText(ln, x0 + cols[0] / 2, y + gh / 2 + (i - (lines.length - 1) / 2) * rh * 0.55 + 12));
+        hits.push({ type: 'group', id: g.id, x: x0, y, w: cols[0], h: gh }); L[g.id] = { u: (x0 + cols[0] / 2) / W, v: (y + gh / 2) / H };
+      }
+      ctx.fillStyle = on ? pl.light : hov ? '#e3eef8' : '#f2f2f2'; ctx.fillRect(cx[1], y, cols[1] - 4, rh - 4);
+      ctx.fillStyle = '#222'; ctx.font = `600 ${Math.min(32, rh * 0.42)}px ${FONT}`; ctx.textAlign = 'left'; ctx.fillText(fitLine(ctx, r.element, cols[1] - 30), cx[1] + 16, y + rh * 0.62);
+      const fs = Math.min(28, rh * 0.38);
+      r.q.forEach(([txt, done], qi) => {
+        const qx = cx[2 + qi]; ctx.fillStyle = pl.color; ctx.globalAlpha = k * dim * (on ? 1 : 0.92); ctx.fillRect(qx, y, cols[2 + qi] - 4, rh - 4);
+        ctx.fillStyle = '#ffffff'; ctx.font = `700 ${fs}px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText(fitLine(ctx, txt, cols[2 + qi] - 70), qx + cols[2 + qi] / 2 - 14, y + rh * 0.62);
+        if (done) { ctx.fillStyle = '#12161C'; ctx.font = `800 ${fs * 1.3}px ${FONT}`; ctx.fillText('✓', qx + cols[2 + qi] - 34, y + rh * 0.7); }
+      });
+      ctx.globalAlpha = k * dim;
+      ctx.fillStyle = pl.color; ctx.fillRect(cx[6], y, cols[6] - 4, rh - 4); ctx.fillStyle = '#ffffff'; ctx.font = `700 ${fs}px ${FONT}`; ctx.fillText(fitLine(ctx, r.kpi, cols[6] - 30), cx[6] + cols[6] / 2, y + rh * 0.62);
+      ctx.fillStyle = pl.color; ctx.fillRect(cx[7], y, cols[7] - 4, rh - 4); ctx.fillStyle = '#ffffff'; ctx.fillText(fitLine(ctx, r.target, cols[7] - 20), cx[7] + cols[7] / 2, y + rh * 0.62);
+      ctx.fillStyle = pl.color; ctx.fillRect(cx[8], y, cols[8] - 4, rh - 4); ctx.fillStyle = '#ffffff'; ctx.fillText(fitLine(ctx, r.ytd, cols[8] - 70), cx[8] + cols[8] / 2 - 18, y + rh * 0.62);
+      ctx.fillStyle = STATUS_COL[r.status]; ctx.beginPath(); ctx.arc(cx[8] + cols[8] - 34, y + rh / 2 - 2, Math.min(14, rh * 0.2), 0, Math.PI * 2); ctx.fill();
+      if (on || hov) { ctx.strokeStyle = '#12161C'; ctx.lineWidth = 6; ctx.strokeRect(cx[1], y, acc - cx[1] - 4, rh - 4); }
+      ctx.textAlign = 'left';
+      hits.push({ type: 'kpi', id: r.id, x: cx[1], y, w: acc - cx[1], h: rh }); L[r.id] = { u: (cx[1] + (acc - cx[1]) / 2) / W, v: (y + rh / 2) / H };
+    }
+    y += rh;
+  });
+  ctx.globalAlpha = 1;
+}
+
 function fitLine(ctx, text, maxW) { if (ctx.measureText(text).width <= maxW) return text; let t = text; while (t.length > 1 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1); return t + '…'; }
 
 export function buildEntrance(scene, data, logoImg) {

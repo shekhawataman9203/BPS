@@ -401,7 +401,7 @@ body.presenting.idle, body.presenting.idle * { cursor: none !important; }
 .bpsgo-icon[aria-pressed="true"] { border-color: var(--red); }
 body:not(.entered) .bpsgo-icon { display: none; }
 @keyframes bpsgo-pulse { 0%, 100% { box-shadow: 0 4px 18px rgba(0, 0, 0, .25), 0 0 0 0 rgba(30, 136, 217, .6); } 50% { box-shadow: 0 4px 18px rgba(0, 0, 0, .25), 0 0 0 8px rgba(30, 136, 217, 0); } }
-body[data-chapter="bpsgo"] .bpsgo-icon:not([aria-pressed="true"]) { animation: bpsgo-pulse 1.8s ease-in-out infinite; }
+body[data-chapter="roadmap"] .bpsgo-icon:not([aria-pressed="true"]) { animation: bpsgo-pulse 1.8s ease-in-out infinite; }
 
 /* pause */
 #pauseBadge { position: fixed; z-index: 19; left: 50%; top: calc(var(--top-h) + var(--lb) + 16px); transform: translate(-50%, -10px); display: flex; align-items: center; gap: 10px; padding: 9px 16px; background: rgba(10, 13, 18, .9); border: 1px solid var(--line2); border-left: 3px solid var(--red); font-weight: 700; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s var(--ease); }

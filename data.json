@@ -692,5 +692,82 @@
       "Digitize the Kaizen and suggestion process",
       "Position JaP for the BPS Award"
     ]
+  },
+  "house": {
+    "title": "HOUSE OF BPS GO!+",
+    "band": "BPS GO!+ Operating System",
+    "statement": "BPS GO!+ serves as the operating system enabling sustainable excellence across the Value Stream",
+    "heading": "Strategy | House of BPS GO!+",
+    "pillars": [
+      {
+        "id": "h-flow",
+        "name": "Waste-Free, Stable Flow",
+        "color": "#005691",
+        "icon": "lines",
+        "driver": "Main Driver",
+        "items": [
+          "Gemba walk",
+          "End to End Pull",
+          "TPT reduction with Small Lot Size, SMED, Balanced Line & Benchmark OEE"
+        ],
+        "roadmap": "waste-free"
+      },
+      {
+        "id": "h-invest",
+        "name": "Investment Efficiency",
+        "color": "#78BE20",
+        "icon": "pie",
+        "driver": "MAE Utilization",
+        "items": [
+          "High Utilization of MAEs & smooth Ramp up",
+          "Obsolescence management: MAE de-risking",
+          "Technical loss <3%"
+        ],
+        "roadmap": "investment"
+      },
+      {
+        "id": "h-cip",
+        "name": "Everybody's CIP",
+        "color": "#B90276",
+        "icon": "people",
+        "driver": "Empowerment",
+        "items": [
+          "Driving improvement @ all levels",
+          "BCA engagement in improvement activities",
+          "“Learn to see” campaigns & theme-based Schemes",
+          "Reward & Recognition"
+        ],
+        "roadmap": "everybody-cip"
+      },
+      {
+        "id": "h-lead",
+        "name": "Leadership Commitment",
+        "color": "#50237F",
+        "icon": "person",
+        "driver": "Governance",
+        "items": [
+          "Development of coaches & lean Multipliers",
+          "Competency development on lean tools",
+          "Living VSO & Continuous Improvement Culture"
+        ],
+        "roadmap": "leadership"
+      }
+    ],
+    "boosters": [
+      {
+        "id": "h-digi",
+        "name": "Digi Lean (Industry 4.0)",
+        "text": "Connected Data Driven Value Chain",
+        "icon": "network",
+        "roadmap": "digi-lean"
+      },
+      {
+        "id": "h-indirect",
+        "name": "CIP in Indirect Areas",
+        "text": "Efficiency in support functions",
+        "icon": "doc",
+        "roadmap": "cip-indirect"
+      }
+    ]
   }
 }
