@@ -9,6 +9,7 @@
   --lb: 0px;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { margin: 0; height: 100%; background: var(--g0); color: var(--white); font-family: var(--font); -webkit-font-smoothing: antialiased; overflow: hidden; }
 body { font-size: 15px; line-height: 1.45; }
 button { font: inherit; color: inherit; cursor: pointer; }
