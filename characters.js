@@ -305,6 +305,7 @@ export class Character {
       cap.scale.set(0.95 * hk, 1.0 * hk, 1.06 * hk); cap.rotation.x = -0.28;
       const back = add(head, sphere(0.098), hairM, 0, 0.115 + hy, -0.03); back.scale.set(0.93 * hk, 0.98 * hk, 0.9 * hk);
       for (const sx of [-1, 1]) { const side = add(head, sphere(0.04), hairM, sx * 0.083 * hk, 0.135 + hy, -0.01); side.scale.set(0.5, 1.0, 1.3); }
+      if (o.hairStyle === 'full') { const top = add(head, sphere(0.06), hairM, 0, 0.19 + hy, 0.02); top.scale.set(1.45 * hk, 0.55, 1.5 * hk); }
       if (o.hairStyle === 'short') { const quiff = add(head, sphere(0.05), hairM, 0.02, 0.2 + hy, 0.05); quiff.scale.set(1.4, 0.45, 0.9); }
       if (o.hairStyle === 'long') {
         add(head, geo('hairLong', () => new RoundedBoxGeometry(0.2, 0.3, 0.07, 3, 0.03)), hairM, 0, 0.02, -0.07);
@@ -610,12 +611,12 @@ export function makeCast(data) {
   const roles = Object.fromEntries((data.cast || []).map(c => [c.id, c.role]));
   // All men, business dress as in the reference: suits and ties, Indian skin tones
   const defs = [
-    { realFace: true, id: 'ph', height: 1.03, skin: 0xB07A58, hair: 0x8f8b87, hairStyle: 'short', jacket: 0x3a3d43, bottom: 0x3a3d43, shoes: 0x1a1412, tie: true, tieColor: 0x9e1b2a, glasses: false, lanyard: false, sleeves: 'long' },
-    { realFace: true, id: 'bps', height: 1.0, skin: 0xA87554, hair: 0x141110, hairStyle: 'short', jacket: 0x1f2a44, bottom: 0x1f2a44, shoes: 0x1a1412, tie: true, tieColor: 0x8e1c2c, lanyard: false, sleeves: 'long' },
-    { realFace: true, id: 'prod', height: 1.01, skin: 0x8D5B3F, hair: 0x15110e, hairStyle: 'short', jacket: 0x55595f, bottom: 0x55595f, shoes: 0x1a1412, tie: true, tieColor: 0x3c4658, lanyard: false, sleeves: 'long', beard: true },
-    { realFace: true, id: 'qual', height: 0.99, skin: 0xC08A68, hair: 0x1a1512, hairStyle: 'short', jacket: 0x4a4e55, bottom: 0x4a4e55, shoes: 0x1a1412, tie: true, tieColor: 0x2f3a4e, glasses: true, lanyard: false, sleeves: 'long' },
-    { realFace: true, id: 'dig', height: 1.02, skin: 0xB98466, hair: 0x141110, hairStyle: 'short', jacket: 0x283246, bottom: 0x283246, shoes: 0x2a1a12, tie: true, tieColor: 0x5a6478, lanyard: false, sleeves: 'long' },
-    { realFace: true, id: 'log', height: 1.0, skin: 0x9A6A4E, hair: 0x0f0c0a, hairStyle: 'bald', jacket: 0x3d4148, bottom: 0x3d4148, shoes: 0x1a1412, tie: true, tieColor: 0x7a1b26, lanyard: false, sleeves: 'long', beard: true },
+    { realFace: true, id: 'ph', height: 1.03, skin: 0xF0C8A6, hair: 0x111111, hairStyle: 'full', jacket: 0x3a3d43, bottom: 0x3a3d43, shoes: 0x1a1412, tie: true, tieColor: 0x9e1b2a, glasses: false, lanyard: false, sleeves: 'long' },
+    { realFace: true, id: 'bps', height: 1.0, skin: 0xF3CDAE, hair: 0x111111, hairStyle: 'full', jacket: 0x1f2a44, bottom: 0x1f2a44, shoes: 0x1a1412, tie: true, tieColor: 0x8e1c2c, lanyard: false, sleeves: 'long' },
+    { realFace: true, id: 'prod', height: 1.01, skin: 0xEDC3A0, hair: 0x111111, hairStyle: 'full', jacket: 0x55595f, bottom: 0x55595f, shoes: 0x1a1412, tie: true, tieColor: 0x3c4658, lanyard: false, sleeves: 'long' },
+    { realFace: true, id: 'qual', height: 0.99, skin: 0xF2CBA9, hair: 0x111111, hairStyle: 'full', jacket: 0x4a4e55, bottom: 0x4a4e55, shoes: 0x1a1412, tie: true, tieColor: 0x2f3a4e, glasses: true, lanyard: false, sleeves: 'long' },
+    { realFace: true, id: 'dig', height: 1.02, skin: 0xF0C6A3, hair: 0x111111, hairStyle: 'full', jacket: 0x283246, bottom: 0x283246, shoes: 0x2a1a12, tie: true, tieColor: 0x5a6478, lanyard: false, sleeves: 'long' },
+    { realFace: true, id: 'log', height: 1.0, skin: 0xEEC5A2, hair: 0x111111, hairStyle: 'full', jacket: 0x3d4148, bottom: 0x3d4148, shoes: 0x1a1412, tie: true, tieColor: 0x7a1b26, lanyard: false, sleeves: 'long' },
   ];
   const cast = {};
   defs.forEach((d, i) => { cast[d.id] = new Character({ ...d, role: roles[d.id] || d.id, seed: i * 1.7 + 0.3 }); });
