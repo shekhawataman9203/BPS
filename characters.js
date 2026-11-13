@@ -272,15 +272,15 @@ export class Character {
     const traps = add(chest, capsule(0.056, 0.22), top, 0, 0.152, -0.012); traps.rotation.z = Math.PI / 2; traps.scale.set(1, 1, 0.85);
     if (o.jacket) {
       // tailored suit: white shirt V with collar, notched lapels, tie, two buttons, pocket square, jacket skirt
-      const lapelM = mat(new THREE.Color(topCol).multiplyScalar(0.82).getHex(), { rough: 0.6 });
-      const shirtD = mat(C.white, { rough: 0.7, extra: { side: THREE.DoubleSide } });
-      add(chest, geo('shirtVee', () => bodyPatch([[-0.062, 0.196], [0.062, 0.196], [0.0, -0.105]], 0.003)), shirtD, 0, 0, 0);
+      const lapelM = mat(new THREE.Color(topCol).multiplyScalar(0.82).getHex(), { rough: 0.6, extra: { side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -8 } });
+      const shirtD = mat(C.white, { rough: 0.7, extra: { side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 } });
+      add(chest, geo('shirtVee', () => bodyPatch([[-0.062, 0.196], [0.062, 0.196], [0.0, -0.105]], 0.007)), shirtD, 0, 0, 0);
       for (const sx of [-1, 1]) {
-        add(chest, geo('lapel' + sx, () => bodyPatch([[sx * 0.062, 0.2], [sx * 0.086, 0.205], [sx * 0.078, 0.158], [sx * 0.094, 0.165], [sx * 0.112, 0.112], [sx * 0.03, -0.075], [0, -0.108]], 0.006)), lapelM, 0, 0, 0);
+        add(chest, geo('lapel' + sx, () => bodyPatch([[sx * 0.062, 0.2], [sx * 0.086, 0.205], [sx * 0.078, 0.158], [sx * 0.094, 0.165], [sx * 0.112, 0.112], [sx * 0.03, -0.075], [0, -0.108]], 0.01)), lapelM, 0, 0, 0);
         const col = add(chest, geo('scollar', () => new THREE.BoxGeometry(0.034, 0.022, 0.006)), shirtD, sx * 0.024, 0.192, surfZ(sx * 0.024, 0.192) + 0.01); col.rotation.set(-0.5, sx * 0.35, sx * 0.62);
       }
       if (o.tie) {
-        const tie = add(chest, geo('tie2', () => { const sh = new THREE.Shape(); sh.moveTo(-0.011, 0.185); sh.lineTo(0.011, 0.185); sh.lineTo(0.021, -0.03); sh.lineTo(0, -0.058); sh.lineTo(-0.021, -0.03); sh.closePath(); const g = new THREE.ExtrudeGeometry(sh, { depth: 0.006, bevelEnabled: false }); const p = g.attributes.position; for (let i = 0; i < p.count; i++) p.setZ(i, p.getZ(i) + surfZ(0, p.getY(i)) + 0.007); g.computeVertexNormals(); return g; }), mat(o.tieColor ?? C.red, { rough: 0.42 }), 0, 0, 0);
+        const tie = add(chest, geo('tie2', () => { const sh = new THREE.Shape(); sh.moveTo(-0.011, 0.185); sh.lineTo(0.011, 0.185); sh.lineTo(0.021, -0.03); sh.lineTo(0, -0.058); sh.lineTo(-0.021, -0.03); sh.closePath(); const g = new THREE.ExtrudeGeometry(sh, { depth: 0.006, bevelEnabled: false }); const p = g.attributes.position; for (let i = 0; i < p.count; i++) p.setZ(i, p.getZ(i) + surfZ(0, p.getY(i)) + 0.011); g.computeVertexNormals(); return g; }), mat(o.tieColor ?? C.red, { rough: 0.42, extra: { polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -12 } }), 0, 0, 0);
         void tie; add(chest, sphere(0.014), mat(o.tieColor ?? C.red, { rough: 0.42 }), 0, 0.186, surfZ(0, 0.186) + 0.012).scale.set(1.1, 0.8, 0.7); // knot
       }
       // pocket square on the left breast
