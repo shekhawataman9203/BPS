@@ -188,6 +188,12 @@ export class UI {
     tc.classList.add('on');
     this.later('tc', 3300, () => tc.classList.remove('on'));
   }
+  // full-screen black card with a single line, e.g. "How 2027 looks like"; null hides it
+  yearCard(text) {
+    const el = $('#yearcard'); if (!el) return;
+    if (!text) { el.classList.remove('on'); this.cancel('year'); return; }
+    $('h2', el).textContent = text; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+  }
   hideTitleCard() { $('#titlecard').classList.remove('on'); this.cancel('tc'); }
   bigTitle(text, { hold } = {}) {
     const b = $('#bigtitle'); b.innerHTML = '';
@@ -250,7 +256,22 @@ export class UI {
     let color = '#1E88D9', kicker = '', title = '';
     const btn = (label, fn, primary) => h('button', { class: primary ? 'primary' : '', onclick: fn }, label);
     const statusBadge = s => h('span', { class: 'badge st-' + s }, STATUS_LABEL[s]);
-    if (hit.type === 'house' || hit.type === 'group') {
+    if (hit.type === 'house27') {
+      const H = d.house2027, el = [...H.pillars, ...H.boosters].find(x => x.id === hit.id);
+      const item = it => { const isNew = it.includes('**'); return h('li', { class: isNew ? 'new27' : '' }, it.replace(/\*\*/g, ''), isNew ? h('span', { class: 'tag27' }, 'New 2027') : null); };
+      if (!el) {
+        color = '#E8101E'; kicker = H.heading; title = 'House of BPS GO!+ 2027';
+        body.append(h('p', { class: 'dt-motto', style: '--c:#E8101E' }, h('em', {}, H.band), ' ', h('b', {}, H.statement)));
+        H.pillars.forEach(x => body.append(h('button', { class: 'dt-link', style: `--c:${x.color}`, onclick: () => this.showDetail({ type: 'house27', id: x.id }) }, h('span', {}, x.name, h('small', {}, x.driver)))));
+      } else {
+        color = el.color || '#1E88D9'; kicker = 'House of BPS GO!+ 2027'; title = el.name;
+        if (el.driver) { body.append(h('h4', {}, el.driver)); const ul = h('ul', { class: 'dt-list' }); el.items.forEach(it => ul.append(item(it))); body.append(ul); }
+        else body.append(h('p', { class: 'dt-el' }, el.text));
+        const was = [...d.house.pillars, ...d.house.boosters].find(x => x.id + '-27' === el.id);
+        if (was && was.items && el.items && was.items.join() !== el.items.join()) { body.append(h('h4', {}, 'In 2026')); const ul = h('ul', { class: 'dt-list was26' }); was.items.forEach(it => ul.append(h('li', {}, it))); body.append(ul); }
+      }
+      this.app.director.select('house27', hit.id);
+    } else if (hit.type === 'house' || hit.type === 'group') {
       // a house element (or roadmap block): its drivers and the linked roadmap rows
       const H = d.house, el = [...H.pillars, ...H.boosters].find(x => x.id === hit.id);
       const gid = hit.type === 'group' ? hit.id : el?.roadmap;
@@ -412,6 +433,21 @@ export class UI {
     const bs = h('div', { class: 'pillar-btns' });
     H.boosters.forEach(p => bs.append(h('button', { style: '--c:#1E88D9', onclick: () => this.showDetail({ type: 'house', id: p.id }) }, h('span', { class: 'pb-name' }, p.name), h('small', {}, p.text))));
     b.append(bs, h('p', { class: 'hint' }, 'Click any element here or on the screen: the camera zooms in and its details open on the right.'));
+  }
+
+  panel_future(b) {
+    const H = this.data.house2027;
+    b.append(h('p', { class: 'lede' }, `${H.heading}. New in 2027 is shown in green.`));
+    b.append(h('h4', {}, 'Pillars'));
+    const grid = h('div', { class: 'pillar-btns' });
+    H.pillars.forEach(p => grid.append(h('button', { style: `--c:${p.color}`, onclick: () => this.showDetail({ type: 'house27', id: p.id }) }, h('span', { class: 'pb-name' }, p.name), h('small', {}, p.items.some(i => i.includes('**')) ? 'New targets for 2027' : p.driver))));
+    b.append(grid, h('h4', {}, 'System boosters'));
+    const bs = h('div', { class: 'pillar-btns' });
+    H.boosters.forEach(p => bs.append(h('button', { style: '--c:#1E88D9', onclick: () => this.showDetail({ type: 'house27', id: p.id }) }, h('span', { class: 'pb-name' }, p.name), h('small', {}, p.text))));
+    b.append(bs, h('h4', {}, 'In the plant of 2027'));
+    const ul = h('ul', { class: 'dt-list' });
+    ['Cobots at the assembly stations', 'Holographic live KPIs over every line', 'LED guide lines and more AGVs on the milk run', 'Digital command centre at the entrance'].forEach(t => ul.append(h('li', {}, t)));
+    b.append(ul, h('p', { class: 'hint' }, 'Click any element on the screen: the camera zooms in and its 2027 details open on the right.'));
   }
 
   panel_roadmap(b) {

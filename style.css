@@ -572,3 +572,14 @@ body.screen-view #panel, body.screen-view #panelTab, body.screen-view #captions,
 #btnScreen[aria-pressed="true"] { border-color: var(--red); }
 .kl-headbtn { width: 100%; text-align: left; background: none; border: 0; border-left: 4px solid var(--c); color: inherit; cursor: pointer; }
 .kl-headbtn:hover { background: rgba(255, 255, 255, .05); }
+
+/* ---------------- "How 2027 looks like" card ---------------- */
+#yearcard { position: fixed; inset: 0; z-index: 31; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; opacity: 0; pointer-events: none; transition: opacity .6s; }
+#yearcard.on { opacity: 1; }
+#yearcard h2 { margin: 0; font-weight: 800; font-stretch: 118%; font-size: clamp(42px, 7.5vw, 132px); line-height: 1; letter-spacing: -.01em; transform: translateY(18px); opacity: 0; transition: transform 1.2s var(--ease) .25s, opacity 1s .25s; }
+#yearcard .yc-small { margin: 0 0 22px; color: #29d3ff; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: 15px; opacity: 0; transition: opacity 1s .1s; }
+#yearcard .yc-bar { display: block; width: 220px; height: 8px; background: #29d3ff; margin-top: 30px; transform: scaleX(0); transition: transform 1.2s var(--ease) .6s; }
+#yearcard.on h2 { transform: none; opacity: 1; } #yearcard.on .yc-small { opacity: 1; } #yearcard.on .yc-bar { transform: scaleX(1); }
+.dt-list li.new27 { color: #7FE08F; font-weight: 700; }
+.tag27 { margin-left: 8px; font-size: 11px; font-weight: 700; padding: 1px 6px; border: 1px solid #7FE08F; color: #7FE08F; border-radius: 2px; vertical-align: 1px; }
+.dt-list.was26 li { color: var(--grey); }

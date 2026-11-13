@@ -809,19 +809,23 @@ export function buildFactory(scene, renderer, data = {}) {
   const gateSign = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 1.2), new THREE.MeshBasicMaterial({ map: gateSignCT.tex, toneMapped: false }));
   gateSign.scale.setScalar(0.62); gateSign.position.set(0, GATE.h + 0.9, fz + 3.22); out.add(gateSign); // on the canopy's front edge
   // sliding door leaves: "2026" | "FLASHBACK"
-  const leafTex = (word, align) => new CanvasTex(512, 800, (ctx, Wc, Hc) => {
+  let doorWords = { left: ['2026', 'Reflection'], right: ['FLASHBACK', 'BPS GO!+'], accent: CSS.red };
+  const leafTex = (side, align) => new CanvasTex(512, 800, (ctx, Wc, Hc) => {
+    const [word, small] = doorWords[side];
     const g = ctx.createLinearGradient(0, 0, Wc, Hc); g.addColorStop(0, '#2d343e'); g.addColorStop(1, '#1a1f26');
     ctx.fillStyle = g; ctx.fillRect(0, 0, Wc, Hc);
     ctx.fillStyle = 'rgba(255,255,255,0.06)'; for (let y = 0; y < Hc; y += 26) ctx.fillRect(0, y, Wc, 2);
-    ctx.fillStyle = CSS.red; ctx.fillRect(0, 300, Wc, 8);
+    ctx.fillStyle = doorWords.accent; ctx.fillRect(0, 300, Wc, 8);
     ctx.fillStyle = '#F4F6F8'; ctx.textAlign = align; const x = align === 'right' ? Wc - 34 : 34;
     const s = fitText(ctx, word, Wc - 60, 170, 800); ctx.font = `800 ${s}px ${FONT}`; ctx.fillText(word, x, 430);
-    ctx.fillStyle = '#C3C9D1'; ctx.font = `600 34px ${FONT}`; ctx.fillText(align === 'right' ? 'Reflection' : 'BPS GO!+', x, 500);
+    ctx.fillStyle = '#C3C9D1'; ctx.font = `600 34px ${FONT}`; ctx.fillText(small, x, 500);
   });
-  const leaves = [['2026', 'right', -1], ['FLASHBACK', 'left', 1]].map(([word, align, sx]) => {
+  const leafTexes = [];
+  const leaves = [['left', 'right', -1], ['right', 'left', 1]].map(([side, align, sx]) => {
     const g = new THREE.Group(); g.position.set(sx * GATE.w / 4, 0, fz + 0.4); out.add(g);
     box(GATE.w / 2, GATE.h, 0.1, mat(0x1a1f26, { rough: 0.35, metal: 0.6 }), 0, GATE.h / 2, 0, g).castShadow = true;
-    const face = new THREE.Mesh(new THREE.PlaneGeometry(GATE.w / 2 - 0.12, GATE.h - 0.2), new THREE.MeshBasicMaterial({ map: leafTex(word, align).tex, toneMapped: false }));
+    const lt = leafTex(side, align); leafTexes.push(lt);
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(GATE.w / 2 - 0.12, GATE.h - 0.2), new THREE.MeshBasicMaterial({ map: lt.tex, toneMapped: false }));
     face.position.set(0, GATE.h / 2, 0.056); face.material.color.setScalar(1.1); g.add(face);
     return { g, sx };
   });
@@ -844,8 +848,71 @@ export function buildFactory(scene, renderer, data = {}) {
     ve: V(12, 3.4, 0), calibration: V(23, 2.6, 9), scrum: V(0, 3.4, -10), customer: V(HALL.x1 - 1.5, 3.2, -14),
   });
 
+  // ---------- 2027: a more digital plant (cobots, holographic KPIs, LED guide lines, more AGVs) ----------
+  const future = new THREE.Group(); future.name = 'future2027'; future.visible = false; root.add(future);
+  const cyan = 0x29d3ff;
+  // cobots between the assembly stations
+  const cobots = [];
+  for (const l of Object.values(LINES)) for (let i = 1; i < l.n; i += 2) {
+    const r = makeRobot(false, 0xF4F6F8); r.g.scale.setScalar(0.55); r.g.position.set(stationX(l, i), 0.84, l.z - 0.62); r.o = i * 1.3 + l.z; future.add(r.g); cobots.push(r);
+    const ringC = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.012, 6, 32), glow(cyan, 1.8)); ringC.rotation.x = Math.PI / 2; ringC.position.set(stationX(l, i), 0.87, l.z - 0.62); future.add(ringC);
+  }
+  // holographic KPI panels floating over the lines
+  const holoPanels = [];
+  const holoTex = (title, value, sub) => new CanvasTex(512, 300, (ctx, w, h) => {
+    ctx.clearRect(0, 0, w, h); ctx.strokeStyle = 'rgba(80,220,255,0.9)'; ctx.lineWidth = 4; ctx.strokeRect(6, 6, w - 12, h - 12);
+    ctx.fillStyle = 'rgba(40,160,220,0.18)'; ctx.fillRect(6, 6, w - 12, h - 12);
+    ctx.fillStyle = '#bff2ff'; ctx.font = `700 34px ${FONT}`; ctx.fillText(title, 30, 58);
+    ctx.fillStyle = '#ffffff'; ctx.font = `800 110px ${FONT}`; ctx.fillText(value, 30, 180);
+    ctx.fillStyle = '#9fe6ff'; ctx.font = `600 30px ${FONT}`; ctx.fillText(sub, 30, 240);
+    ctx.strokeStyle = '#7EDEBE'; ctx.lineWidth = 5; ctx.beginPath(); for (let i = 0; i < 10; i++) { const x = 300 + i * 20, y = 200 - i * 9 - Math.sin(i) * 8; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke();
+  });
+  const panelDefs = [
+    [-22, 3.3, 11, 'NHA line · OEE', '89%', 'Target 85% · live'], [-11, 3.3, 11, 'NHA line · TPT', '−11%', 'vs 2026 · small lot'],
+    [6.5, 3.3, 11, 'VE line · FPY', '99.1%', 'AI vision · live'], [14, 3.3, 11, 'VE line · DLPC', '96%', 'Maturity · target >95%'],
+    [-16, 3.4, 0, 'Machining · TPM', 'L3', 'Maturity level'], [12, 4.8, 0, 'Press · changeover', '14 min', 'SMED · −22%'],
+  ];
+  for (const [x, y, z, t, v, sb] of panelDefs) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.11), new THREE.MeshBasicMaterial({ map: holoTex(t, v, sb).tex, transparent: true, depthWrite: false, toneMapped: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+    m.position.set(x, y, z + 0.9); future.add(m); holoPanels.push({ m, y });
+    const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, y - 2.2, 6), glow(cyan, 1.2)); beam.position.set(x, (y + 2.2) / 2 - 0.55, z + 0.9); future.add(beam);
+  }
+  // LED guide lines along the aisles and the gate approach, light strips under the roof
+  const ledM = glow(cyan, 1.6);
+  for (const z of [4.6, 7.6, 17, 19.6]) box(48, 0.012, 0.06, ledM, -6, 0.02, z, future);
+  for (const x of [-2.2, 2.2]) box(0.06, 0.012, 24.4, ledM, x, 0.02, 19.8, future);
+  for (const x of [-16, 0, 16]) box(0.08, 0.06, D - 8, glow(cyan, 1.3), x + 1.4, HALL.h - 0.3, 4, future);
+  // two more AGVs on the milk run
+  const moreAgvs = [0.17, 0.51, 0.85].map(u0 => { const g = makeAGV(); future.add(g); return { g, u: u0 }; });
+  // a digital command centre beside the gate: three linked screens
+  const cmdCT = new CanvasTex(1024, 360, (ctx, w, h) => {
+    ctx.fillStyle = '#071622'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#29d3ff'; ctx.fillRect(0, 0, w, 8);
+    ctx.fillStyle = '#e6faff'; ctx.font = `800 46px ${FONT}`; ctx.fillText('Digital command centre 2027', 30, 70);
+    ['E2E value stream', 'Energy', 'Quality', 'Logistics'].forEach((t, i) => { const x = 30 + i * 245; ctx.strokeStyle = 'rgba(41,211,255,0.6)'; ctx.strokeRect(x, 110, 220, 210); ctx.fillStyle = '#9fe6ff'; ctx.font = `600 26px ${FONT}`; ctx.fillText(t, x + 14, 146); ctx.fillStyle = '#ffffff'; ctx.font = `800 64px ${FONT}`; ctx.fillText(['98%', '−8%', '1.9', '100%'][i], x + 14, 230); ctx.fillStyle = '#7EDEBE'; ctx.fillRect(x + 14, 270, 150 + i * 12, 10); });
+  });
+  const cmd = new THREE.Group(); cmd.position.set(7.6, 0, 23.0); cmd.rotation.y = -(Math.PI / 2 - 0.35); future.add(cmd);
+  for (const [dx, ry] of [[-2.05, 0.28], [0, 0], [2.05, -0.28]]) {
+    const scr = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 0.7), new THREE.MeshBasicMaterial({ map: cmdCT.tex, toneMapped: false })); scr.position.set(dx, 2.3, Math.abs(dx) * 0.14); scr.rotation.y = ry; cmd.add(scr);
+    box(2.06, 0.76, 0.06, mat(0x14181d, { rough: 0.4, metal: 0.5 }), dx, 2.3, Math.abs(dx) * 0.14 - 0.04, cmd).rotation.y = ry;
+  }
+  box(0.12, 1.95, 0.12, mat(0x14181d, { rough: 0.4, metal: 0.5 }), 0, 0.98, -0.1, cmd);
+  box(5.6, 0.05, 1.4, glow(cyan, 0.9), 0, 0.02, 0.6, cmd);
+  let futureOn = false;
+  anim.push((dt, t) => {
+    if (!futureOn) return;
+    for (const r of cobots) { const k = t * 1.2 + r.o; r.turret.rotation.y = Math.sin(k * 0.8) * 1.1; r.shoulder.rotation.x = 0.5 + Math.sin(k) * 0.3; r.elbow.rotation.x = 1.3 + Math.sin(k + 1) * 0.35; r.wrist.rotation.x = 0.4 + Math.sin(k * 1.5) * 0.4; }
+    holoPanels.forEach(({ m, y }, i) => { m.position.y = y + Math.sin(t * 1.2 + i) * 0.06; m.material.opacity = 0.85 + 0.15 * Math.sin(t * 3 + i); });
+    ledM.color.setRGB(0.16, 0.83, 1).multiplyScalar(1.3 + 0.5 * Math.sin(t * 2));
+    for (const a of moreAgvs) { a.u = (a.u + dt * 1.15 / agvLen) % 1; agvPath.getPointAt(a.u, a.g.position); agvPath.getTangentAt(a.u, tmpT); a.g.rotation.y = Math.atan2(tmpT.x, tmpT.z) + Math.PI / 2; }
+  });
+
   return {
     root, hotspots, agvs, outside: out,
+    setFuture(on) {
+      futureOn = on; future.visible = on; digitalTarget = on ? 1 : digitalTarget;
+      doorWords = on ? { left: ['2027', 'How 2027 looks like'], right: ['FUTURE', 'BPS GO!+'], accent: '#29d3ff' } : { left: ['2026', 'Reflection'], right: ['FLASHBACK', 'BPS GO!+'], accent: CSS.red };
+      leafTexes.forEach(t => t.redraw());
+    },
     gate: {
       open(on = true, glowOn = true) { gateTarget = on ? 1 : 0; glowTarget = on && glowOn ? 1 : 0; },
       snap(on) { gateK = gateTarget = on ? 1 : 0; glowK = glowTarget = 0; },
