@@ -149,7 +149,7 @@ export class Character {
       // open jacket: white shirt V, lapels, tie, buttons
       const v = add(chest, geo('shirtV', () => { const s = new THREE.Shape(); s.moveTo(-0.055, 0.2); s.lineTo(0.055, 0.2); s.lineTo(0, -0.02); s.closePath(); return new THREE.ShapeGeometry(s); }), shirt, 0, 0.0, 0.118); v.rotation.x = -0.1;
       for (const sx of [-1, 1]) { const lp = add(chest, geo('lapel', () => new THREE.BoxGeometry(0.022, 0.2, 0.012)), top, sx * 0.038, 0.09, 0.121); lp.rotation.set(-0.1, 0, sx * 0.32); }
-      if (o.tie) { const tie = add(chest, geo('tie', () => { const s = new THREE.Shape(); s.moveTo(-0.012, 0.18); s.lineTo(0.012, 0.18); s.lineTo(0.022, 0.0); s.lineTo(0, -0.03); s.lineTo(-0.022, 0.0); s.closePath(); return new THREE.ExtrudeGeometry(s, { depth: 0.008, bevelEnabled: false }); }), mat(C.red, { rough: 0.45 }), 0, 0.0, 0.118); tie.rotation.x = -0.1; }
+      if (o.tie) { const tie = add(chest, geo('tie', () => { const s = new THREE.Shape(); s.moveTo(-0.012, 0.18); s.lineTo(0.012, 0.18); s.lineTo(0.022, 0.0); s.lineTo(0, -0.03); s.lineTo(-0.022, 0.0); s.closePath(); return new THREE.ExtrudeGeometry(s, { depth: 0.008, bevelEnabled: false }); }), mat(o.tieColor ?? C.red, { rough: 0.45 }), 0, 0.0, 0.118); tie.rotation.x = -0.1; }
       for (const yy of [-0.02, 0.05]) add(spine, sphere(0.008), mat(0x111111, { rough: 0.3 }), 0.028, yy + 0.2, 0.1);
     } else {
       // shirt collar and placket
@@ -472,22 +472,23 @@ function mergeChildren(group) {
 // ---------- Cast definitions ----------
 export function makeCast(data) {
   const roles = Object.fromEntries((data.cast || []).map(c => [c.id, c.role]));
+  // All men, business dress as in the reference: suits and ties, Indian skin tones
   const defs = [
-    { id: 'ph', height: 1.04, skin: 0xB98466, hair: 0x7a7672, hairStyle: 'short', jacket: 0x1f2633, bottom: 0x1f2633, shoes: 0x2a1a12, tie: true, glasses: true, lanyard: false, sleeves: 'long' },
-    { id: 'bps', height: 0.97, skin: 0xE0B697, hair: 0x2b1d14, hairStyle: 'bun', top: 0xBFD3EA, bottom: 0x283344, sleeves: 'long', eyes: 0x4a3420 },
-    { id: 'prod', height: 1.0, skin: 0x8D5B3F, hair: 0x15110e, hairStyle: 'short', top: 0x23395B, bottom: 0x2e3238, beard: true },
-    { id: 'qual', height: 0.96, skin: 0xC99A7A, hair: 0x4a2c1c, hairStyle: 'long', top: 0xF1F2F4, bottom: 0x2a2f38, sleeves: 'long', glasses: true },
-    { id: 'dig', height: 1.01, skin: 0xD7A889, hair: 0x1a1512, hairStyle: 'short', top: 0x3A4250, bottom: 0x4a4f57, shoes: 0x3b2a1e },
-    { id: 'log', height: 0.99, skin: 0x6B4430, hair: 0x0f0c0a, hairStyle: 'bald', top: 0xD9DCE1, bottom: 0x23395B, beard: true },
+    { id: 'ph', height: 1.03, skin: 0xB07A58, hair: 0x8f8b87, hairStyle: 'short', jacket: 0x3a3d43, bottom: 0x3a3d43, shoes: 0x1a1412, tie: true, tieColor: 0x9e1b2a, glasses: false, lanyard: false, sleeves: 'long' },
+    { id: 'bps', height: 1.0, skin: 0xA87554, hair: 0x141110, hairStyle: 'short', jacket: 0x1f2a44, bottom: 0x1f2a44, shoes: 0x1a1412, tie: true, tieColor: 0x8e1c2c, lanyard: false, sleeves: 'long' },
+    { id: 'prod', height: 1.01, skin: 0x8D5B3F, hair: 0x15110e, hairStyle: 'short', jacket: 0x55595f, bottom: 0x55595f, shoes: 0x1a1412, tie: true, tieColor: 0x3c4658, lanyard: false, sleeves: 'long', beard: true },
+    { id: 'qual', height: 0.99, skin: 0xC08A68, hair: 0x1a1512, hairStyle: 'short', jacket: 0x4a4e55, bottom: 0x4a4e55, shoes: 0x1a1412, tie: true, tieColor: 0x2f3a4e, glasses: true, lanyard: false, sleeves: 'long' },
+    { id: 'dig', height: 1.02, skin: 0xB98466, hair: 0x141110, hairStyle: 'short', jacket: 0x283246, bottom: 0x283246, shoes: 0x2a1a12, tie: true, tieColor: 0x5a6478, lanyard: false, sleeves: 'long' },
+    { id: 'log', height: 1.0, skin: 0x9A6A4E, hair: 0x0f0c0a, hairStyle: 'bald', jacket: 0x3d4148, bottom: 0x3d4148, shoes: 0x1a1412, tie: true, tieColor: 0x7a1b26, lanyard: false, sleeves: 'long', beard: true },
   ];
   const cast = {};
   defs.forEach((d, i) => { cast[d.id] = new Character({ ...d, role: roles[d.id] || d.id, seed: i * 1.7 + 0.3 }); });
   return cast;
 }
 export function makeOperator(i) {
-  const skins = [0xC99A7A, 0x8D5B3F, 0xE0B697, 0x6B4430, 0xB98466, 0xD7A889, 0xA87554];
-  const hair = [0x15110e, 0x2b1d14, 0x3a2a1c, 0x0f0c0a, 0x4a2c1c];
+  const skins = [0xB07A58, 0x8D5B3F, 0xC08A68, 0x9A6A4E, 0xA87554, 0xB98466, 0x7E5238];
+  const hair = [0x15110e, 0x1a1512, 0x2b1d14, 0x0f0c0a];
   // ESD workwear: blue smock on the assembly lines, grey on machining
   const tops = [0x3D5F8C, 0x3D5F8C, 0x55606e];
-  return new Character({ id: 'op' + i, role: 'Operator', height: 0.95 + (i % 3) * 0.03, skin: skins[i % skins.length], hair: hair[i % hair.length], top: tops[i % tops.length], bottom: 0x23272e, sleeves: 'long', vest: false, hardhat: false, glasses: i % 2 === 0, lanyard: true, hairStyle: ['short', 'bun', 'short', 'long', 'bald'][i % 5], beard: i % 4 === 2, seed: 20 + i * 2.3 });
+  return new Character({ id: 'op' + i, role: 'Operator', height: 0.97 + (i % 3) * 0.025, skin: skins[i % skins.length], hair: hair[i % hair.length], top: tops[i % tops.length], bottom: 0x23272e, sleeves: 'long', vest: false, hardhat: false, glasses: i % 2 === 0, lanyard: true, hairStyle: i % 4 === 3 ? 'bald' : 'short', beard: i % 3 === 1, seed: 20 + i * 2.3 });
 }
