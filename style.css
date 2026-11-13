@@ -570,3 +570,5 @@ body.screen-view #panel, body.screen-view #panelTab, body.screen-view #captions,
 #svHost { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 0 20px 16px; }
 .sv-canvas { max-width: 100%; max-height: 100%; width: auto; height: auto; aspect-ratio: 4096 / 1784; box-shadow: 0 24px 70px rgba(0, 0, 0, .5); background: #fff; }
 #btnScreen[aria-pressed="true"] { border-color: var(--red); }
+.kl-headbtn { width: 100%; text-align: left; background: none; border: 0; border-left: 4px solid var(--c); color: inherit; cursor: pointer; }
+.kl-headbtn:hover { background: rgba(255, 255, 255, .05); }

@@ -1,7 +1,7 @@
 import { THREE } from './lib.js';
 import { clamp } from './util.js';
 import { CHAPTERS } from './director.js';
-import { allRows, STATUS_LABEL } from './rooms.js';
+import { allRows, STATUS_LABEL, houseColumns } from './rooms.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 function h(tag, attrs = {}, ...kids) {
@@ -290,7 +290,7 @@ export class UI {
       const sib = rows.filter(x => x.group === r.group && x.id !== r.id);
       if (sib.length) { body.append(h('h4', {}, `Also in ${r.groupName}`)); sib.forEach(x => body.append(h('button', { class: 'dt-link', onclick: () => this.showDetail({ type: 'kpi', id: x.id }) }, h('span', {}, x.kpi), statusBadge(x.status)))); }
       body.append(h('div', { class: 'actions' }, btn('Zoom into the roadmap', () => { this.openRoadmap(r.group); setTimeout(() => this.pickRow(r.id), 900); }, true)));
-      this.app.entrance.wall.highlight(r.pillar, r.id); this.app.director.select('kpi', r.id, { fly: false });
+      this.app.director.select('kpi', r.id, { fly: false });
     } else if (hit.type === 'pillar' && hit.id !== rf.id) {
       const p = rm.pillars.find(x => x.id === hit.id); if (!p) return;
       const pr = rows.filter(r => r.pillar === p.id);
@@ -358,26 +358,26 @@ export class UI {
   }
 
   panel_kpis(b) {
-    const d = this.data, rows = allRows(d);
+    const d = this.data, cols = houseColumns(d), rows = cols.flatMap(c => c.rows);
     const count = s => rows.filter(r => r.status === s).length;
-    b.append(h('p', { class: 'lede' }, `All ${rows.length} BPS GO!+ KPIs on one wall, target against ${d.roadmap.ytdLabel}.`));
+    b.append(h('p', { class: 'lede' }, `Every element of the House of BPS GO!+ with its KPIs, target against ${d.roadmap.ytdLabel}.`));
     b.append(h('div', { class: 'status-sum' }, ...['ok', 'watch', 'behind'].map(s => h('div', { class: 'ss s-' + s }, h('b', {}, count(s)), h('span', {}, STATUS_LABEL[s])))));
-    let pf = 'all';
-    const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Filter by pillar' });
+    let cf = 'all';
+    const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Filter by house element' });
     const list = h('div', { class: 'kpi-list' });
     const render = () => {
       list.innerHTML = '';
-      d.roadmap.pillars.filter(p => pf === 'all' || p.id === pf).forEach(p => {
-        list.append(h('div', { class: 'kl-head', style: `--c:${p.color}` }, p.name, h('small', {}, `${p.motto} ${p.tag}`)));
-        rows.filter(r => r.pillar === p.id).forEach(r => list.append(h('button', { class: 'kl-row' + (this.sel.kpi === r.id ? ' sel' : ''), 'data-id': r.id, 'aria-pressed': this.sel.kpi === r.id ? 'true' : 'false', style: `--c:${p.color}`, onclick: () => { this.sel.kpi = r.id; render(); this.showDetail({ type: 'kpi', id: r.id }); } },
+      cols.filter(c => cf === 'all' || c.id === cf).forEach(c => {
+        list.append(h('button', { class: 'kl-head kl-headbtn', style: `--c:${c.color}`, onclick: () => this.showDetail({ type: 'house', id: c.id }) }, c.name, h('small', {}, `${c.rows.filter(r => r.status === 'ok').length} of ${c.rows.length} on track · open in the roadmap ›`)));
+        c.rows.forEach(r => list.append(h('button', { class: 'kl-row' + (this.sel.kpi === r.id ? ' sel' : ''), 'data-id': r.id, 'aria-pressed': this.sel.kpi === r.id ? 'true' : 'false', style: `--c:${c.color}`, onclick: () => { this.sel.kpi = r.id; render(); this.showDetail({ type: 'kpi', id: r.id }); } },
           h('span', { class: 'kl-name' }, r.kpi, h('small', {}, r.element)),
           h('span', { class: 'kl-num' }, h('small', {}, 'Target'), r.target),
           h('span', { class: 'kl-num' }, h('small', {}, d.roadmap.ytdLabel), h('b', {}, r.ytd)),
           h('span', { class: 'badge st-' + r.status }, STATUS_LABEL[r.status]))));
       });
     };
-    [['all', 'All'], ...d.roadmap.pillars.map(p => [p.id, p.name])].forEach(([id, name]) => chips.append(h('button', { 'aria-pressed': id === 'all' ? 'true' : 'false', onclick: e => { pf = id; chips.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === e.currentTarget)); render(); if (id !== 'all') this.select('kpiPillar', id); else this.app.entrance.wall.highlight(null, null); } }, name)));
-    b.append(chips, list, h('p', { class: 'hint' }, 'Pick a KPI here, or click any tile on the screen, to open its details.'));
+    [['all', 'All'], ...cols.map(c => [c.id, c.name])].forEach(([id, name]) => chips.append(h('button', { 'aria-pressed': id === 'all' ? 'true' : 'false', onclick: e => { cf = id; chips.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === e.currentTarget)); render(); if (id !== 'all') this.select('kpiCol', id); else this.app.entrance.wall.highlight(null, null); } }, name)));
+    b.append(chips, list, h('p', { class: 'hint' }, 'Click a KPI for details, or a house element to see it in the roadmap.'));
     render();
   }
 

@@ -1,5 +1,5 @@
 import { V, Tweens, clamp, ease } from './util.js';
-import { allRows, KPI_WALL } from './rooms.js';
+import { allRows, KPI_WALL, houseColumns } from './rooms.js';
 
 const PI = Math.PI;
 // Camera shots: pos, target, fov
@@ -42,8 +42,7 @@ export const CHAPTERS = [
   { id: 'opening', title: 'Opening', loc: 'overview', dur: 20 },
   { id: 'flashback', title: '2026 Flashback', sub: 'Through the main gate, between NHA and VE Pump', loc: 'gate', dur: 24 },
   { id: 'house', title: 'House of BPS GO!+', sub: 'Where 2026 started: one operating system', loc: 'wall', dur: 30 },
-  { id: 'roadmap', title: 'BPS GO!+ Roadmap 2026', sub: 'Aligned with the house, quarter by quarter', loc: 'wall', dur: 22 },
-  { id: 'kpis', title: 'KPI wall', sub: 'The KPIs of the roadmap, target against YTD', loc: 'wall', dur: 28 },
+  { id: 'kpis', title: 'KPI wall', sub: 'Every element of the house, target against YTD', loc: 'wall', dur: 30 },
   { id: 'plant', title: 'Picture of Future', sub: 'A walk through the modern plant', loc: 'floor', dur: 36 },
   { id: 'closing', title: 'Lead. Work. Win.', sub: 'Creating value. Together.', loc: 'close', dur: 18 },
 ];
@@ -205,7 +204,8 @@ export class Director {
     // the KPI screen itself is clickable, so it needs no markers; pillar markers sit just above it
     const above = pid => () => { const l = E.wall.layout[pid]; return l ? E.wall.spot(l.u, -0.05) : null; };
     if (id === 'plant') return d.plant.zones.map(z => ({ id: z.id, type: 'zone', label: z.name, pos: H[z.id] })).filter(p => p.pos);
-    if (id === 'closing') return [{ id: 'logo', type: 'logo', label: 'BPS GO!+ roadmap', pos: () => E.wall.spot(0.09, -0.05) }, ...E.pillarIds.map(pid => ({ id: pid, type: 'pillar', label: pid === d.reflection.id ? d.reflection.name : d.roadmap.pillars.find(p => p.id === pid).name, pos: above(pid) }))];
+    if (id === 'closing') return [{ id: 'logo', type: 'logo', label: 'BPS GO!+ roadmap', pos: () => E.wall.spot(0.09, -0.05) }];
+    void above;
     return [];
   }
 
@@ -216,18 +216,31 @@ export class Director {
     const pointAt = (p, dur = 2.6) => { if (!near(p)) return; ph.faceTo(p); ph.lookAt(p); ph.gesture('point', dur, { target: p }); setTimeout(() => { if (ph.look === p) ph.lookAt(null); }, dur * 1000 + 200); };
     if (type === 'kpi') {
       const r = allRows(a.data).find(r => r.id === id); if (!r) return;
-      E.wall.highlight(r.pillar, id); const s = E.wall.rowSpot(id); pointAt(s); this.all().forEach(m => near(s) && m.lookAt(s));
+      if (E.wall.mode === 'house') E.wall.setMode('kpi');
+      E.wall.highlight(r.group, id); const s = E.wall.rowSpot(id); pointAt(s); this.all().forEach(m => near(s) && m.lookAt(s));
       if (fly && !near(s)) this.fly(SHOT.k_wall);
     }
     if (type === 'house' || type === 'group') {
-      if (type === 'house' && E.wall.mode !== 'house') E.wall.setMode('house');
-      if (type === 'group' && E.wall.mode !== 'roadmap') E.wall.setMode('roadmap');
-      E.wall.highlight(id, null);
-      const sp = E.wall.rowSpot(id); pointAt(sp); this.all().forEach(m => near(sp) && m.lookAt(sp));
-      if (fly) this.zoomScreen(id, id === 'h-house' ? 7.5 : 5.2);
+      clearTimeout(this._toRoadmap);
+      const H = a.data.house, el = [...H.pillars, ...H.boosters].find(x => x.id === id);
+      const gid = type === 'group' ? id : el?.roadmap;
+      const goRoadmap = () => {
+        if (E.wall.mode !== 'roadmap') E.wall.setMode('roadmap');
+        E.wall.highlight(gid, null);
+        const sp = E.wall.rowSpot('rows:' + gid); pointAt(sp); this.all().forEach(m => near(sp) && m.lookAt(sp));
+        if (fly) this.zoomScreen('rows:' + gid, 8.5);
+      };
+      if (id === 'h-house') { if (E.wall.mode !== 'house') E.wall.setMode('house'); E.wall.highlight(id, null); if (fly) this.zoomScreen(id, 7.5); }
+      else if (type === 'house' && E.wall.mode === 'house') {
+        // zoom into the element on the house, then go to its block in the roadmap
+        E.wall.highlight(id, null);
+        const sp = E.wall.rowSpot(id); pointAt(sp); this.all().forEach(m => near(sp) && m.lookAt(sp));
+        if (fly) this.zoomScreen(id, 5.2);
+        if (gid) this._toRoadmap = setTimeout(goRoadmap, 2600);
+      } else if (gid) goRoadmap();
     }
     if (type === 'reflection') { E.wall.highlight(a.data.reflection.id, id); pointAt(E.wall.rowSpot(id)); }
-    if (type === 'kpiPillar') { E.wall.highlight(id, null); pointAt(E.wall.pillarSpot(id)); if (fly && !near(E.wall.pillarSpot(id))) this.fly(SHOT.k_wall); }
+    if (type === 'kpiCol') { if (E.wall.mode !== 'kpi') E.wall.setMode('kpi'); E.wall.highlight(id, null); pointAt(E.wall.pillarSpot(id)); }
     if (type === 'pillar') { E.highlight(id); pointAt(E.anchor(id)); E.pulse(); }
     if (type === 'logo') { E.highlight(null); E.pulse(); pointAt(E.logoAnchor()); }
     if (type === 'zone' && fly) {
@@ -245,7 +258,7 @@ export class Director {
   resetView() {
     this.userCam = false; this.app.ui.showResetView(false);
     const id = CHAPTERS[this.index]?.id;
-    const shot = { flashback: SHOT.in_both, house: SHOT.k_wall, roadmap: SHOT.k_wall, kpis: SHOT.k_wall, plant: SHOT.p_cell, closing: SHOT.c_crane }[id];
+    const shot = { flashback: SHOT.in_both, house: SHOT.k_wall, kpis: SHOT.k_wall, plant: SHOT.p_cell, closing: SHOT.c_crane }[id];
     if (shot) this.app.rig.moveTo(shot, 2.2);
   }
 
@@ -362,20 +375,20 @@ export class Director {
     wall.replay();
     const c = wall.spot(0.5, 0.5); team.forEach(m => m.lookAt(c)); ph.lookAt(c);
     await ctx.wait(1.0);
-    ctx.cap('And this is the KPI wall of the roadmap: target against year to date.');
+    ctx.cap('And this is the KPI wall: every element of the house, target against year to date.');
     await ctx.wait(3.0);
     ctx.cap(`${rows.length} KPIs on one wall: ${rows.filter(r => r.status === 'ok').length} on track, ${rows.filter(r => r.status === 'watch').length} to watch, ${rows.filter(r => r.status === 'behind').length} behind.`);
     await ctx.wait(3.2);
-    for (const p of d.roadmap.pillars) {
-      const pr = rows.filter(r => r.pillar === p.id), s = wall.pillarSpot(p.id);
-      wall.highlight(p.id, null); ph.lookAt(s); ph.gesture('point', 2.6, { target: s });
-      ctx.cap(`${p.name}: ${pr.filter(r => r.status === 'ok').length} of ${pr.length} on track. ${p.motto} ${p.tag}.`);
-      await ctx.wait(3.4);
+    for (const col of houseColumns(d)) {
+      const s = wall.pillarSpot(col.id);
+      wall.highlight(col.id, null); ph.lookAt(s); ph.gesture('point', 2.2, { target: s });
+      ctx.cap(`${col.name}: ${col.rows.filter(r => r.status === 'ok').length} of ${col.rows.length} on track.`);
+      await ctx.wait(2.6);
     }
     const miss = rows.find(r => r.status === 'behind');
     if (miss) {
       const s = wall.rowSpot(miss.id);
-      wall.highlight(miss.pillar, miss.id); ph.lookAt(s); ph.gesture('point', 2.8, { target: s });
+      wall.highlight(miss.group, miss.id); ph.lookAt(s); ph.gesture('point', 2.8, { target: s });
       ctx.cap(`${miss.kpi}: ${miss.ytd} against a target of ${miss.target}.`);
       await ctx.wait(3.0);
       ph.gesture('think', 2.4);

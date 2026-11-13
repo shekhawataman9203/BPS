@@ -171,7 +171,7 @@ class KpiWall {
   get layout() { return this.layouts[this.mode]; }
   replay() { this.p = 0; this.animating = true; }
   // screen views: 'house' (House of BPS GO!+), 'roadmap' (Roadmap 2026), 'kpi' (KPI wall)
-  setMode(m) { if (m === this.mode) return; this.mode = m; this.hl = { pillar: null, row: null }; this.replay(); this.onMode?.(m); }
+  setMode(m) { if (m === this.mode) return; this.mode = m; this.hl = { pillar: null, row: null }; this.replay(); this.ct.redraw(); this.onMode?.(m); }
   highlight(pillar = null, row = null) { this.hl = { pillar, row }; this.ct.redraw(); }
   setHover(h) { const k = h ? h.type + h.id : null; if (k === this.hoverKey) return; this.hoverKey = k; this.hover = h; this.ct.redraw(); }
   update(dt) { if (!this.animating) return; this.p = Math.min(1, this.p + dt / 2.2); this.ct.redraw(); if (this.p >= 1) this.animating = false; }
@@ -220,66 +220,60 @@ class KpiWall {
     const L = this.layouts[this.mode];
     if (this.mode === 'house') { drawHouse(this, ctx, W, H, HH, p, L, hits, isHover); return; }
     if (this.mode === 'roadmap') { drawRoadmap(this, ctx, W, H, HH, p, L, hits, isHover); return; }
-    // four columns: People, Process, System, Reflection
-    const cols = [...rm.pillars, { ...rf, reflection: true }];
-    const gap = 36, colW = (W - 120 - gap * 3) / 4, top = HH + 40;
-    cols.forEach((pl, ci) => {
-      const x = 60 + ci * (colW + gap);
-      const dim = (hl.pillar && hl.pillar !== pl.id) ? 0.3 : 1;
-      const k = clamp(p * 1.5 - ci * 0.12, 0, 1);
+    // six columns, one per element of the House of BPS GO!+, each with its roadmap KPIs
+    const cols = houseColumns(d);
+    const gap = 28, colW = (W - 100 - gap * (cols.length - 1)) / cols.length, top = HH + 36;
+    cols.forEach((col, ci) => {
+      const x = 50 + ci * (colW + gap);
+      const on = hl.pillar === col.id || hl.pillar === col.group;
+      const dim = (hl.pillar && !on) ? 0.3 : 1;
+      const k = clamp(p * 1.5 - ci * 0.1, 0, 1);
       ctx.globalAlpha = dim * (0.2 + 0.8 * k);
-      // pillar header tile
-      const hh = 150;
-      ctx.fillStyle = pl.color; ctx.fillRect(x, top, colW, hh);
-      if (isHover('pillar', pl.id) || hl.pillar === pl.id) { ctx.strokeStyle = '#12161C'; ctx.lineWidth = 8; ctx.strokeRect(x + 4, top + 4, colW - 8, hh - 8); }
-      ctx.fillStyle = '#ffffff'; ctx.font = `800 70px ${FONT}`; ctx.fillText(pl.name.toUpperCase(), x + 34, top + 78);
-      ctx.font = `600 34px ${FONT}`;
-      const sub = pl.reflection ? 'What went well · gaps · learnings' : `${pl.motto} ${pl.tag}`;
-      ctx.fillText(fitLine(ctx, sub, colW - 68), x + 34, top + 126);
-      hits.push({ type: 'pillar', id: pl.id, x, y: top, w: colW, h: hh });
-      L[pl.id] = { u: (x + colW / 2) / W, v: (top + hh / 2) / H };
+      // element header tile
+      const hh = 190, hov = isHover('house', col.id);
+      ctx.fillStyle = col.color; ctx.fillRect(x, top, colW, hh);
+      if (hov || on) { ctx.strokeStyle = '#12161C'; ctx.lineWidth = 8; ctx.strokeRect(x + 4, top + 4, colW - 8, hh - 8); }
+      icon(ctx, col.icon, x + 62, top + 60, 30, '#ffffff');
+      ctx.fillStyle = '#ffffff'; ctx.font = `800 50px ${FONT}`;
+      const lines = wrap(ctx, col.name, colW - 140); lines.slice(0, 2).forEach((ln, i) => ctx.fillText(ln, x + 112, top + 74 + i * 56));
+      const ok = col.rows.filter(r => r.status === 'ok').length;
+      ctx.font = `700 34px ${FONT}`; ctx.fillText(`${ok}/${col.rows.length} on track`, x + 30, top + hh - 24);
+      hits.push({ type: 'house', id: col.id, x, y: top, w: colW, h: hh });
+      L[col.id] = { u: (x + colW / 2) / W, v: (top + hh / 2) / H };
       const y0 = top + hh + 18, avail = H - y0 - 40;
-      if (!pl.reflection) {
-        const rows = pl.groups.flatMap(g => g.rows);
-        const ok = rows.filter(r => r.status === 'ok').length;
-        ctx.textAlign = 'right'; ctx.fillStyle = '#ffffff'; ctx.font = `800 40px ${FONT}`; ctx.fillText(`${ok}/${rows.length} on track`, x + colW - 30, top + 78); ctx.textAlign = 'left';
-        const rh = Math.min(205, avail / rows.length);
-        rows.forEach((r, i) => {
-          const y = y0 + i * rh, on = hl.row === r.id, hov = isHover('kpi', r.id);
-          const rk = clamp(p * 1.8 - ci * 0.12 - i * 0.04, 0, 1);
-          ctx.globalAlpha = dim * rk * (hl.row && !on ? 0.5 : 1);
-          ctx.fillStyle = on ? pl.light : hov ? '#e3eef8' : '#ffffff'; ctx.fillRect(x, y, colW, rh - 12);
-          ctx.fillStyle = on || hov ? pl.color : 'rgba(18,22,28,0.08)'; ctx.fillRect(x, y, on || hov ? 14 : 4, rh - 12);
-          ctx.fillStyle = STATUS_COL[r.status] || '#9AA3AE'; ctx.beginPath(); ctx.arc(x + colW - 44, y + 46, 20, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#12161C'; const fs = fitText(ctx, r.kpi, colW - 140, 54, 800); ctx.font = `800 ${fs}px ${FONT}`; ctx.fillText(r.kpi, x + 36, y + 58);
-          ctx.fillStyle = '#6b737e'; ctx.font = `600 34px ${FONT}`; ctx.fillText('Target', x + 36, y + rh - 46);
-          ctx.fillStyle = '#12161C'; ctx.font = `700 40px ${FONT}`; const tw = ctx.measureText('Target ').width; ctx.fillText(fitLine(ctx, r.target, colW * 0.5 - tw - 40), x + 36 + tw + 6, y + rh - 46);
-          ctx.textAlign = 'right'; ctx.fillStyle = '#6b737e'; ctx.font = `600 34px ${FONT}`; const yl = `${rm.ytdLabel} `;
-          ctx.fillStyle = '#12161C'; ctx.font = `800 48px ${FONT}`; const yv = fitLine(ctx, r.ytd, colW * 0.42 - 120); ctx.fillText(yv, x + colW - 30, y + rh - 44);
-          const vw = ctx.measureText(yv).width; ctx.fillStyle = '#6b737e'; ctx.font = `600 34px ${FONT}`; ctx.fillText(yl, x + colW - 40 - vw, y + rh - 46);
-          ctx.textAlign = 'left';
-          hits.push({ type: 'kpi', id: r.id, x, y, w: colW, h: rh - 12 });
-          L[r.id] = { u: (x + colW / 2) / W, v: (y + rh / 2) / H };
-        });
-      } else {
-        const bh = avail / pl.boxes.length;
-        pl.boxes.forEach((b, i) => {
-          const y = y0 + i * bh, hov = isHover('reflection', b.id), on = hl.row === b.id;
-          ctx.globalAlpha = dim * clamp(p * 1.8 - ci * 0.12 - i * 0.06, 0, 1);
-          ctx.fillStyle = on ? '#e7d9b8' : hov ? '#efe4c9' : '#FAF6EE'; ctx.fillRect(x, y, colW, bh - 14);
-          ctx.fillStyle = '#2E6DA4'; ctx.fillRect(x, y + 20, 10, bh - 54);
-          ctx.fillStyle = '#1673C4'; ctx.font = `700 48px ${FONT}`; ctx.fillText(b.title, x + 36, y + 64);
-          ctx.fillStyle = '#2a2f36'; ctx.font = `500 32px ${FONT}`;
-          let ty = y + 112; const maxY = y + bh - 30;
-          for (const it of b.items) { for (const ln of wrap(ctx, '• ' + plain(it), colW - 70)) { if (ty > maxY) break; ctx.fillText(ln, x + 36, ty); ty += 40; } ty += 6; }
-          hits.push({ type: 'reflection', id: b.id, x, y, w: colW, h: bh - 14 });
-          L[b.id] = { u: (x + colW / 2) / W, v: (y + bh / 2) / H };
-        });
-      }
+      const rh = Math.min(300, avail / 4);
+      col.rows.forEach((r, i) => {
+        const y = y0 + i * rh, rOn = hl.row === r.id, rHov = isHover('kpi', r.id);
+        ctx.globalAlpha = dim * clamp(p * 1.8 - ci * 0.1 - i * 0.05, 0, 1) * (hl.row && !rOn ? 0.5 : 1);
+        ctx.fillStyle = rOn ? '#e7eef7' : rHov ? '#eef4fb' : '#ffffff'; ctx.fillRect(x, y, colW, rh - 16);
+        ctx.fillStyle = rOn || rHov ? col.color : 'rgba(18,22,28,0.1)'; ctx.fillRect(x, y, rOn || rHov ? 14 : 5, rh - 16);
+        ctx.fillStyle = STATUS_COL[r.status] || '#9AA3AE'; ctx.beginPath(); ctx.arc(x + colW - 42, y + 50, 22, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#12161C'; ctx.font = `800 46px ${FONT}`;
+        const kl = wrap(ctx, r.kpi, colW - 120).slice(0, 2); kl.forEach((ln, li) => ctx.fillText(ln, x + 34, y + 64 + li * 52));
+        ctx.fillStyle = '#6b737e'; ctx.font = `600 32px ${FONT}`; ctx.fillText(fitLine(ctx, r.element, colW - 60), x + 34, y + rh - 104);
+        ctx.fillStyle = '#6b737e'; ctx.font = `600 34px ${FONT}`; ctx.fillText('Target', x + 34, y + rh - 46);
+        const tw = ctx.measureText('Target ').width; ctx.fillStyle = '#12161C'; ctx.font = `700 40px ${FONT}`; ctx.fillText(fitLine(ctx, r.target, colW * 0.5 - tw - 30), x + 34 + tw + 4, y + rh - 46);
+        ctx.textAlign = 'right'; ctx.fillStyle = '#12161C'; ctx.font = `800 52px ${FONT}`; const yv = fitLine(ctx, r.ytd, colW * 0.42 - 100); ctx.fillText(yv, x + colW - 28, y + rh - 42);
+        const vw = ctx.measureText(yv).width; ctx.fillStyle = '#6b737e'; ctx.font = `600 32px ${FONT}`; ctx.fillText(`${rm.ytdLabel} `, x + colW - 36 - vw, y + rh - 46);
+        ctx.textAlign = 'left';
+        hits.push({ type: 'kpi', id: r.id, x, y, w: colW, h: rh - 16 });
+        L[r.id] = { u: (x + colW / 2) / W, v: (y + rh / 2) / H };
+      });
       ctx.globalAlpha = 1;
     });
     ctx.fillStyle = CSS.red; ctx.fillRect(0, H - 14, W * p, 14);
   }
+}
+
+// KPI wall columns: the six elements of the House of BPS GO!+, each with the KPIs of its roadmap block
+export function houseColumns(d) {
+  const H = d.house, groups = {};
+  d.roadmap.pillars.forEach(p => p.groups.forEach(g => { groups[g.id] = { g, p }; }));
+  const boosterCol = { 'h-digi': '#1E88D9', 'h-indirect': '#0A6EBD' };
+  return [...H.pillars, ...H.boosters].map(e => {
+    const gp = groups[e.roadmap];
+    return { id: e.id, name: e.name, icon: e.icon, color: e.color || boosterCol[e.id] || '#1E88D9', group: e.roadmap, pillarId: gp?.p.id, rows: gp ? gp.g.rows.map(r => ({ ...r, pillar: gp.p.id, group: gp.g.id })) : [] };
+  });
 }
 
 // ---------- House of BPS GO!+ (drawn like the strategy slide) ----------
@@ -382,6 +376,7 @@ function drawRoadmap(w, ctx, W, H, HH, p, L, hits, isHover) {
         ctx.fillStyle = '#12161C'; ctx.font = `800 ${Math.min(40, rh * 0.5)}px ${FONT}`; ctx.textAlign = 'center';
         const lines = wrap(ctx, g.name, cols[0] - 40); lines.forEach((ln, i) => ctx.fillText(ln, x0 + cols[0] / 2, y + gh / 2 + (i - (lines.length - 1) / 2) * rh * 0.55 + 12));
         hits.push({ type: 'group', id: g.id, x: x0, y, w: cols[0], h: gh }); L[g.id] = { u: (x0 + cols[0] / 2) / W, v: (y + gh / 2) / H };
+        L['rows:' + g.id] = { u: (x0 + acc) / 2 / W, v: (y + gh / 2) / H };
       }
       ctx.fillStyle = on ? pl.light : hov ? '#e3eef8' : '#f2f2f2'; ctx.fillRect(cx[1], y, cols[1] - 4, rh - 4);
       ctx.fillStyle = '#222'; ctx.font = `700 ${Math.min(36, rh * 0.46)}px ${FONT}`; ctx.textAlign = 'left'; ctx.fillText(fitLine(ctx, r.element, cols[1] - 30), cx[1] + 16, y + rh * 0.62);
