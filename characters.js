@@ -120,11 +120,22 @@ function surfZ(x, y) { const r = profileR(y), rx = r * (y < -0.01 ? 1 : 1.06), r
 // a flat 2D outline laid onto the front of the torso, lifted by `lift`
 function bodyPatch(pts, lift) {
   const sh = new THREE.Shape(); sh.moveTo(pts[0][0], pts[0][1]); for (const [x, y] of pts.slice(1)) sh.lineTo(x, y); sh.closePath();
-  const g = new THREE.ShapeGeometry(sh, 8), p = g.attributes.position;
-  // subdivide by tessellating a few times so the patch follows the curve
-  const sub = g.toNonIndexed(); const q = sub.attributes.position;
-  for (let i = 0; i < q.count; i++) q.setZ(i, surfZ(q.getX(i), q.getY(i)) + lift);
-  sub.computeVertexNormals(); void p; return sub;
+  // triangulate, then split every triangle into 4 (three times) so the patch can follow the chest's curve
+  let tri = Array.from(new THREE.ShapeGeometry(sh, 8).toNonIndexed().attributes.position.array);
+  for (let k = 0; k < 3; k++) {
+    const out = [];
+    for (let i = 0; i < tri.length; i += 9) {
+      const A = [tri[i], tri[i + 1]], B = [tri[i + 3], tri[i + 4]], Cc = [tri[i + 6], tri[i + 7]];
+      const m = (P, Q) => [(P[0] + Q[0]) / 2, (P[1] + Q[1]) / 2], ab = m(A, B), bc = m(B, Cc), ca = m(Cc, A);
+      for (const [p1, p2, p3] of [[A, ab, ca], [ab, B, bc], [ca, bc, Cc], [ab, bc, ca]]) out.push(p1[0], p1[1], 0, p2[0], p2[1], 0, p3[0], p3[1], 0);
+    }
+    tri = out;
+  }
+  for (let i = 0; i < tri.length; i += 3) tri[i + 2] = surfZ(tri[i], tri[i + 1]) + lift;
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(tri, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(new Array(tri.length / 3 * 2).fill(0), 2));
+  g.computeVertexNormals(); return g;
 }
 
 // ---------- sculpted head (used for the Plant Head and the BPS team) ----------
@@ -269,7 +280,7 @@ export class Character {
         const col = add(chest, geo('scollar', () => new THREE.BoxGeometry(0.034, 0.022, 0.006)), shirtD, sx * 0.024, 0.192, surfZ(sx * 0.024, 0.192) + 0.01); col.rotation.set(-0.5, sx * 0.35, sx * 0.62);
       }
       if (o.tie) {
-        const tie = add(chest, geo('tie2', () => { const sh = new THREE.Shape(); sh.moveTo(-0.011, 0.185); sh.lineTo(0.011, 0.185); sh.lineTo(0.021, -0.03); sh.lineTo(0, -0.058); sh.lineTo(-0.021, -0.03); sh.closePath(); const g = new THREE.ExtrudeGeometry(sh, { depth: 0.006, bevelEnabled: false }); const p = g.attributes.position; for (let i = 0; i < p.count; i++) p.setZ(i, p.getZ(i) + surfZ(0, p.getY(i)) + 0.004); g.computeVertexNormals(); return g; }), mat(o.tieColor ?? C.red, { rough: 0.42 }), 0, 0, 0);
+        const tie = add(chest, geo('tie2', () => { const sh = new THREE.Shape(); sh.moveTo(-0.011, 0.185); sh.lineTo(0.011, 0.185); sh.lineTo(0.021, -0.03); sh.lineTo(0, -0.058); sh.lineTo(-0.021, -0.03); sh.closePath(); const g = new THREE.ExtrudeGeometry(sh, { depth: 0.006, bevelEnabled: false }); const p = g.attributes.position; for (let i = 0; i < p.count; i++) p.setZ(i, p.getZ(i) + surfZ(0, p.getY(i)) + 0.007); g.computeVertexNormals(); return g; }), mat(o.tieColor ?? C.red, { rough: 0.42 }), 0, 0, 0);
         void tie; add(chest, sphere(0.014), mat(o.tieColor ?? C.red, { rough: 0.42 }), 0, 0.186, surfZ(0, 0.186) + 0.012).scale.set(1.1, 0.8, 0.7); // knot
       }
       // pocket square on the left breast
