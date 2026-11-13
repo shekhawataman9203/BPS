@@ -1,7 +1,7 @@
 import { THREE, RoundedBoxGeometry } from './lib.js';
-import { C, CSS, FONT, mat, glow, box, cyl, shadows, CanvasTex, fitText, V, fmt, clamp, ease, lerp } from './util.js';
+import { C, CSS, FONT, mat, glow, box, cyl, shadows, CanvasTex, fitText, textPlane, V, clamp, ease } from './util.js';
 
-// ======================= Meeting room =======================
+// ======================= SCRUM review room (glass room at the back of the hall) =======================
 export const ROOM = { x0: -9, x1: 9, z0: -22, z1: -10, h: 4.3 };
 export const TABLE = { x: 0, z: -15.6, w: 2.2, len: 7, top: 0.77 };
 export const SEATS = [
@@ -26,99 +26,34 @@ function makeChair() {
   return g;
 }
 
-export class LedWall {
+export class ScrumWall {
   constructor(data) {
-    this.data = data; this.view = 'idle'; this.p = 1; this.hl = -1; this.animating = false;
+    this.data = data; this.p = 1; this.animating = false;
     this.ct = new CanvasTex(2048, 768, (ctx, W, H) => this.draw(ctx, W, H));
     this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN.w, SCREEN.h), new THREE.MeshBasicMaterial({ map: this.ct.tex, toneMapped: false }));
-    this.mesh.material.color.setScalar(1.05);
     this.mesh.position.set(SCREEN.x, SCREEN.y, SCREEN.z);
   }
-  show(view, hl = -1) { if (view === this.view && hl === this.hl) return; this.view = view; this.hl = hl; this.p = 0; this.animating = true; }
-  highlight(i) { this.hl = i; this.ct.redraw(); }
+  replay() { this.p = 0; this.animating = true; }
   update(dt) { if (!this.animating) return; this.p = Math.min(1, this.p + dt / 1.8); this.ct.redraw(); if (this.p >= 1) this.animating = false; }
-  // world position of a spot on the screen, u,v in 0..1 from top-left
-  spot(u, v) { return V(SCREEN.x - SCREEN.w / 2 + u * SCREEN.w, SCREEN.y + SCREEN.h / 2 - v * SCREEN.h, SCREEN.z); }
-  tileSpot(i) { return this.spot((80 + i * 488 + 224) / 2048, 0.55); }
   draw(ctx, W, H) {
-    const d = this.data, p = ease.out(this.p);
-    const g = ctx.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#0e1218'); g.addColorStop(1, '#151a22');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-    ctx.globalAlpha = 0.06; ctx.fillStyle = '#ffffff';
-    for (let x = 0; x < W; x += 64) ctx.fillRect(x, 0, 1, H);
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = CSS.red; ctx.fillRect(0, H - 10, W * p, 10);
-    const head = (title, sub) => {
-      ctx.globalAlpha = p; ctx.fillStyle = '#F4F6F8'; ctx.font = `800 76px ${FONT}`; ctx.fillText(title, 80, 130);
-      if (sub) { ctx.fillStyle = '#9AA3AE'; ctx.font = `500 34px ${FONT}`; ctx.fillText(sub, 80, 184); }
-      ctx.fillStyle = CSS.red; ctx.fillRect(80, 40, 90 * p, 10); ctx.globalAlpha = 1;
-    };
-    if (this.view === 'idle' || this.view === 'title') {
-      ctx.fillStyle = CSS.red; ctx.fillRect(80, 200, 140 * p, 14);
-      ctx.fillStyle = '#F4F6F8'; ctx.globalAlpha = p;
-      ctx.font = `800 150px ${FONT}`; ctx.fillText('BPS Strategy', 80, 380);
-      ctx.fillText('Workshop 2026', 80, 540);
-      ctx.fillStyle = '#9AA3AE'; ctx.font = `500 44px ${FONT}`; ctx.fillText(`${d.meta.plant}, ${d.meta.date}`, 80, 640);
+    const p = ease.out(this.p);
+    ctx.fillStyle = '#0e1218'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#F4F6F8'; ctx.font = `800 76px ${FONT}`; ctx.fillText('SCRUM review', 80, 130);
+    ctx.fillStyle = '#9AA3AE'; ctx.font = `500 34px ${FONT}`; ctx.fillText('Sprint board · agile projects 2026', 80, 184);
+    ctx.fillStyle = CSS.red; ctx.fillRect(80, 40, 90, 10);
+    const cols = ['Backlog', 'In sprint', 'Review', 'Done'], cards = [5, 4, 3, 7];
+    cols.forEach((c, i) => {
+      const x = 80 + i * 480;
+      ctx.fillStyle = '#9AA3AE'; ctx.font = `700 34px ${FONT}`; ctx.fillText(c, x, 270);
+      for (let k = 0; k < cards[i]; k++) {
+        const a = clamp(p * 2 - (i * 0.2 + k * 0.05), 0, 1); ctx.globalAlpha = a;
+        ctx.fillStyle = i === 3 ? '#7EDEBE' : k % 3 === 0 ? '#F4F6F8' : '#c9ced5';
+        ctx.fillRect(x + (k % 2) * 210, 300 + Math.floor(k / 2) * 110, 190, 90);
+      }
       ctx.globalAlpha = 1;
-    } else if (this.view === 'welcome') {
-      head('Welcome', d.meta.tagline);
-      const items = ['2026 achievements', 'Lean transformation', 'Digital projects', 'KPI review', '2027 strategy', 'Commitment'];
-      items.forEach((s, i) => {
-        const k = clamp(p * 1.6 - i * 0.1, 0, 1); ctx.globalAlpha = k;
-        const col = i % 2, row = Math.floor(i / 2), x = 80 + col * 960, y = 300 + row * 140;
-        ctx.fillStyle = CSS.red; ctx.font = `800 64px ${FONT}`; ctx.fillText(String(i + 2).padStart(2, '0'), x, y + 20);
-        ctx.fillStyle = '#F4F6F8'; ctx.font = `700 60px ${FONT}`; ctx.fillText(s, x + 120, y + 20);
-      });
-      ctx.globalAlpha = 1;
-    } else if (this.view === 'achievements') {
-      head('2026 achievements', d.achievements.intro);
-      d.achievements.headline.forEach((h, i) => {
-        const x = 80 + i * 488, y = 240, w = 448, hh = 470;
-        const k = clamp(p * 1.4 - i * 0.12, 0, 1);
-        ctx.globalAlpha = 0.25 + 0.75 * k;
-        ctx.fillStyle = i === this.hl ? 'rgba(226,0,21,0.16)' : 'rgba(255,255,255,0.04)'; ctx.fillRect(x, y, w, hh);
-        ctx.fillStyle = i === this.hl ? CSS.red : 'rgba(255,255,255,0.18)'; ctx.fillRect(x, y, w, i === this.hl ? 10 : 3);
-        ctx.fillStyle = '#9AA3AE'; ctx.font = `600 34px ${FONT}`; ctx.fillText(h.short, x + 32, y + 72);
-        const v = h.value * ease.outExpo(k);
-        const txt = (h.prefix || '') + fmt(v, h.decimals) + (h.unit.trim() === '%' ? '%' : '');
-        ctx.fillStyle = '#F4F6F8'; const fs = fitText(ctx, txt, w - 64, 132, 800); ctx.font = `800 ${fs}px ${FONT}`; ctx.fillText(txt, x + 32, y + 220);
-        if (h.unit.trim() && h.unit.trim() !== '%') { ctx.fillStyle = '#9AA3AE'; ctx.font = `600 34px ${FONT}`; ctx.fillText(h.unit.trim(), x + 32, y + 268); }
-        ctx.fillStyle = i === this.hl ? '#ffffff' : '#c9ced5'; ctx.font = `600 30px ${FONT}`; ctx.fillText(h.delta, x + 32, y + 318);
-        // sparkline
-        const s = h.series, mn = Math.min(...s), mx = Math.max(...s);
-        ctx.beginPath(); ctx.strokeStyle = i === this.hl ? CSS.red : '#F4F6F8'; ctx.lineWidth = 5;
-        const n = Math.max(2, Math.floor(s.length * k));
-        for (let j = 0; j < n; j++) { const px = x + 32 + j / (s.length - 1) * (w - 64), py = y + hh - 40 - (s[j] - mn) / (mx - mn || 1) * 90; j ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
-        ctx.stroke();
-      });
-      ctx.globalAlpha = 1;
-    } else if (this.view === 'kpi') {
-      head('KPI review 2026', 'December result against target. Bar height shows attainment; the line marks 100%.');
-      const items = d.kpis.items; const bw = 150, gap = (W - 160 - bw * items.length) / (items.length - 1);
-      const base = 640, full = 300;
-      ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.setLineDash([12, 10]); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(80, base - full); ctx.lineTo(W - 80, base - full); ctx.stroke(); ctx.setLineDash([]);
-      items.forEach((k, i) => {
-        const a = attainment(k); const x = 80 + i * (bw + gap);
-        const hgt = full * Math.min(1.35, a) * ease.out(clamp(p * 1.4 - i * 0.06, 0, 1));
-        ctx.fillStyle = a >= 1 ? (i === this.hl ? '#ffffff' : '#c9ced5') : CSS.red; ctx.globalAlpha = i === this.hl || this.hl < 0 ? 1 : 0.55;
-        ctx.fillRect(x, base - hgt, bw, hgt);
-        ctx.fillStyle = '#F4F6F8'; ctx.font = `700 30px ${FONT}`; ctx.textAlign = 'center';
-        ctx.fillText(fmt(last(k), k.decimals) + k.unit.replace(' ', ''), x + bw / 2, base - hgt - 18);
-        ctx.fillStyle = '#9AA3AE'; ctx.font = `600 24px ${FONT}`;
-        const words = k.name.split(' '); const l1 = words.slice(0, 2).join(' '), l2 = words.slice(2).join(' ');
-        ctx.fillText(l1, x + bw / 2, base + 44); if (l2) ctx.fillText(l2, x + bw / 2, base + 74);
-        ctx.textAlign = 'left'; ctx.globalAlpha = 1;
-      });
-    } else {
-      const titles = { lean: ['Lean transformation', 'Shop floor walk, Line A'], digital: ['Digital projects', 'Shop floor walk, digital cell'], strategy: ['2027 strategy', 'Town hall, shop floor'], closing: [d.closing.title, d.meta.event] };
-      const [a, b] = titles[this.view] || ['', ''];
-      ctx.globalAlpha = p; ctx.fillStyle = '#F4F6F8'; ctx.font = `800 120px ${FONT}`; ctx.fillText(a, 80, 400);
-      ctx.fillStyle = '#9AA3AE'; ctx.font = `500 44px ${FONT}`; ctx.fillText(b, 80, 480); ctx.globalAlpha = 1;
-    }
+    });
   }
 }
-export const last = k => k.monthly[k.monthly.length - 1];
-export function attainment(k, v = last(k)) { return k.higherBetter ? v / k.target : k.target / v; }
 
 export function buildMeetingRoom(scene, data) {
   const root = new THREE.Group(); root.name = 'meeting'; scene.add(root);
@@ -143,14 +78,14 @@ export function buildMeetingRoom(scene, data) {
   box(0.2, h, d, mat(0x1d2128, { rough: 0.85 }), x0 - 0.1, h / 2, cz, root);
   box(0.2, h, d, mat(0x1d2128, { rough: 0.85 }), x1 + 0.1, h / 2, cz, root);
   // wall sign (left wall)
-  const sign = new CanvasTex(1024, 256, (ctx, W, H) => { ctx.clearRect(0, 0, W, H); ctx.fillStyle = CSS.red; ctx.fillRect(0, 30, 10, 196); ctx.fillStyle = '#F4F6F8'; ctx.font = `800 92px ${FONT}`; ctx.fillText('BPS', 50, 120); ctx.fillStyle = '#9AA3AE'; ctx.font = `500 46px ${FONT}`; ctx.fillText('Bosch Production System', 50, 196); });
+  const sign = new CanvasTex(1024, 256, (ctx, W, H) => { ctx.clearRect(0, 0, W, H); ctx.fillStyle = CSS.red; ctx.fillRect(0, 30, 10, 196); ctx.fillStyle = '#F4F6F8'; ctx.font = `800 92px ${FONT}`; ctx.fillText('SCRUM', 50, 120); ctx.fillStyle = '#9AA3AE'; ctx.font = `500 46px ${FONT}`; ctx.fillText('Review room · agile projects', 50, 196); });
   const signM = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.8), new THREE.MeshBasicMaterial({ map: sign.tex, transparent: true, toneMapped: false }));
   signM.rotation.y = Math.PI / 2; signM.position.set(x0 + 0.02, 2.6, -15.5); root.add(signM);
-  // right wall graphic: the eight BPS principles
-  const prin = (data.lean && data.lean.principles || []).map(p => p.name);
+  // right wall graphic: the enablers from the Picture of Future
+  const prin = ((data.plant && data.plant.enablers) || []).slice(0, 8);
   const pw = new CanvasTex(2048, 512, (ctx, W, H) => {
     ctx.fillStyle = '#14181e'; ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = '#9AA3AE'; ctx.font = `600 40px ${FONT}`; ctx.fillText('The eight principles of the Bosch Production System', 70, 92);
+    ctx.fillStyle = '#9AA3AE'; ctx.font = `600 40px ${FONT}`; ctx.fillText('Enablers', 70, 92);
     ctx.fillStyle = CSS.red; ctx.fillRect(70, 118, 120, 8);
     prin.forEach((n, i) => {
       const col = i % 4, row = Math.floor(i / 4), x = 70 + col * 490, y = 250 + row * 150;
@@ -189,7 +124,7 @@ export function buildMeetingRoom(scene, data) {
   // chairs
   const chairs = SEATS.map(s => { const c = makeChair(); c.position.set(s.x, 0, s.z); c.rotation.y = s.yaw; c.userData.home = V(s.x, 0, s.z); root.add(c); return c; });
   // LED wall
-  const wall = new LedWall(data);
+  const wall = new ScrumWall(data);
   box(SCREEN.w + 0.16, SCREEN.h + 0.16, 0.1, mat(0x07080a, { rough: 0.3, metal: 0.5 }), SCREEN.x, SCREEN.y, SCREEN.z - 0.06, root);
   root.add(wall.mesh);
   box(5, 0.5, 0.45, mat(0x1b1f26, { rough: 0.5 }), 0, 0.25, z0 + 0.3, root);
@@ -203,106 +138,148 @@ export function buildMeetingRoom(scene, data) {
   return { root, wall, chairs };
 }
 
-// ======================= KPI hologram (over the table) =======================
-export function buildKpiHologram(scene, data) {
-  const g = new THREE.Group(); g.position.set(0, TABLE.top + 0.02, TABLE.z); scene.add(g);
-  const items = data.kpis.items, n = items.length, span = 5.8;
-  const bars = [], mats = [];
-  const fade = (c, max, additive = true) => { const m = new THREE.MeshBasicMaterial({ color: new THREE.Color(c).multiplyScalar(1.6), transparent: true, opacity: 0, depthWrite: false, toneMapped: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending }); m.userData.max = max; mats.push(m); return m; };
-  const plate = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.01, span + 0.8), fade(C.red, 0.12)); g.add(plate);
-  const target = new THREE.Mesh(new THREE.PlaneGeometry(1.0, span + 0.6), fade(0xffffff, 0.08)); target.rotation.x = -Math.PI / 2; target.position.y = 1; g.add(target);
-  const tEdge = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(1.0, span + 0.6)), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false })); tEdge.material.userData.max = 0.6; mats.push(tEdge.material);
-  tEdge.rotation.x = -Math.PI / 2; tEdge.position.y = 1; g.add(tEdge);
-  items.forEach((k, i) => {
-    const z = -span / 2 + i * span / (n - 1);
-    const a = attainment(k);
-    const ok = a >= 1;
-    const geo = new THREE.BoxGeometry(0.34, 1, 0.34); geo.translate(0, 0.5, 0);
-    const m = new THREE.Mesh(geo, fade(ok ? 0xffffff : C.red, ok ? 0.42 : 0.6));
-    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: ok ? 0xffffff : 0xff2233, transparent: true, opacity: 0, depthWrite: false }));
-    edges.material.userData.max = 0.95; mats.push(edges.material);
-    m.position.z = z; edges.position.z = z; m.scale.y = 0.001; edges.scale.y = 0.001;
-    m.userData.kpi = k.id; g.add(m, edges);
-    bars.push({ k, m, edges, h: Math.min(1.4, a), cur: 0.001, delay: i * 0.12, z });
-  });
-  let level = 0, targetLevel = 0, grow = 0, hl = null;
-  return {
-    group: g, bars,
-    show(on) { targetLevel = on ? 1 : 0; if (on) grow = 0; },
-    highlight(id) { hl = id; },
-    anchor(id) { const b = bars.find(b => b.k.id === id); return b ? V(g.position.x, g.position.y + b.h + 0.18, g.position.z + b.z) : null; },
-    update(dt, t) {
-      level += (targetLevel - level) * (1 - Math.exp(-3 * dt));
-      g.visible = level > 0.01; if (!g.visible) return;
-      grow += dt;
-      for (const m of mats) m.opacity = m.userData.max * level;
-      for (const b of bars) {
-        const k = clamp((grow - 0.5 - b.delay) / 1.2, 0, 1);
-        const hgt = Math.max(0.001, b.h * ease.outBack(k) * level);
-        b.m.scale.y = hgt; b.edges.scale.y = hgt;
-        const on = hl === b.k.id;
-        b.m.scale.x = b.m.scale.z = b.edges.scale.x = b.edges.scale.z = on ? 1.25 + 0.05 * Math.sin(t * 6) : 1;
-        b.m.material.opacity = b.m.material.userData.max * level * (hl && !on ? 0.4 : on ? 1.8 : 1);
-      }
-      plate.material.opacity = (0.09 + 0.04 * Math.sin(t * 2)) * level;
-    },
-  };
+// ======================= Entrance: big KPI screen (left of the gate aisle), confetti =======================
+const STATUS_COL = { ok: '#3FBF8F', watch: '#F2B233', behind: '#E20015' };
+export const STATUS_LABEL = { ok: 'On track', watch: 'Watch', behind: 'Behind' };
+export const KPI_WALL = { x: -8.7, y: 3.75, z: 23.6, w: 14, h: 6.1, ry: Math.PI / 2 - 0.35 };
+const TEX_W = 4096, TEX_H = Math.round(4096 * KPI_WALL.h / KPI_WALL.w); // 4K-wide canvas
+
+export function allRows(data) {
+  const out = [];
+  data.roadmap.pillars.forEach(p => p.groups.forEach(g => g.rows.forEach(r => out.push({ ...r, pillar: p.id, pillarName: p.name, group: g.id, groupName: g.name, color: p.color }))));
+  return out;
+}
+// "**bold**" markers removed for canvas text
+const plain = t => t.replace(/\*\*/g, '');
+
+function wrap(ctx, text, maxW) {
+  const words = text.split(' '), lines = []; let cur = '';
+  for (const w of words) { const t = cur ? cur + ' ' + w : w; if (ctx.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; }
+  if (cur) lines.push(cur); return lines;
 }
 
-// ======================= Town hall: strategy house, banner, confetti =======================
-export function buildTownHall(scene, data) {
-  const root = new THREE.Group(); root.name = 'townhall'; scene.add(root);
-  const center = V(-4, 0, 25);
-  // floor rings
-  const ring = new THREE.Mesh(new THREE.RingGeometry(6.9, 7.0, 128), glow(C.red, 1.8)); ring.rotation.x = -Math.PI / 2; ring.position.set(center.x, 0.02, center.z); root.add(ring);
-  const ring2 = new THREE.Mesh(new THREE.RingGeometry(4.0, 4.04, 96), glow(0xffffff, 0.8)); ring2.rotation.x = -Math.PI / 2; ring2.position.set(center.x, 0.02, center.z); root.add(ring2);
-  // banner on back wall
-  const banner = new CanvasTex(2048, 512, (ctx, W, H) => {
-    ctx.fillStyle = '#0d1015'; ctx.fillRect(0, 0, W, H); ctx.fillStyle = CSS.red; ctx.fillRect(0, 0, 24, H);
-    ctx.fillStyle = '#F4F6F8'; ctx.font = `800 132px ${FONT}`; ctx.fillText('Bosch Production System', 110, 250);
-    ctx.fillStyle = '#9AA3AE'; ctx.font = `500 60px ${FONT}`; ctx.fillText(data.meta.org + ' ' + data.meta.plant, 114, 370);
-  });
-  const ban = new THREE.Mesh(new THREE.PlaneGeometry(13, 3.25), new THREE.MeshBasicMaterial({ map: banner.tex, toneMapped: false }));
-  ban.material.color.setScalar(0.7);
-  ban.rotation.y = Math.PI; ban.position.set(-4, 8.3, 31.55); root.add(ban);
-
-  // ---- strategy house (faces -z, toward the hall) ----
-  const house = new THREE.Group(); house.position.set(-4, 0, 28.6); root.add(house);
-  const parts = []; // {id, group, mats, kind}
-  const glassM = () => new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.12, depthWrite: false, emissive: new THREE.Color(C.red), emissiveIntensity: 0.0 });
-  const edgeM = (c) => new THREE.LineBasicMaterial({ color: c, transparent: true, opacity: 0.9, toneMapped: false });
-  const label = (text, w, h, size, vertical = false) => {
-    const ct = new CanvasTex(vertical ? 256 : 1024, vertical ? 1024 : Math.round(1024 * h / w), (ctx, W, H) => {
-      ctx.clearRect(0, 0, W, H); ctx.fillStyle = '#F4F6F8';
-      if (vertical) { ctx.translate(W / 2, H / 2); ctx.rotate(-Math.PI / 2); const s = fitText(ctx, text, H * 0.9, size, 800); ctx.font = `800 ${s}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, 0, 0); }
-      else { const s = fitText(ctx, text, W * 0.9, size, 800); ctx.font = `800 ${s}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, W / 2, H / 2); }
+class KpiWall {
+  constructor(data, logoImg) {
+    this.data = data; this.logoImg = logoImg; this.p = 1; this.animating = false;
+    this.hl = { pillar: null, row: null }; this.layout = {}; this.hits = []; this.hover = null;
+    this.ct = new CanvasTex(TEX_W, TEX_H, (ctx, W, H) => this.draw(ctx, W, H));
+    this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(KPI_WALL.w, KPI_WALL.h), new THREE.MeshBasicMaterial({ map: this.ct.tex, toneMapped: false }));
+    this.mesh.userData.kpiWall = true;
+    if (logoImg && !logoImg.complete) logoImg.addEventListener('load', () => this.ct.redraw());
+  }
+  setAnisotropy(a) { this.ct.tex.anisotropy = a; this.ct.tex.needsUpdate = true; }
+  replay() { this.p = 0; this.animating = true; }
+  highlight(pillar = null, row = null) { this.hl = { pillar, row }; this.ct.redraw(); }
+  setHover(h) { const k = h ? h.type + h.id : null; if (k === this.hoverKey) return; this.hoverKey = k; this.hover = h; this.ct.redraw(); }
+  update(dt) { if (!this.animating) return; this.p = Math.min(1, this.p + dt / 2.2); this.ct.redraw(); if (this.p >= 1) this.animating = false; }
+  // world position of a spot on the screen, u,v in 0..1 from top-left
+  spot(u, v) { this.mesh.updateMatrixWorld(true); return this.mesh.localToWorld(V((u - 0.5) * KPI_WALL.w, (0.5 - v) * KPI_WALL.h, 0.05)); }
+  rowSpot(id) { const l = this.layout[id]; return l ? this.spot(l.u, l.v) : this.spot(0.5, 0.5); }
+  pillarSpot(id) { const l = this.layout[id]; return l ? this.spot(l.u, l.v) : this.spot(0.5, 0.5); }
+  logoSpot() { return this.spot(0.1, 0.06); }
+  // what is at texture coordinate (u, v from the bottom-left, as three.js returns it)
+  hitTest(uv) {
+    const x = uv.x * TEX_W, y = (1 - uv.y) * TEX_H;
+    for (let i = this.hits.length - 1; i >= 0; i--) { const h = this.hits[i]; if (x >= h.x && x <= h.x + h.w && y >= h.y && y <= h.y + h.h) return h; }
+    return null;
+  }
+  draw(ctx, W, H) {
+    const d = this.data, rm = d.roadmap, rf = d.reflection, p = ease.out(this.p), hl = this.hl, hv = this.hover;
+    const hits = this.hits = [];
+    const isHover = (type, id) => hv && hv.type === type && hv.id === id;
+    ctx.fillStyle = '#F4F6F8'; ctx.fillRect(0, 0, W, H);
+    // header: logo, title, legend
+    const HH = 210;
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, HH);
+    let lx0 = 70;
+    if (this.logoImg && this.logoImg.complete && this.logoImg.naturalWidth) {
+      const lh = 150, lw = this.logoImg.naturalWidth * lh / this.logoImg.naturalHeight;
+      ctx.drawImage(this.logoImg, 60, (HH - lh) / 2, lw, lh); hits.push({ type: 'logo', id: 'logo', x: 40, y: 20, w: lw + 40, h: HH - 40 }); lx0 = 60 + lw + 60;
+    }
+    ctx.fillStyle = '#0A6EBD'; ctx.font = `800 96px ${FONT}`; ctx.fillText('KPI wall 2026', lx0, 118);
+    ctx.fillStyle = '#4a525d'; ctx.font = `600 44px ${FONT}`; ctx.fillText(`Target against ${rm.ytdLabel} · click any tile for details`, lx0, 176);
+    let lx = W - 70; ctx.textAlign = 'right'; ctx.font = `700 42px ${FONT}`;
+    for (const k of ['behind', 'watch', 'ok']) { const t = STATUS_LABEL[k]; ctx.fillStyle = '#12161C'; ctx.fillText(t, lx, 122); lx -= ctx.measureText(t).width + 22; ctx.fillStyle = STATUS_COL[k]; ctx.beginPath(); ctx.arc(lx - 16, 108, 17, 0, Math.PI * 2); ctx.fill(); lx -= 70; }
+    ctx.textAlign = 'left';
+    ctx.fillStyle = CSS.red; ctx.fillRect(0, HH - 8, W, 8);
+    // four columns: People, Process, System, Reflection
+    const cols = [...rm.pillars, { ...rf, reflection: true }];
+    const gap = 36, colW = (W - 120 - gap * 3) / 4, top = HH + 40;
+    cols.forEach((pl, ci) => {
+      const x = 60 + ci * (colW + gap);
+      const dim = (hl.pillar && hl.pillar !== pl.id) ? 0.3 : 1;
+      const k = clamp(p * 1.5 - ci * 0.12, 0, 1);
+      ctx.globalAlpha = dim * (0.2 + 0.8 * k);
+      // pillar header tile
+      const hh = 150;
+      ctx.fillStyle = pl.color; ctx.fillRect(x, top, colW, hh);
+      if (isHover('pillar', pl.id) || hl.pillar === pl.id) { ctx.strokeStyle = '#12161C'; ctx.lineWidth = 8; ctx.strokeRect(x + 4, top + 4, colW - 8, hh - 8); }
+      ctx.fillStyle = '#ffffff'; ctx.font = `800 70px ${FONT}`; ctx.fillText(pl.name.toUpperCase(), x + 34, top + 78);
+      ctx.font = `600 34px ${FONT}`;
+      const sub = pl.reflection ? 'What went well · gaps · learnings' : `${pl.motto} ${pl.tag}`;
+      ctx.fillText(fitLine(ctx, sub, colW - 68), x + 34, top + 126);
+      hits.push({ type: 'pillar', id: pl.id, x, y: top, w: colW, h: hh });
+      this.layout[pl.id] = { u: (x + colW / 2) / W, v: (top + hh / 2) / H };
+      const y0 = top + hh + 18, avail = H - y0 - 40;
+      if (!pl.reflection) {
+        const rows = pl.groups.flatMap(g => g.rows);
+        const ok = rows.filter(r => r.status === 'ok').length;
+        ctx.textAlign = 'right'; ctx.fillStyle = '#ffffff'; ctx.font = `800 40px ${FONT}`; ctx.fillText(`${ok}/${rows.length} on track`, x + colW - 30, top + 78); ctx.textAlign = 'left';
+        const rh = Math.min(205, avail / rows.length);
+        rows.forEach((r, i) => {
+          const y = y0 + i * rh, on = hl.row === r.id, hov = isHover('kpi', r.id);
+          const rk = clamp(p * 1.8 - ci * 0.12 - i * 0.04, 0, 1);
+          ctx.globalAlpha = dim * rk * (hl.row && !on ? 0.5 : 1);
+          ctx.fillStyle = on ? pl.light : hov ? '#e3eef8' : '#ffffff'; ctx.fillRect(x, y, colW, rh - 12);
+          ctx.fillStyle = on || hov ? pl.color : 'rgba(18,22,28,0.08)'; ctx.fillRect(x, y, on || hov ? 14 : 4, rh - 12);
+          ctx.fillStyle = STATUS_COL[r.status] || '#9AA3AE'; ctx.beginPath(); ctx.arc(x + colW - 44, y + 46, 20, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#12161C'; const fs = fitText(ctx, r.kpi, colW - 140, 54, 800); ctx.font = `800 ${fs}px ${FONT}`; ctx.fillText(r.kpi, x + 36, y + 58);
+          ctx.fillStyle = '#6b737e'; ctx.font = `600 34px ${FONT}`; ctx.fillText('Target', x + 36, y + rh - 46);
+          ctx.fillStyle = '#12161C'; ctx.font = `700 40px ${FONT}`; const tw = ctx.measureText('Target ').width; ctx.fillText(fitLine(ctx, r.target, colW * 0.5 - tw - 40), x + 36 + tw + 6, y + rh - 46);
+          ctx.textAlign = 'right'; ctx.fillStyle = '#6b737e'; ctx.font = `600 34px ${FONT}`; const yl = `${rm.ytdLabel} `;
+          ctx.fillStyle = '#12161C'; ctx.font = `800 48px ${FONT}`; const yv = fitLine(ctx, r.ytd, colW * 0.42 - 120); ctx.fillText(yv, x + colW - 30, y + rh - 44);
+          const vw = ctx.measureText(yv).width; ctx.fillStyle = '#6b737e'; ctx.font = `600 34px ${FONT}`; ctx.fillText(yl, x + colW - 40 - vw, y + rh - 46);
+          ctx.textAlign = 'left';
+          hits.push({ type: 'kpi', id: r.id, x, y, w: colW, h: rh - 12 });
+          this.layout[r.id] = { u: (x + colW / 2) / W, v: (y + rh / 2) / H };
+        });
+      } else {
+        const bh = avail / pl.boxes.length;
+        pl.boxes.forEach((b, i) => {
+          const y = y0 + i * bh, hov = isHover('reflection', b.id), on = hl.row === b.id;
+          ctx.globalAlpha = dim * clamp(p * 1.8 - ci * 0.12 - i * 0.06, 0, 1);
+          ctx.fillStyle = on ? '#e7d9b8' : hov ? '#efe4c9' : '#FAF6EE'; ctx.fillRect(x, y, colW, bh - 14);
+          ctx.fillStyle = '#2E6DA4'; ctx.fillRect(x, y + 20, 10, bh - 54);
+          ctx.fillStyle = '#1673C4'; ctx.font = `700 48px ${FONT}`; ctx.fillText(b.title, x + 36, y + 64);
+          ctx.fillStyle = '#2a2f36'; ctx.font = `500 32px ${FONT}`;
+          let ty = y + 112; const maxY = y + bh - 30;
+          for (const it of b.items) { for (const ln of wrap(ctx, '• ' + plain(it), colW - 70)) { if (ty > maxY) break; ctx.fillText(ln, x + 36, ty); ty += 40; } ty += 6; }
+          hits.push({ type: 'reflection', id: b.id, x, y, w: colW, h: bh - 14 });
+          this.layout[b.id] = { u: (x + colW / 2) / W, v: (y + bh / 2) / H };
+        });
+      }
+      ctx.globalAlpha = 1;
     });
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(vertical ? h : w, vertical ? w : h), new THREE.MeshBasicMaterial({ map: ct.tex, transparent: true, depthWrite: false, toneMapped: false, opacity: 0 }));
-    m.rotation.y = Math.PI; return m;
-  };
-  const mkPart = (id, geo, pos, edgeColor, lbl) => {
-    const grp = new THREE.Group(); grp.position.copy(pos); house.add(grp);
-    const gm = glassM(); const mesh = new THREE.Mesh(geo, gm); mesh.userData.part = id; grp.add(mesh);
-    const em = edgeM(edgeColor); const e = new THREE.LineSegments(new THREE.EdgesGeometry(geo), em); grp.add(e);
-    if (lbl) grp.add(lbl);
-    const p = { id, grp, mesh, gm, em, lbl, base: pos.clone() }; parts.push(p); return p;
-  };
-  const fGeo = new THREE.BoxGeometry(10.4, 0.6, 2.6); fGeo.translate(0, 0.3, 0);
-  const fl = label(data.strategy.foundation.name, 5.6, 0.36, 120); fl.position.set(0, 0.3, -1.32);
-  mkPart('base', fGeo, V(0, 0, 0), 0xffffff, fl);
-  data.strategy.pillars.forEach((pl, i) => {
-    const geo = new THREE.BoxGeometry(1.25, 3.4, 1.25); geo.translate(0, 1.7, 0);
-    const l = label(pl.name, 3.0, 0.62, 150, true); l.position.set(0, 1.7, -0.64);
-    mkPart(pl.id, geo, V(3.9 - i * 2.6, 0.6, 0), 0xffffff, l); // house faces -z, so +x is screen-left
-  });
-  const roofShape = new THREE.Shape(); roofShape.moveTo(-5.9, 0); roofShape.lineTo(5.9, 0); roofShape.lineTo(0, 2.5); roofShape.closePath();
-  const rGeo = new THREE.ExtrudeGeometry(roofShape, { depth: 2.8, bevelEnabled: false }); rGeo.translate(0, 0, -1.4);
-  const rl = label(data.strategy.vision.title, 4.4, 0.9, 200); rl.position.set(0, 0.85, -1.42);
-  mkPart('vision', rGeo, V(0, 4.0, 0), C.red, rl);
-  const houseLight = new THREE.PointLight(0xff3344, 0, 10, 1.8); houseLight.position.set(0, 3, -2.5); house.add(houseLight);
-  house.visible = false;
-  let prog = 0, progTarget = 0, hl = null;
+    ctx.fillStyle = CSS.red; ctx.fillRect(0, H - 14, W * p, 14);
+  }
+}
+function fitLine(ctx, text, maxW) { if (ctx.measureText(text).width <= maxW) return text; let t = text; while (t.length > 1 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1); return t + '…'; }
 
+export function buildEntrance(scene, data, logoImg) {
+  const root = new THREE.Group(); root.name = 'entrance'; scene.add(root);
+  const wall = new KpiWall(data, logoImg);
+  const wg = new THREE.Group(); wg.position.set(KPI_WALL.x, KPI_WALL.y, KPI_WALL.z); wg.rotation.y = KPI_WALL.ry; root.add(wg);
+  wg.add(wall.mesh);
+  const frameM = mat(0x1b2027, { rough: 0.35, metal: 0.6 });
+  box(KPI_WALL.w + 0.3, KPI_WALL.h + 0.3, 0.3, frameM, 0, 0, -0.17, wg);
+  box(KPI_WALL.w + 0.3, 0.07, 0.07, glow(C.red, 2), 0, -KPI_WALL.h / 2 - 0.19, 0.02, wg);
+  const legH = KPI_WALL.y - KPI_WALL.h / 2;
+  for (const sx of [-KPI_WALL.w * 0.33, KPI_WALL.w * 0.33]) { box(0.3, legH + 0.4, 0.3, frameM, sx, -KPI_WALL.y + (legH + 0.4) / 2, -0.17, wg); box(1.2, 0.08, 1.4, frameM, sx, -KPI_WALL.y + 0.04, -0.17, wg); }
+  shadows(wg, true, true); wall.mesh.castShadow = false;
+  const wallLight = new THREE.PointLight(0xffffff, 0, 12, 1.6);
+  let hlPillar = null, pulse = 0;
+
+  const center = V(0, 0, 24);
   // ---- confetti ----
   const CN = 420;
   const conf = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.06, 0.1), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, toneMapped: false }), CN);
@@ -312,35 +289,22 @@ export function buildTownHall(scene, data) {
   let confT = -1;
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), one = V(1, 1, 1);
 
+
   return {
-    root, house, parts,
-    anchor(id) { const p = parts.find(p => p.id === id); if (!p) return null; const v = p.grp.getWorldPosition(V()); v.y += id === 'base' ? 0.9 : id === 'vision' ? 2.9 : 3.8; v.z -= 1; return v; },
-    setBuild(v) { progTarget = v; if (v === 0) prog = 0; },
-    snapBuild(v) { prog = progTarget = v; },
-    highlight(id) { hl = id; },
+    root, wall,
+    pillarIds: [...data.roadmap.pillars.map(p => p.id), data.reflection.id],
+    logoAnchor() { return wall.logoSpot(); },
+    anchor(id) { return wall.pillarSpot(id); },
+    setBuild() { }, snapBuild() { },
+    highlight(id) { hlPillar = id; wall.highlight(id, null); },
+    pulse() { pulse = 1; },
     burst() {
       confT = 0; conf.visible = true;
       cs.forEach(c => { c.p.set(center.x + (Math.random() - 0.5) * 3, 4.5 + Math.random() * 2, center.z - 1 + (Math.random() - 0.5) * 3); const a = Math.random() * Math.PI * 2, s = 2 + Math.random() * 4; c.w.set(Math.random() * 6, Math.random() * 6, Math.random() * 6); c.v.set(Math.cos(a) * s, 3 + Math.random() * 5, Math.sin(a) * s); c.r.set(Math.random() * 6, Math.random() * 6, Math.random() * 6); });
     },
     update(dt, t) {
-      prog += (progTarget - prog) * (1 - Math.exp(-1.6 * dt));
-      house.visible = prog > 0.005;
-      if (house.visible) {
-        for (const p of parts) {
-          let k;
-          if (p.id === 'base') k = clamp(prog / 0.25, 0, 1);
-          else if (p.id === 'vision') k = clamp((prog - 0.72) / 0.28, 0, 1);
-          else { const i = data.strategy.pillars.findIndex(x => x.id === p.id); k = clamp((prog - 0.22 - i * 0.12) / 0.2, 0, 1); }
-          const ek = ease.out(k);
-          if (p.id === 'vision') { p.grp.position.y = p.base.y + (1 - ek) * 3.5; p.grp.scale.setScalar(Math.max(0.001, 0.6 + 0.4 * ek)); }
-          else p.grp.scale.set(1, Math.max(0.001, ek), 1);
-          const on = hl === p.id;
-          p.gm.opacity = (on ? 0.32 : 0.12) * ek; p.gm.emissiveIntensity = on ? 0.9 + 0.3 * Math.sin(t * 5) : 0.08;
-          p.em.opacity = 0.9 * ek; p.em.color.setHex(on ? C.red : (p.id === 'vision' ? C.red : 0xffffff)); p.em.color.multiplyScalar(on ? 2.5 : 1.4);
-          if (p.lbl) p.lbl.material.opacity = clamp((k - 0.6) / 0.4, 0, 1);
-        }
-        houseLight.intensity = 7 * prog;
-      }
+      wall.update(dt);
+      pulse = Math.max(0, pulse - dt * 0.8); void hlPillar; void wallLight;
       if (confT >= 0) {
         confT += dt;
         cs.forEach((c, i) => {

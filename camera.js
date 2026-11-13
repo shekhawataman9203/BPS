@@ -16,7 +16,7 @@ export class CameraRig {
     dom.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') { this.par.x = (e.clientX / innerWidth - 0.5) * 2; this.par.y = (e.clientY / innerHeight - 0.5) * 2; } });
     this._r = V(); this._u = V(); this._f = V();
   }
-  stop() { if (this.tw) { const r = this.tw.res; this.tw = null; } this.fol = null; this.orb = null; }
+  stop() { this.tw = null; this.fol = null; this.orb = null; }
   cut(s) { this.stop(); this.pos.set(...s.pos); this.tgt.set(...s.target); if (s.fov) this.fov = s.fov; }
   moveTo(s, dur = 3, { arc = 0.12, easing = ease.inOut } = {}) {
     this.fol = null; this.orb = null;
