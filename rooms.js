@@ -230,7 +230,7 @@ class KpiWall {
       const k = clamp(p * 1.5 - ci * 0.1, 0, 1);
       ctx.globalAlpha = dim * (0.2 + 0.8 * k);
       // element header tile
-      const hh = 190, hov = isHover('house', col.id);
+      const hh = 214, hov = isHover('house', col.id);
       ctx.fillStyle = col.color; ctx.fillRect(x, top, colW, hh);
       if (hov || on) { ctx.strokeStyle = '#12161C'; ctx.lineWidth = 8; ctx.strokeRect(x + 4, top + 4, colW - 8, hh - 8); }
       icon(ctx, col.icon, x + 62, top + 60, 30, '#ffffff');
@@ -250,12 +250,13 @@ class KpiWall {
         ctx.fillStyle = STATUS_COL[r.status] || '#9AA3AE'; ctx.beginPath(); ctx.arc(x + colW - 42, y + 50, 22, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#12161C'; ctx.font = `800 46px ${FONT}`;
         const kl = wrap(ctx, r.kpi, colW - 120).slice(0, 2); kl.forEach((ln, li) => ctx.fillText(ln, x + 34, y + 64 + li * 52));
-        ctx.fillStyle = '#6b737e'; ctx.font = `600 32px ${FONT}`; ctx.fillText(fitLine(ctx, r.element, colW - 60), x + 34, y + rh - 104);
-        ctx.fillStyle = '#6b737e'; ctx.font = `600 34px ${FONT}`; ctx.fillText('Target', x + 34, y + rh - 46);
-        const tw = ctx.measureText('Target ').width; ctx.fillStyle = '#12161C'; ctx.font = `700 40px ${FONT}`; ctx.fillText(fitLine(ctx, r.target, colW * 0.5 - tw - 30), x + 34 + tw + 4, y + rh - 46);
-        ctx.textAlign = 'right'; ctx.fillStyle = '#12161C'; ctx.font = `800 52px ${FONT}`; const yv = fitLine(ctx, r.ytd, colW * 0.42 - 100); ctx.fillText(yv, x + colW - 28, y + rh - 42);
-        const vw = ctx.measureText(yv).width; ctx.fillStyle = '#6b737e'; ctx.font = `600 32px ${FONT}`; ctx.fillText(`${rm.ytdLabel} `, x + colW - 36 - vw, y + rh - 46);
-        ctx.textAlign = 'left';
+        ctx.fillStyle = '#6b737e'; ctx.font = `600 30px ${FONT}`; ctx.fillText(fitLine(ctx, r.element, colW - 60), x + 34, y + rh - 128);
+        // target and YTD on their own lines so long values fit
+        const lab = 170;
+        ctx.fillStyle = '#6b737e'; ctx.font = `600 32px ${FONT}`; ctx.fillText('Target', x + 34, y + rh - 78);
+        ctx.fillStyle = '#12161C'; ctx.font = `700 40px ${FONT}`; ctx.fillText(fitLine(ctx, r.target, colW - lab - 50), x + 34 + lab, y + rh - 78);
+        ctx.fillStyle = '#6b737e'; ctx.font = `600 32px ${FONT}`; ctx.fillText(rm.ytdLabel, x + 34, y + rh - 30);
+        ctx.fillStyle = '#12161C'; ctx.font = `800 48px ${FONT}`; ctx.fillText(fitLine(ctx, r.ytd, colW - lab - 50), x + 34 + lab, y + rh - 28);
         hits.push({ type: 'kpi', id: r.id, x, y, w: colW, h: rh - 16 });
         L[r.id] = { u: (x + colW / 2) / W, v: (y + rh / 2) / H };
       });
