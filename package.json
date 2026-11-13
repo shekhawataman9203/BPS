@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "BPS Strategy Workshop 2026 - single-file 3D presentation",
   "scripts": {
-    "build": "node build.mjs"
+    "build": "node build.mjs",
+    "bake-walk": "node tools/bake-walk.mjs"
   },
   "keywords": [],
   "author": "",

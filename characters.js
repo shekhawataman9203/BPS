@@ -1,5 +1,7 @@
 import { THREE, RoundedBoxGeometry, mergeGeometries } from './lib.js';
 import { C, mat, glow, clamp, lerp, damp, angleLerp } from './util.js';
+// Motion-captured walk (baked from a Mixamo clip by tools/bake-walk.mjs); null falls back to the hand-made walk
+import WALK from './walkcycle.json';
 
 /*
   Procedural low-poly humanoids with a joint hierarchy, animated entirely in code.
@@ -9,7 +11,7 @@ import { C, mat, glow, clamp, lerp, damp, angleLerp } from './util.js';
 */
 
 const JOINTS = ['hips', 'spine', 'chest', 'neck', 'head', 'lSh', 'lEl', 'rSh', 'rEl', 'lHip', 'lKnee', 'rHip', 'rKnee'];
-const STRIDE = 1.5; // metres per full walk cycle
+const STRIDE = WALK ? WALK.stride : 1.5; // metres per full walk cycle
 const DOWN = new THREE.Vector3(0, -1, 0);
 const geoCache = new Map();
 function geo(key, make) { if (!geoCache.has(key)) geoCache.set(key, make()); return geoCache.get(key); }
@@ -41,6 +43,16 @@ const BASE = {
     };
   },
   walk(c, t) {
+    if (WALK) {
+      // sample the captured cycle by distance walked; walkAmp eases it in and out
+      const a = c.walkAmp, N = WALK.samples, f = ((c.phase / (Math.PI * 2)) % 1 + 1) % 1 * N, i0 = Math.floor(f) % N, i1 = (i0 + 1) % N, k = f - Math.floor(f);
+      const out = { hipY: lerp(WALK.hipY[i0], WALK.hipY[i1], k) * a, hipZ: 0 };
+      for (const [jn, arr] of Object.entries(WALK.joints)) {
+        const A = arr[i0], B = arr[i1];
+        out[jn] = [lerp(A[0], B[0], k) * a, lerp(A[1], B[1], k) * a, lerp(A[2], B[2], k) * a];
+      }
+      return out;
+    }
     const ph = c.phase, s = S(ph), a = c.walkAmp;
     const kl = 0.12 + 0.85 * Math.pow(Math.max(0, Math.cos(ph)), 1.4);
     const kr = 0.12 + 0.85 * Math.pow(Math.max(0, Math.cos(ph + Math.PI)), 1.4);
