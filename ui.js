@@ -43,8 +43,8 @@ export class UI {
   // ------------------------------------------------------------ static chrome
   buildStatic() {
     const d = this.data;
-    $('#plantName').textContent = `${d.meta.event} · ${d.meta.date}`;
-    $('#introPlant').textContent = `${d.meta.event} · ${d.meta.date}`;
+    $('#plantName').textContent = d.meta.subtitle || d.meta.event;
+    $('#introPlant').textContent = d.meta.subtitle || d.meta.event;
     $('#introTag').textContent = d.meta.tagline;
     const rail = $('#railStations');
     CHAPTERS.forEach((c, i) => {
