@@ -353,13 +353,13 @@ export class Character {
       const lower = add(head, geo('lipL', () => new RoundedBoxGeometry(0.03, 0.007, 0.01, 1, 0.003)), lip, 0, 0.053, 0.093); lower.rotation.x = -0.2;
       if (o.beard) { const bd = add(head, sphere(0.08), hairM, 0, 0.055, 0.02); bd.scale.set(1.0, 0.75, 0.98); }
     }
-    const hy = o.realFace ? -0.014 : 0, hk = o.realFace ? 1.0 : 1; // hair follows the sculpted head
+    const hy = o.realFace ? -0.02 : 0, hk = o.realFace ? 0.95 : 1; // hair follows the sculpted head
     if (o.hairStyle !== 'bald' && !o.hardhat) {
       const cap = add(head, geo('hairCap', () => new THREE.SphereGeometry(0.104, 26, 14, 0, Math.PI * 2, 0, Math.PI * 0.55)), hairM, 0, 0.13 + hy, -0.008);
       cap.scale.set(0.95 * hk, 1.0 * hk, 1.06 * hk); cap.rotation.x = -0.28;
       const back = add(head, sphere(0.098), hairM, 0, 0.115 + hy, -0.03); back.scale.set(0.93 * hk, 0.98 * hk, 0.9 * hk);
       for (const sx of [-1, 1]) { const side = add(head, sphere(0.04), hairM, sx * 0.083 * hk, 0.135 + hy, -0.01); side.scale.set(0.5, 1.0, 1.3); }
-      if (o.hairStyle === 'full') { const top = add(head, sphere(0.062), hairM, 0, 0.184 + hy, 0.012); top.scale.set(1.42 * hk, 0.42, 1.55 * hk); }
+      if (o.hairStyle === 'full') { const top = add(head, sphere(0.06), hairM, 0, 0.19 + hy, 0.02); top.scale.set(1.45 * hk, 0.55, 1.5 * hk); }
       if (o.hairStyle === 'short') { const quiff = add(head, sphere(0.05), hairM, 0.02, 0.2 + hy, 0.05); quiff.scale.set(1.4, 0.45, 0.9); }
       if (o.hairStyle === 'long') {
         add(head, geo('hairLong', () => new RoundedBoxGeometry(0.2, 0.3, 0.07, 3, 0.03)), hairM, 0, 0.02, -0.07);
