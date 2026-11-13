@@ -57,9 +57,9 @@ const OPS = [
 ];
 export const OPS_COUNT = OPS.length;
 // The team waiting inside the gate, facing it
-const WAIT = { bps: [-1.4, 25.4], prod: [1.7, 24.8], qual: [-3.2, 24.3], dig: [3.4, 24.0], log: [0.3, 23.4] };
+const WAIT = { bps: [-1.2, 25.3], prod: [1.5, 24.8], qual: [0.2, 23.8] };
 // The team watching the KPI wall
-const WALLTEAM = { bps: [-1.0, 26.2], prod: [0.9, 25.4], qual: [-2.2, 27.4], dig: [0.6, 23.7], log: [-1.4, 22.9] };
+const WALLTEAM = { bps: [-1.0, 26.2], prod: [0.6, 25.0], qual: [-2.0, 23.4] };
 // The team at the BPS GO!+ stand
 
 export class Director {
@@ -107,7 +107,7 @@ export class Director {
   // ---------- staging helpers ----------
   placeOps() { this.app.ops.forEach((o, i) => { o.place(OPS[i][0], OPS[i][1], OPS[i][2], 'work'); }); }
   placeGroup(spots, yawOf) { const c = this.cast; for (const [id, [x, z]] of Object.entries(spots)) c[id].place(x, z, yawOf(x, z)); }
-  all() { const c = this.cast; return [c.bps, c.prod, c.qual, c.dig, c.log]; }
+  all() { const c = this.cast; return [c.bps, c.prod, c.qual]; }
   wallCenter() { return V(KPI_WALL.x, KPI_WALL.y, KPI_WALL.z); }
   yawTo(px, pz) { return (x, z) => Math.atan2(px - x, pz - z); }
 
@@ -134,7 +134,7 @@ export class Director {
       case 'kpis':
         this.placeGroup(WALLTEAM, this.yawTo(W.x, W.z)); c.ph.place(-4.6, 24.4, Math.atan2(W.x + 4.6, W.z - 24.4)); this.setWorld({ gate: true }); a.rig.cut(SHOT.k_wall); break;
       case 'plant':
-        this.placeGroup(WAIT, () => PI); c.dig.place(23.4, 5.7, -PI * 0.75); c.ph.place(0, 21.5, PI); c.bps.place(0.9, 22.2, PI); this.setWorld({ gate: true, digital: true }); a.rig.cut(SHOT.p_high); break;
+        this.placeGroup(WAIT, () => PI); c.qual.place(23.4, 5.7, -PI * 0.75); c.ph.place(0, 21.5, PI); c.bps.place(0.9, 22.2, PI); this.setWorld({ gate: true, digital: true }); a.rig.cut(SHOT.p_high); break;
       case 'bpsgo':
         this.placeGroup(WALLTEAM, this.yawTo(W.x, W.z)); c.ph.place(-4.6, 24.4, Math.atan2(W.x + 4.6, W.z - 24.4)); this.setWorld({ gate: true }); a.rig.cut(SHOT.s_stand); break;
       case 'closing':
@@ -148,14 +148,14 @@ export class Director {
     switch (id) {
       case 'flashback': a.factory.gate.snap(true); this.placeGroup(WAIT, () => 0); c.ph.place(0, 27.4, PI); c.bps.place(-0.6, 26.3, PI * 0.75); lookAll(c.ph); a.rig.cut(SHOT.in_both); break;
       case 'kpis': a.rig.cut(SHOT.k_wall); lookAll(this.wallCenter()); break;
-      case 'plant': c.ph.place(22.2, 5.0, 0.6); c.bps.place(21.1, 4.6, 0.6); c.dig.place(23.4, 5.7, -2.4); a.rig.cut(SHOT.p_cell); break;
+      case 'plant': c.ph.place(22.2, 5.0, 0.6); c.bps.place(21.1, 4.6, 0.6); c.qual.place(23.4, 5.7, -2.4); a.rig.cut(SHOT.p_cell); break;
       case 'bpsgo': lookAll(this.wallCenter()); a.rig.cut(SHOT.s_stand); break;
       case 'closing': this.rowTeam(true); a.rig.cut(SHOT.c_crane); break;
     }
   }
   rowTeam(snap) {
-    const c = this.cast; const order = [c.log, c.qual, c.ph, c.bps, c.prod, c.dig];
-    return order.map((m, i) => { const x = (i - 2.5) * 1.35, z = 25.6 - Math.abs(i - 2.5) * 0.25; if (snap) { m.place(x, z, PI); return null; } return [m, x, z]; });
+    const c = this.cast; const order = [c.qual, c.ph, c.bps, c.prod];
+    return order.map((m, i) => { const x = (i - 1.5) * 1.4, z = 25.6 - Math.abs(i - 1.5) * 0.25; if (snap) { m.place(x, z, PI); return null; } return [m, x, z]; });
   }
 
   // ---------- navigation ----------
@@ -256,7 +256,7 @@ export class Director {
   async opening(ctx) { await ctx.wait(0.1); }
 
   async flashback(ctx) {
-    const { ph, bps, prod, qual, dig, log } = this.cast, a = this.app, gate = a.factory.gate, d = a.data;
+    const { ph, bps, prod, qual } = this.cast, a = this.app, gate = a.factory.gate, d = a.data;
     const team = this.all(), sign = a.factory.hotspots.gate;
     ph.place(0, 40.5, PI);
     ctx.cut(SHOT.g_door);
@@ -283,7 +283,7 @@ export class Director {
     const bpsGo = ctx.walk(bps, [[-0.6, 26.3]], { speed: 1.0 });
     ph.gesture('wave', 2.2);
     ctx.cap('The BPS team is waiting at the entrance.');
-    [prod, qual, dig, log].forEach((m, i) => ctx.later(0.3 + i * 0.2, () => m.gesture(i % 2 ? 'nod' : 'waveL', 1.6)));
+    [prod, qual].forEach((m, i) => ctx.later(0.3 + i * 0.2, () => m.gesture(i % 2 ? 'nod' : 'waveL', 1.6)));
     ctx.cam(SHOT.in_greet, 2.4);
     await bpsGo;
     ph.faceTo(bps); bps.faceTo(ph); ph.lookAt(bps); bps.lookAt(ph);
@@ -338,7 +338,7 @@ export class Director {
   }
 
   async plant(ctx) {
-    const { ph, bps, dig } = this.cast, a = this.app, d = a.data.plant, H = a.factory.hotspots;
+    const { ph, bps, qual: dig } = this.cast, a = this.app, d = a.data.plant, H = a.factory.hotspots; // the Quality Manager presents the AI vision cell
     const Z = id => d.zones.find(z => z.id === id) || { name: id, items: [''] };
     ctx.cap(d.title, { kind: 'marker' });
     ctx.cam(SHOT.p_digital, 6, { easing: ease.inOutSine, arc: 0.05 });
@@ -369,7 +369,7 @@ export class Director {
     const holo = H.calibration.clone();
     dig.faceTo(holo); dig.lookAt(holo); dig.gesture('present', 3.2);
     ph.lookAt(holo); bps.lookAt(holo);
-    ctx.cap(`${Z('calibration').name}: ${Z('calibration').items[0]}.`);
+    ctx.cap(`The Quality Manager shows ${Z('calibration').name}: ${Z('calibration').items[0]}.`);
     await ctx.wait(3.4);
     ph.faceTo(dig); ph.lookAt(dig); dig.faceTo(ph); dig.lookAt(ph);
     await ctx.wait(0.5);

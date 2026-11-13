@@ -27,14 +27,6 @@
     {
       "id": "qual",
       "role": "Quality Manager"
-    },
-    {
-      "id": "dig",
-      "role": "Digital Lead"
-    },
-    {
-      "id": "log",
-      "role": "Logistics Lead"
     }
   ],
   "roadmap": {
