@@ -265,7 +265,7 @@ export class Character {
   // ----- realistic model (GLB, Mixamo-style skeleton) driven by this rig -----
   // The procedural rig keeps doing all the animation; its joints are copied onto the model's bones
   // as world-space rotation deltas, so any Mixamo-compatible character works without its own clips.
-  attachModel(model) {
+  attachModel(model, clips = []) {
     const bones = {};
     model.traverse(o => { if (o.isBone) bones[o.name.replace(/^mixamorig:?/i, '').replace(/^.*[:|]/, '')] = o; });
     const need = ['Hips', 'Spine', 'Neck', 'Head', 'LeftArm', 'LeftForeArm', 'RightArm', 'RightForeArm', 'LeftUpLeg', 'LeftLeg', 'RightUpLeg', 'RightLeg'];
@@ -306,30 +306,56 @@ export class Character {
     model.traverse(o => { if (o.isBone && map.some(([, b]) => bones[b] === o)) order.push(o); }); // parents before children
     this.retarget = {
       holder, bones,
-      list: order.map(bone => ({ bone, joint: this.j[map.find(([, b]) => bones[b] === bone)[0]], rest: rel(bone) })),
+      list: order.map(bone => { const key = map.find(([, b]) => bones[b] === bone)[0]; return { bone, key, joint: this.j[key], rest: rel(bone) }; }),
       hips: bones.Hips, hipsRest: bones.Hips.position.clone(), hipsRestWorld: bones.Hips.getWorldPosition(new THREE.Vector3()).applyMatrix4(new THREE.Matrix4().copy(this.root.matrixWorld).invert()),
       tq: new THREE.Quaternion(), pq: new THREE.Quaternion(), ri: new THREE.Quaternion(), v: new THREE.Vector3(),
     };
+    // the model's own walk / idle clips, if it has them (in place: forward root motion removed)
+    const find = re => clips.find(c => re.test(c.name));
+    const walkClip = find(/walk/i), idleClip = find(/idle|stand|breath/i);
+    if (walkClip || idleClip) {
+      const mixer = new THREE.AnimationMixer(model);
+      const inPlace = clip => { const c = clip.clone(); for (const t of c.tracks) if (/hips\.position$/i.test(t.name)) { for (let i = 0; i < t.values.length; i += 3) { t.values[i] = t.values[0]; t.values[i + 2] = t.values[2]; } } return c; };
+      const walk = walkClip ? mixer.clipAction(inPlace(walkClip)) : null, idle = idleClip ? mixer.clipAction(inPlace(idleClip)) : null;
+      [walk, idle].forEach(a => a && (a.play(), a.setEffectiveWeight(0)));
+      this.retarget.clip = { mixer, walk, idle, w: 0 };
+    }
     // hide the procedural body; keep its joints as the animation source
     for (const g of Object.values(this.j)) for (const c of g.children) if (c.isMesh) c.visible = false;
     for (const c of this.root.children) if (c.isMesh) c.visible = false;
     model.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; if (o.material) { const ms = Array.isArray(o.material) ? o.material : [o.material]; ms.forEach(m => { if (m.metalness !== undefined) m.metalness = Math.min(m.metalness, 0.2); }); } } });
     return true;
   }
-  applyRetarget() {
+  applyRetarget(dt = 0) {
     const R = this.retarget; if (!R) return;
+    let blend = null; // per-joint weight of the rig over the model's own clips
+    if (R.clip) {
+      const C = R.clip, walking = this.base === 'walk' && !!C.walk;
+      C.w = damp(C.w, walking ? 1 : 0, 6, dt);
+      if (C.walk) { C.walk.setEffectiveWeight(C.idle ? C.w : 1); C.walk.timeScale = Math.max(0.5, this.speed / 1.3); }
+      if (C.idle) C.idle.setEffectiveWeight(1 - (C.walk ? C.w : 0));
+      C.mixer.update(dt);
+      // clips play the body; gestures, pointing and head turns from the rig blend on top
+      const gw = this.gestures.reduce((m, g) => g.def.additive ? m : Math.max(m, g.w || 0), 0);
+      const clipCovers = (walking && C.walk) || (!walking && C.idle);
+      if (clipCovers && this.base !== 'sit' && this.base !== 'work') {
+        const arm = Math.max(gw, this.aim ? this.aim.g.w : 0), head = Math.max(this.lookW, gw * 0.6);
+        blend = { hips: 0, spine: gw * 0.6, chest: gw * 0.7, neck: head, head, lSh: arm, lEl: arm, rSh: arm, rEl: arm, lHip: 0, lKnee: 0, rHip: 0, rKnee: 0 };
+      }
+    }
     this.root.updateMatrixWorld(true);
     this.root.getWorldQuaternion(R.ri).invert();
     // hips height and sway follow the rig
     const hipOff = R.v.set(0, this.pose.hipY, this.pose.hipZ);
     const wpos = R.hipsRestWorld.clone().add(hipOff).applyMatrix4(this.root.matrixWorld);
     R.hips.parent.updateMatrixWorld(true);
-    R.hips.position.copy(R.hips.parent.worldToLocal(wpos));
+    if (!blend) R.hips.position.copy(R.hips.parent.worldToLocal(wpos));
     for (const e of R.list) {
       // target rotation relative to the character root = joint delta * bone rest
       e.joint.getWorldQuaternion(R.tq).premultiply(R.ri).multiply(e.rest);
       e.bone.parent.getWorldQuaternion(R.pq).premultiply(R.ri).invert();
-      e.bone.quaternion.copy(R.pq.multiply(R.tq));
+      const w = blend ? (blend[e.key] ?? 0) : 1;
+      if (w > 0.001) { R.pq.multiply(R.tq); if (w >= 0.999) e.bone.quaternion.copy(R.pq); else e.bone.quaternion.slerp(R.pq, w); }
       e.bone.updateMatrixWorld(true);
     }
   }
@@ -444,7 +470,7 @@ export class Character {
       j.rEl.rotation.x = lerp(j.rEl.rotation.x, -0.08, this.aim.g.w);
       j.rEl.rotation.z = lerp(j.rEl.rotation.z, 0, this.aim.g.w);
     }
-    if (this.retarget) this.applyRetarget();
+    if (this.retarget) this.applyRetarget(dt);
   }
 }
 

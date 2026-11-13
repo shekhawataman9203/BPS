@@ -65,11 +65,11 @@ async function boot() {
     const names = Object.keys(files);
     if (names.length) {
       const loader = new GLTFLoader(), cache = {};
-      const load = async f => (cache[f] ||= loader.loadAsync(files[f]).then(g => g.scene));
+      const load = async f => (cache[f] ||= loader.loadAsync(files[f]));
       const opFiles = names.filter(n => n.startsWith('operator'));
       let done = 0;
-      for (const c of Object.values(app.cast)) if (files[c.id + '.glb']) { c.attachModel(cloneSkinned(await load(c.id + '.glb'))); ui.setLoading(0.62 + 0.12 * (++done / names.length)); }
-      if (opFiles.length) for (const [i, o] of app.ops.entries()) o.attachModel(cloneSkinned(await load(opFiles[i % opFiles.length])));
+      for (const c of Object.values(app.cast)) if (files[c.id + '.glb']) { const g = await load(c.id + '.glb'); c.attachModel(cloneSkinned(g.scene), g.animations); ui.setLoading(0.62 + 0.12 * (++done / names.length)); }
+      if (opFiles.length) for (const [i, o] of app.ops.entries()) { const g = await load(opFiles[i % opFiles.length]); o.attachModel(cloneSkinned(g.scene), g.animations); }
     }
   } catch (e) { console.warn('People models could not be loaded; using built-in people.', e); }
   scene.traverse(o => { if (o.isMesh && o.material && o.material.transparent) o.castShadow = false; });

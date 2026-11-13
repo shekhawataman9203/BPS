@@ -20,9 +20,14 @@ const images = { __BPS_LOGO__: dataUri('assets/bps-go-logo.png', 'image/png'), _
 JSON.parse(data); // validate
 for (const [k, v] of Object.entries(images)) html = html.replaceAll(k, v);
 // people models: assets/people/<role id>.glb (ph, bps, prod, qual, dig, log) and operator*.glb; PEOPLE_DIR overrides the folder
-const peopleDir = process.env.PEOPLE_DIR || src('assets/people');
+// Also reads models/ (e.g. models/plant-head.glb). Friendly names map to role ids.
+const ALIAS = { 'plant-head': 'ph', 'planthead': 'ph', 'bps-lead': 'bps', 'production': 'prod', 'production-manager': 'prod', 'quality': 'qual', 'quality-manager': 'qual', 'digital': 'dig', 'digital-lead': 'dig', 'logistics': 'log', 'logistics-lead': 'log' };
+const peopleDirs = process.env.PEOPLE_DIR ? [process.env.PEOPLE_DIR] : [src('assets/people'), src('models')];
 const people = {};
-if (fs.existsSync(peopleDir)) for (const f of fs.readdirSync(peopleDir).sort()) if (/\.glb$/i.test(f)) people[f.toLowerCase()] = `data:model/gltf-binary;base64,${fs.readFileSync(path.join(peopleDir, f)).toString('base64')}`;
+for (const dir of peopleDirs) if (fs.existsSync(dir)) for (const f of fs.readdirSync(dir).sort()) if (/\.glb$/i.test(f)) {
+  const base = f.toLowerCase().replace(/\.glb$/, ''), id = ALIAS[base] || base;
+  people[id + '.glb'] = `data:model/gltf-binary;base64,${fs.readFileSync(path.join(dir, f)).toString('base64')}`;
+}
 console.log('people models:', Object.keys(people).join(', ') || 'none (procedural people)');
 html = html.replace('__PEOPLE__', () => JSON.stringify(people));
 html = html.replace('/*__CSS__*/', () => css)
