@@ -557,3 +557,16 @@ body.detail-open #panel, body.detail-open #panelTab { visibility: hidden; }
 .dt-motto em { font-style: normal; font-weight: 700; } .dt-motto b { font-weight: 500; color: var(--grey2); }
 .dt-list { margin: 0; padding-left: 18px; } .dt-list li { margin: 6px 0; color: #D5DAE0; }
 @media (max-width: 900px) { #detail { top: auto; left: 0; right: 0; bottom: var(--rail-h); width: 100%; height: 56vh; transform: translateY(calc(100% + var(--rail-h))); } }
+
+/* ---------------- full view of the big screen ---------------- */
+#screenView { position: fixed; z-index: 17; inset: var(--top-h) 0 var(--rail-h) 0; background: rgba(9, 12, 17, .94); display: flex; flex-direction: column; }
+body.detail-open #screenView { right: calc(var(--panel-w) + 32px); }
+body.screen-view #panel, body.screen-view #panelTab, body.screen-view #captions, body.screen-view #pins, body.screen-view #scenebar { visibility: hidden; }
+.sv-bar { display: flex; align-items: center; gap: 14px; padding: 10px 20px; }
+.sv-title { font-weight: 800; font-stretch: 110%; }
+.sv-hint { flex: 1; color: var(--grey2); font-size: 13.5px; }
+#svClose { background: none; border: 1px solid var(--line2); padding: 7px 12px; font-size: 13px; color: var(--grey2); }
+#svClose:hover { color: var(--white); border-color: var(--white); }
+#svHost { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 0 20px 16px; }
+.sv-canvas { max-width: 100%; max-height: 100%; width: auto; height: auto; aspect-ratio: 4096 / 1784; box-shadow: 0 24px 70px rgba(0, 0, 0, .5); background: #fff; }
+#btnScreen[aria-pressed="true"] { border-color: var(--red); }

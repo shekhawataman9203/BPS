@@ -319,11 +319,11 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover) {
     ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.font = `800 54px ${FONT}`;
     const words = pl.name.split(' '), mid = Math.ceil(words.length / 2), l1 = words.slice(0, mid).join(' '), l2 = words.slice(mid).join(' ');
     ctx.fillText(l1, x + pw / 2, py + 180); if (l2) ctx.fillText(l2, x + pw / 2, py + 240);
-    ctx.fillStyle = '#12161C'; ctx.font = `700 46px ${FONT}`; ctx.fillText(pl.driver, x + pw / 2, py + headH + 80);
-    ctx.textAlign = 'left'; ctx.font = `500 38px ${FONT}`; ctx.fillStyle = '#2a2f36';
-    let ty = py + headH + 160;
-    for (const it of pl.items) { const lines = wrap(ctx, it, pw - 110); lines.forEach((ln, li) => { if (li === 0) { ctx.beginPath(); ctx.arc(x + 46, ty - 12, 7, 0, Math.PI * 2); ctx.fill(); } ctx.fillText(ln, x + 70, ty); ty += 48; }); ty += 10; }
-    if (hov || on) { ctx.fillStyle = pl.color; ctx.font = `700 34px ${FONT}`; ctx.fillText('Click for details ›', x + 40, py + ph - 30); }
+    ctx.fillStyle = '#12161C'; ctx.font = `800 52px ${FONT}`; ctx.fillText(pl.driver, x + pw / 2, py + headH + 78);
+    ctx.textAlign = 'left'; ctx.font = `600 44px ${FONT}`; ctx.fillStyle = '#1d2228';
+    let ty = py + headH + 150;
+    for (const it of pl.items) { const lines = wrap(ctx, it, pw - 100); lines.forEach((ln, li) => { if (li === 0) { ctx.beginPath(); ctx.arc(x + 42, ty - 14, 8, 0, Math.PI * 2); ctx.fill(); } ctx.fillText(ln, x + 64, ty); ty += 54; }); ty += 8; }
+    if ((hov || on) && ty < py + ph - 60) { ctx.fillStyle = pl.color; ctx.font = `700 34px ${FONT}`; ctx.fillText('Click for details ›', x + 40, py + ph - 26); }
     hits.push({ type: 'house', id: pl.id, x, y: py, w: pw, h: ph }); L[pl.id] = { u: (x + pw / 2) / W, v: (py + ph / 2) / H };
   });
   // system boosters
@@ -384,8 +384,8 @@ function drawRoadmap(w, ctx, W, H, HH, p, L, hits, isHover) {
         hits.push({ type: 'group', id: g.id, x: x0, y, w: cols[0], h: gh }); L[g.id] = { u: (x0 + cols[0] / 2) / W, v: (y + gh / 2) / H };
       }
       ctx.fillStyle = on ? pl.light : hov ? '#e3eef8' : '#f2f2f2'; ctx.fillRect(cx[1], y, cols[1] - 4, rh - 4);
-      ctx.fillStyle = '#222'; ctx.font = `600 ${Math.min(32, rh * 0.42)}px ${FONT}`; ctx.textAlign = 'left'; ctx.fillText(fitLine(ctx, r.element, cols[1] - 30), cx[1] + 16, y + rh * 0.62);
-      const fs = Math.min(28, rh * 0.38);
+      ctx.fillStyle = '#222'; ctx.font = `700 ${Math.min(36, rh * 0.46)}px ${FONT}`; ctx.textAlign = 'left'; ctx.fillText(fitLine(ctx, r.element, cols[1] - 30), cx[1] + 16, y + rh * 0.62);
+      const fs = Math.min(33, rh * 0.43);
       r.q.forEach(([txt, done], qi) => {
         const qx = cx[2 + qi]; ctx.fillStyle = pl.color; ctx.globalAlpha = k * dim * (on ? 1 : 0.92); ctx.fillRect(qx, y, cols[2 + qi] - 4, rh - 4);
         ctx.fillStyle = '#ffffff'; ctx.font = `700 ${fs}px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText(fitLine(ctx, txt, cols[2 + qi] - 70), qx + cols[2 + qi] / 2 - 14, y + rh * 0.62);

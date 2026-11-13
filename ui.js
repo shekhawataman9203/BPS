@@ -57,6 +57,8 @@ export class UI {
     $('#btnExplore').onclick = () => this.toggleExplore();
     $('#btnAuto').onclick = () => this.toggleAutoplay();
     $('#btnPause').onclick = () => this.togglePause();
+    $('#btnScreen').onclick = () => this.toggleScreenView();
+    $('#svClose').onclick = () => this.toggleScreenView(false);
     $('#btnPresent').onclick = () => this.togglePresent();
     $('#btnHelp').onclick = () => this.toggleHelp();
     $('#btnBpsGo').onclick = () => this.roadmapOpen ? this.closeRoadmap() : this.openRoadmap();
@@ -92,7 +94,9 @@ export class UI {
       const d = this.app.director;
       if (!document.body.classList.contains('entered')) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.enter(false); } return; }
       const k = e.key;
+      if (k === 'Escape' && this.screenView && !this.detailOpen && !this.roadmapOpen) { this.toggleScreenView(false); return; }
       if (k === 'Escape' && this.detailOpen && !this.roadmapOpen) { this.closeDetail(); return; }
+      if ((k === 'v' || k === 'V') && !this.roadmapOpen) { this.toggleScreenView(); return; }
       if (k === 'Escape') { if (!$('#help').hidden) this.toggleHelp(false); else if (this.roadmapOpen) { if (this.rmFocus) this.zoomTo(null); else this.closeRoadmap(); } else if (this.explore) this.toggleExplore(false); return; }
       if (k === 'k' || k === 'K' || k === 'Pause') { e.preventDefault(); this.togglePause(); return; }
       if (k === 'b' || k === 'B') { this.roadmapOpen ? this.closeRoadmap() : this.openRoadmap(); return; }
@@ -130,6 +134,23 @@ export class UI {
       this.pausedTotal += now - this.pausedAt;
       for (const [key, t] of this.timers) { t.end = now + t.left; t.id = setTimeout(() => { this.timers.delete(key); t.fn(); }, t.left); }
     }
+  }
+  // the big screen's own 4K canvas, shown flat in the page: sharp at any size, still clickable
+  toggleScreenView(v = !this.screenView) {
+    const wall = this.app.entrance?.wall; if (!wall) return;
+    this.screenView = v; this.pressed('#btnScreen', v); document.body.classList.toggle('screen-view', v);
+    const host = $('#svHost'), cv = wall.ct.canvas, sec = $('#screenView');
+    if (v) {
+      sec.hidden = false; host.append(cv); cv.classList.add('sv-canvas');
+      if (!cv._svBound) {
+        cv._svBound = true;
+        const at = e => { const r = cv.getBoundingClientRect(); return wall.hitTest({ x: (e.clientX - r.left) / r.width, y: 1 - (e.clientY - r.top) / r.height }); };
+        cv.addEventListener('click', e => { const h = at(e); if (h) this.showDetail(h); });
+        cv.addEventListener('pointermove', e => { const h = at(e); wall.setHover(h); cv.style.cursor = h ? 'pointer' : ''; });
+        cv.addEventListener('pointerleave', () => wall.setHover(null));
+      }
+      this.closePanel();
+    } else { sec.hidden = true; cv.remove(); wall.setHover(null); }
   }
   toggleExplore(v = !this.explore) {
     this.explore = v; this.pressed('#btnExplore', v); document.body.classList.toggle('exploring', v);
@@ -193,7 +214,7 @@ export class UI {
 
   // ------------------------------------------------------------ rail / progress
   setChapter(i) {
-    this.chapter = i; this.closeDetail();
+    this.chapter = i; this.closeDetail(); if (this.screenView) this.toggleScreenView(false);
     document.querySelectorAll('.station').forEach(b => { const k = +b.dataset.i; b.classList.toggle('done', k < i); b.classList.toggle('current', k === i); b.setAttribute('aria-current', k === i ? 'step' : 'false'); });
     $('#hudChapter').textContent = i ? `${pad(i)} / ${pad(CHAPTERS.length - 1)}` : '';
     $('#hudTitle').textContent = CHAPTERS[i].title;

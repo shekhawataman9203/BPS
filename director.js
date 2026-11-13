@@ -9,7 +9,7 @@ export const SHOT = {
   g_doorClose: { pos: [2.6, 1.8, 39.4], target: [0, 2.8, 32], fov: 50 },
   in_entry: { pos: [3.4, 2.3, 17.2], target: [0, 1.9, 30], fov: 50 },
   in_greet: { pos: [4.2, 1.9, 29.6], target: [-0.6, 1.4, 25.4], fov: 46 },
-  k_wall: { pos: [3.4, 3.9, 28.2], target: [-8.7, 3.75, 23.6], fov: 50 },
+  k_wall: { pos: [1.7, 3.85, 27.4], target: [-8.7, 3.75, 23.6], fov: 50 },
   k_close: { pos: [-1.4, 3.7, 27.0], target: [-8.7, 3.7, 23.6], fov: 50 },
   k_team: { pos: [-4.3, 2.1, 28.0], target: [0.4, 1.3, 23.4], fov: 50 },
   in_both: { pos: [3.2, 3.0, 30.6], target: [-5.5, 2.8, 22.5], fov: 58 },

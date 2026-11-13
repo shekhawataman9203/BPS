@@ -41,6 +41,7 @@
     <button id="btnCC" aria-pressed="true" title="Subtitles (C)"><span class="lg">Subtitles</span><span class="sm">CC</span></button>
     <button id="btnRoles" aria-pressed="false" title="Show roles above people (R)"><span class="lg">Roles</span><span class="sm">Roles</span></button>
     <button id="btnExplore" aria-pressed="false" title="Free camera (F)"><span class="lg">Free camera</span><span class="sm">Orbit</span></button>
+    <button id="btnScreen" aria-pressed="false" title="Full view of the big screen (V)"><span class="lg">Screen</span><span class="sm">Screen</span></button>
     <button id="btnPause" aria-pressed="false" title="Pause animation (K)"><span class="lg">Pause</span><span class="sm">❚❚</span></button>
     <button id="btnAuto" aria-pressed="false" title="Advance chapters automatically (A)"><span class="lg">Autoplay</span><span class="sm">Auto</span></button>
     <button id="btnPresent" aria-pressed="false" title="Presentation mode (P)"><span class="lg">Present</span><span class="sm">Present</span></button>
@@ -57,6 +58,10 @@
 <div id="toast" role="status"></div>
 <button id="pauseBadge" aria-label="Resume animation"><span class="pb-ico" aria-hidden="true">❚❚</span>Paused<small>Press K or click to play</small></button>
 
+<section id="screenView" aria-label="Full view of the big screen" hidden>
+  <div class="sv-bar"><span class="sv-title">Big screen</span><span class="sv-hint">Click any element for details</span><button id="svClose" aria-label="Close the full view">Close <kbd>Esc</kbd></button></div>
+  <div id="svHost"></div>
+</section>
 <section id="roadmap" aria-label="BPS GO!+ roadmap" hidden>
   <div class="rm-bar">
     <div id="rmPills" class="rm-pills" role="group" aria-label="Zoom to a pillar"></div>
@@ -123,6 +128,7 @@
     <dt><kbd>←</kbd> <kbd>Page Up</kbd></dt><dd>Previous chapter</dd>
     <dt><kbd>1</kbd>–<kbd>6</kbd></dt><dd>Jump to a chapter</dd>
     <dt><kbd>K</kbd></dt><dd>Pause or play the animation</dd>
+    <dt><kbd>V</kbd></dt><dd>Full, sharp view of the big screen</dd>
     <dt><kbd>B</kbd></dt><dd>BPS GO!+ roadmap: click a block to zoom, <kbd>Esc</kbd> to zoom out</dd>
     <dt><kbd>S</kbd></dt><dd>Skip the current scene</dd>
     <dt><kbd>H</kbd></dt><dd>Show or hide the details panel</dd>
