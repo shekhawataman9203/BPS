@@ -316,8 +316,14 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
     ctx.fillText(l1, x + pw / 2, py + 180); if (l2) ctx.fillText(l2, x + pw / 2, py + 240);
     ctx.fillStyle = '#12161C'; ctx.font = `800 52px ${FONT}`; ctx.fillText(pl.driver, x + pw / 2, py + headH + 78);
     ctx.textAlign = 'left'; ctx.font = `600 44px ${FONT}`; ctx.fillStyle = '#1d2228';
-    let ty = py + headH + 150;
-    for (const it of pl.items) { const isNew = it.includes('**'), txt = it.replace(/\*\*/g, ''); ctx.fillStyle = isNew ? '#1E9E3C' : '#1d2228'; ctx.font = `${isNew ? 800 : 600} 44px ${FONT}`; const lines = wrap(ctx, txt, pw - 100); lines.forEach((ln, li) => { if (li === 0) { ctx.beginPath(); ctx.arc(x + 42, ty - 14, 8, 0, Math.PI * 2); ctx.fill(); } ctx.fillText(ln, x + 64, ty); ty += 54; }); ty += 8; }
+    // shrink the bullet text until all items fit in the pillar
+    let fs = 44;
+    const linesFor = size => pl.items.map(it => { const isNew = it.includes('**'); ctx.font = `${isNew ? 800 : 600} ${size}px ${FONT}`; return { isNew, lines: wrap(ctx, it.replace(/\*\*/g, ''), pw - 100) }; });
+    let blocks = linesFor(fs);
+    const height = (b, size) => b.reduce((acc, x) => acc + x.lines.length * size * 1.22 + 8, 0);
+    while (fs > 30 && py + headH + 150 - fs + height(blocks, fs) > py + ph - 24) { fs -= 2; blocks = linesFor(fs); }
+    let ty = py + headH + 150 - (44 - fs);
+    for (const bl of blocks) { ctx.fillStyle = bl.isNew ? '#1E9E3C' : '#1d2228'; ctx.font = `${bl.isNew ? 800 : 600} ${fs}px ${FONT}`; bl.lines.forEach((ln, li) => { if (li === 0) { ctx.beginPath(); ctx.arc(x + 42, ty - fs * 0.32, 8, 0, Math.PI * 2); ctx.fill(); } ctx.fillText(ln, x + 64, ty); ty += fs * 1.22; }); ty += 8; }
     if ((hov || on) && ty < py + ph - 60) { ctx.fillStyle = pl.color; ctx.font = `700 34px ${FONT}`; ctx.fillText('Click for details ›', x + 40, py + ph - 26); }
     hits.push({ type: ht, id: pl.id, x, y: py, w: pw, h: ph }); L[pl.id] = { u: (x + pw / 2) / W, v: (py + ph / 2) / H };
   });
