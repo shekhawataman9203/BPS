@@ -291,7 +291,10 @@ export class Character {
       // jacket skirt over the hips, open at the front
       const skirt = add(spine, geo('jskirt', () => new THREE.LatheGeometry([[0.172, -0.2], [0.166, -0.12], [0.152, -0.02], [0.142, 0.05]].map(([r, y]) => new THREE.Vector2(r, y)), 28, 0.32, Math.PI * 2 - 0.64)), mat(topCol, { rough: 0.82, extra: { side: THREE.DoubleSide } }), 0, 0, 0); skirt.scale.set(1.02, 1, 0.74);
       for (const sx of [-1, 1]) { const fl = add(spine, geo('flap', () => new THREE.BoxGeometry(0.075, 0.018, 0.006)), lapelM, sx * 0.1, -0.06, 0.094); fl.rotation.y = sx * 0.62; }
-      traps.scale.set(1.06, 1, 0.88);
+      chest.remove(traps);
+      for (const sx of [-1, 1]) {
+        const pad = add(chest, capsule(0.06, 0.15), top, sx * 0.118, 0.168, -0.004); pad.rotation.z = sx * 1.33; pad.scale.set(1, 1, 0.92);
+      }
     } else {
       // shirt collar and placket
       for (const sx of [-1, 1]) { const c = add(chest, geo('collar', () => new THREE.BoxGeometry(0.06, 0.03, 0.05)), shirt, sx * 0.04, 0.205, 0.04); c.rotation.set(-0.5, sx * 0.5, sx * -0.35); }
@@ -356,7 +359,7 @@ export class Character {
       cap.scale.set(0.95 * hk, 1.0 * hk, 1.06 * hk); cap.rotation.x = -0.28;
       const back = add(head, sphere(0.098), hairM, 0, 0.115 + hy, -0.03); back.scale.set(0.93 * hk, 0.98 * hk, 0.9 * hk);
       for (const sx of [-1, 1]) { const side = add(head, sphere(0.04), hairM, sx * 0.083 * hk, 0.135 + hy, -0.01); side.scale.set(0.5, 1.0, 1.3); }
-      if (o.hairStyle === 'full') { const top = add(head, sphere(0.06), hairM, 0, 0.19 + hy, 0.02); top.scale.set(1.45 * hk, 0.55, 1.5 * hk); }
+      if (o.hairStyle === 'full') { const top = add(head, sphere(0.06), hairM, 0, 0.176 + hy, 0.028); top.scale.set(1.4 * hk, 0.38, 1.35 * hk); }
       if (o.hairStyle === 'short') { const quiff = add(head, sphere(0.05), hairM, 0.02, 0.2 + hy, 0.05); quiff.scale.set(1.4, 0.45, 0.9); }
       if (o.hairStyle === 'long') {
         add(head, geo('hairLong', () => new RoundedBoxGeometry(0.2, 0.3, 0.07, 3, 0.03)), hairM, 0, 0.02, -0.07);
@@ -384,9 +387,11 @@ export class Character {
     const arm = (side) => {
       const sx = side === 'l' ? 1 : -1;
       const shJ = j[side + 'Sh'] = new THREE.Group(); shJ.position.set(0.19 * sx, 0.15, 0); chest.add(shJ);
-      const delt = add(shJ, sphere(0.054), top, -0.006 * sx, -0.012, 0); delt.scale.set(0.95, 1.1, 0.95);
+      const delt = o.jacket ? add(shJ, sphere(0.058), top, -0.004 * sx, -0.006, 0) : add(shJ, sphere(0.054), top, -0.006 * sx, -0.012, 0);
+      if (o.jacket) delt.scale.set(1, 0.9, 0.98); else delt.scale.set(0.95, 1.1, 0.95);
       // upper arm: sleeve over the top, skin below for short sleeves
-      if (longSleeve) add(shJ, taper(0.05, 0.044, 0.28), top, 0, -0.14, 0);
+      if (o.jacket) add(shJ, taper(0.057, 0.046, 0.29), top, 0, -0.145, 0);
+      else if (longSleeve) add(shJ, taper(0.05, 0.044, 0.28), top, 0, -0.14, 0);
       else { add(shJ, taper(0.053, 0.05, 0.15), top, 0, -0.07, 0); add(shJ, taper(0.047, 0.042, 0.16), skin, 0, -0.2, 0); }
       const el = j[side + 'El'] = new THREE.Group(); el.position.y = -0.29; shJ.add(el);
       add(el, sphere(0.044), longSleeve ? top : skin, 0, 0, 0);
