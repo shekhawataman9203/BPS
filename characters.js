@@ -107,6 +107,26 @@ export const GESTURES = {
   handOnChest: { fn: () => ({ rSh: [-0.35, 0, 0.42], rEl: [-1.95, 0, 0], head: [0.1, 0, 0] }) },
 };
 
+// Front surface of the torso in chest-local coordinates (chest joint origin), from the lathe profiles above.
+const RIBS = [[-0.01, 0.158], [0.06, 0.17], [0.12, 0.172], [0.17, 0.158], [0.2, 0.11], [0.215, 0.055]];
+const WAIST = [[-0.26, 0.138], [-0.18, 0.134], [-0.08, 0.142], [-0.01, 0.158]]; // spine profile shifted into chest space
+function profileR(y) {
+  const P = y < -0.01 ? WAIST : RIBS;
+  if (y <= P[0][0]) return P[0][1]; if (y >= P[P.length - 1][0]) return P[P.length - 1][1];
+  for (let i = 1; i < P.length; i++) if (y <= P[i][0]) { const [y0, r0] = P[i - 1], [y1, r1] = P[i]; return r0 + (r1 - r0) * (y - y0) / (y1 - y0); }
+  return P[P.length - 1][1];
+}
+function surfZ(x, y) { const r = profileR(y), rx = r * (y < -0.01 ? 1 : 1.06), rz = r * (y < -0.01 ? 0.66 : 0.68); const u = Math.min(0.98, Math.abs(x) / rx); return rz * Math.sqrt(1 - u * u); }
+// a flat 2D outline laid onto the front of the torso, lifted by `lift`
+function bodyPatch(pts, lift) {
+  const sh = new THREE.Shape(); sh.moveTo(pts[0][0], pts[0][1]); for (const [x, y] of pts.slice(1)) sh.lineTo(x, y); sh.closePath();
+  const g = new THREE.ShapeGeometry(sh, 8), p = g.attributes.position;
+  // subdivide by tessellating a few times so the patch follows the curve
+  const sub = g.toNonIndexed(); const q = sub.attributes.position;
+  for (let i = 0; i < q.count; i++) q.setZ(i, surfZ(q.getX(i), q.getY(i)) + lift);
+  sub.computeVertexNormals(); void p; return sub;
+}
+
 // ---------- sculpted head (used for the Plant Head and the BPS team) ----------
 const smoothstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 const G = (dx, dy) => Math.exp(-(dx * dx + dy * dy));
@@ -217,7 +237,7 @@ export class Character {
     const top = mat(topCol, { rough: 0.82 });
     const shirt = mat(o.jacket ? C.white : topCol, { rough: 0.8 });
     const bottom = mat(o.bottom, { rough: 0.78 });
-    const shoes = mat(o.shoes, { rough: 0.32, metal: 0.15 });
+    const shoes = o.jacket ? mat(0x0b0b0d, { rough: 0.16, metal: 0.35 }) : mat(o.shoes, { rough: 0.32, metal: 0.15 }); // polished black with a suit
     const sole = mat(0x1a1a1a, { rough: 0.9 });
     const hairM = mat(o.hair, { rough: 0.85 });
     const eyeW = mat(0xf1f0ea, { rough: 0.25 }), iris = mat(o.eyes ?? 0x3b2a1e, { rough: 0.2 }), pupil = mat(0x050505, { rough: 0.1 });
@@ -228,8 +248,10 @@ export class Character {
     // ---- hips / pelvis with belt ----
     const hips = j.hips = new THREE.Group(); hips.position.y = 0.94; this.root.add(hips);
     const pelvis = add(hips, lathe('pelvis', [[0.001, -0.1], [0.1, -0.085], [0.145, -0.03], [0.152, 0.03], [0.142, 0.08], [0.001, 0.08]]), bottom); pelvis.scale.set(1, 1, 0.7);
-    const belt = add(hips, taper(0.146, 0.148, 0.04, 22), mat(0x1b1714, { rough: 0.5 }), 0, 0.06, 0); belt.scale.set(1, 1, 0.72);
-    add(hips, geo('buckle', () => new THREE.BoxGeometry(0.04, 0.03, 0.01)), mat(0xb9c0c8, { rough: 0.2, metal: 0.9 }), 0, 0.06, 0.107);
+    if (!o.jacket) { // the jacket covers the belt
+      const belt = add(hips, taper(0.146, 0.148, 0.04, 22), mat(0x1b1714, { rough: 0.5 }), 0, 0.06, 0); belt.scale.set(1, 1, 0.72);
+      add(hips, geo('buckle', () => new THREE.BoxGeometry(0.04, 0.03, 0.01)), mat(0xb9c0c8, { rough: 0.2, metal: 0.9 }), 0, 0.06, 0.107);
+    }
     // ---- torso: waist to chest, then chest to shoulders ----
     const spine = j.spine = new THREE.Group(); spine.position.y = 0.06; hips.add(spine);
     const waist = add(spine, lathe('waist', [[0.001, -0.02], [0.138, -0.02], [0.134, 0.06], [0.142, 0.16], [0.158, 0.25], [0.001, 0.25]]), top); waist.scale.set(1, 1, 0.66);
@@ -238,11 +260,27 @@ export class Character {
     // trapezius / shoulder line
     const traps = add(chest, capsule(0.056, 0.22), top, 0, 0.152, -0.012); traps.rotation.z = Math.PI / 2; traps.scale.set(1, 1, 0.85);
     if (o.jacket) {
-      // open jacket: white shirt V, lapels, tie, buttons
-      const v = add(chest, geo('shirtV', () => { const s = new THREE.Shape(); s.moveTo(-0.055, 0.2); s.lineTo(0.055, 0.2); s.lineTo(0, -0.02); s.closePath(); return new THREE.ShapeGeometry(s); }), shirt, 0, 0.0, 0.118); v.rotation.x = -0.1;
-      for (const sx of [-1, 1]) { const lp = add(chest, geo('lapel', () => new THREE.BoxGeometry(0.022, 0.2, 0.012)), top, sx * 0.038, 0.09, 0.121); lp.rotation.set(-0.1, 0, sx * 0.32); }
-      if (o.tie) { const tie = add(chest, geo('tie', () => { const s = new THREE.Shape(); s.moveTo(-0.012, 0.18); s.lineTo(0.012, 0.18); s.lineTo(0.022, 0.0); s.lineTo(0, -0.03); s.lineTo(-0.022, 0.0); s.closePath(); return new THREE.ExtrudeGeometry(s, { depth: 0.008, bevelEnabled: false }); }), mat(o.tieColor ?? C.red, { rough: 0.45 }), 0, 0.0, 0.118); tie.rotation.x = -0.1; }
-      for (const yy of [-0.02, 0.05]) add(spine, sphere(0.008), mat(0x111111, { rough: 0.3 }), 0.028, yy + 0.2, 0.1);
+      // tailored suit: white shirt V with collar, notched lapels, tie, two buttons, pocket square, jacket skirt
+      const lapelM = mat(new THREE.Color(topCol).multiplyScalar(0.82).getHex(), { rough: 0.6 });
+      const shirtD = mat(C.white, { rough: 0.7, extra: { side: THREE.DoubleSide } });
+      add(chest, geo('shirtVee', () => bodyPatch([[-0.062, 0.196], [0.062, 0.196], [0.0, -0.105]], 0.003)), shirtD, 0, 0, 0);
+      for (const sx of [-1, 1]) {
+        add(chest, geo('lapel' + sx, () => bodyPatch([[sx * 0.062, 0.2], [sx * 0.086, 0.205], [sx * 0.078, 0.158], [sx * 0.094, 0.165], [sx * 0.112, 0.112], [sx * 0.03, -0.075], [0, -0.108]], 0.006)), lapelM, 0, 0, 0);
+        const col = add(chest, geo('scollar', () => new THREE.BoxGeometry(0.034, 0.022, 0.006)), shirtD, sx * 0.024, 0.192, surfZ(sx * 0.024, 0.192) + 0.01); col.rotation.set(-0.5, sx * 0.35, sx * 0.62);
+      }
+      if (o.tie) {
+        const tie = add(chest, geo('tie2', () => { const sh = new THREE.Shape(); sh.moveTo(-0.011, 0.185); sh.lineTo(0.011, 0.185); sh.lineTo(0.021, -0.03); sh.lineTo(0, -0.058); sh.lineTo(-0.021, -0.03); sh.closePath(); const g = new THREE.ExtrudeGeometry(sh, { depth: 0.006, bevelEnabled: false }); const p = g.attributes.position; for (let i = 0; i < p.count; i++) p.setZ(i, p.getZ(i) + surfZ(0, p.getY(i)) + 0.004); g.computeVertexNormals(); return g; }), mat(o.tieColor ?? C.red, { rough: 0.42 }), 0, 0, 0);
+        void tie; add(chest, sphere(0.014), mat(o.tieColor ?? C.red, { rough: 0.42 }), 0, 0.186, surfZ(0, 0.186) + 0.012).scale.set(1.1, 0.8, 0.7); // knot
+      }
+      // pocket square on the left breast
+      const ps = add(chest, geo('psq', () => { const sh = new THREE.Shape(); sh.moveTo(-0.018, 0); sh.lineTo(0.018, 0); sh.lineTo(0.012, 0.016); sh.lineTo(0, 0.008); sh.lineTo(-0.01, 0.018); sh.closePath(); return new THREE.ShapeGeometry(sh); }), shirtD, 0.098, 0.088, surfZ(0.098, 0.088) + 0.006); ps.rotation.y = 0.35;
+      add(chest, geo('pkt', () => new THREE.BoxGeometry(0.05, 0.004, 0.004)), lapelM, 0.098, 0.088, surfZ(0.098, 0.088) + 0.004).rotation.y = 0.35;
+      // buttons below the V
+      for (const yy of [-0.13, -0.19]) add(chest, sphere(0.0075), mat(0x111214, { rough: 0.25, metal: 0.2 }), 0.004, yy, surfZ(0, yy) + 0.006);
+      // jacket skirt over the hips, open at the front
+      const skirt = add(spine, geo('jskirt', () => new THREE.LatheGeometry([[0.172, -0.2], [0.166, -0.12], [0.152, -0.02], [0.142, 0.05]].map(([r, y]) => new THREE.Vector2(r, y)), 28, 0.32, Math.PI * 2 - 0.64)), mat(topCol, { rough: 0.82, extra: { side: THREE.DoubleSide } }), 0, 0, 0); skirt.scale.set(1.02, 1, 0.74);
+      for (const sx of [-1, 1]) { const fl = add(spine, geo('flap', () => new THREE.BoxGeometry(0.075, 0.018, 0.006)), lapelM, sx * 0.1, -0.06, 0.094); fl.rotation.y = sx * 0.62; }
+      traps.scale.set(1.06, 1, 0.88);
     } else {
       // shirt collar and placket
       for (const sx of [-1, 1]) { const c = add(chest, geo('collar', () => new THREE.BoxGeometry(0.06, 0.03, 0.05)), shirt, sx * 0.04, 0.205, 0.04); c.rotation.set(-0.5, sx * 0.5, sx * -0.35); }
@@ -260,8 +298,10 @@ export class Character {
     }
     // ---- neck and head ----
     const neck = j.neck = new THREE.Group(); neck.position.y = 0.21; chest.add(neck);
-    add(neck, taper(0.047, 0.054, 0.12), skin, 0, 0.03, 0.005);
-    const head = j.head = new THREE.Group(); head.position.y = 0.08; neck.add(head);
+    // shorter neck for the business cast; a shirt collar band wraps it
+    if (o.realFace) add(neck, taper(0.049, 0.055, 0.08), skin, 0, 0.012, 0.005); else add(neck, taper(0.047, 0.054, 0.12), skin, 0, 0.03, 0.005);
+    const head = j.head = new THREE.Group(); head.position.y = o.realFace ? 0.045 : 0.08; neck.add(head);
+    if (o.realFace && o.jacket) { const band = add(neck, taper(0.058, 0.064, 0.04, 20), mat(C.white, { rough: 0.7 }), 0, -0.012, 0.004); band.scale.set(1, 1, 0.95); }
     if (o.realFace) {
       // sculpted head with a painted skin texture (brows, lips, stubble, soft shading)
       const HC = new THREE.Vector3(0, 0.094, 0.006);
@@ -611,12 +651,12 @@ export function makeCast(data) {
   const roles = Object.fromEntries((data.cast || []).map(c => [c.id, c.role]));
   // All men, business dress as in the reference: suits and ties, Indian skin tones
   const defs = [
-    { realFace: true, id: 'ph', height: 1.03, skin: 0xF0C8A6, hair: 0x111111, hairStyle: 'full', jacket: 0x3a3d43, bottom: 0x3a3d43, shoes: 0x1a1412, tie: true, tieColor: 0x9e1b2a, glasses: false, lanyard: false, sleeves: 'long' },
-    { realFace: true, id: 'bps', height: 1.0, skin: 0xF3CDAE, hair: 0x111111, hairStyle: 'full', jacket: 0x1f2a44, bottom: 0x1f2a44, shoes: 0x1a1412, tie: true, tieColor: 0x8e1c2c, lanyard: false, sleeves: 'long' },
-    { realFace: true, id: 'prod', height: 1.01, skin: 0xEDC3A0, hair: 0x111111, hairStyle: 'full', jacket: 0x55595f, bottom: 0x55595f, shoes: 0x1a1412, tie: true, tieColor: 0x3c4658, lanyard: false, sleeves: 'long' },
-    { realFace: true, id: 'qual', height: 0.99, skin: 0xF2CBA9, hair: 0x111111, hairStyle: 'full', jacket: 0x4a4e55, bottom: 0x4a4e55, shoes: 0x1a1412, tie: true, tieColor: 0x2f3a4e, glasses: true, lanyard: false, sleeves: 'long' },
-    { realFace: true, id: 'dig', height: 1.02, skin: 0xF0C6A3, hair: 0x111111, hairStyle: 'full', jacket: 0x283246, bottom: 0x283246, shoes: 0x2a1a12, tie: true, tieColor: 0x5a6478, lanyard: false, sleeves: 'long' },
-    { realFace: true, id: 'log', height: 1.0, skin: 0xEEC5A2, hair: 0x111111, hairStyle: 'full', jacket: 0x3d4148, bottom: 0x3d4148, shoes: 0x1a1412, tie: true, tieColor: 0x7a1b26, lanyard: false, sleeves: 'long' },
+    { realFace: true, id: 'ph', height: 1.03, skin: 0xF0C8A6, hair: 0x111111, hairStyle: 'full', jacket: 0x2b2e33, bottom: 0x2b2e33, shoes: 0x1a1412, tie: true, tieColor: 0x8b1c2b, glasses: false, lanyard: false, sleeves: 'long' },
+    { realFace: true, id: 'bps', height: 1.0, skin: 0xF3CDAE, hair: 0x111111, hairStyle: 'full', jacket: 0x1c2536, bottom: 0x1c2536, shoes: 0x1a1412, tie: true, tieColor: 0x7c1a28, lanyard: false, sleeves: 'long' },
+    { realFace: true, id: 'prod', height: 1.01, skin: 0xEDC3A0, hair: 0x111111, hairStyle: 'full', jacket: 0x33373d, bottom: 0x33373d, shoes: 0x1a1412, tie: true, tieColor: 0x2c3a52, lanyard: false, sleeves: 'long' },
+    { realFace: true, id: 'qual', height: 0.99, skin: 0xF2CBA9, hair: 0x111111, hairStyle: 'full', jacket: 0x24304a, bottom: 0x24304a, shoes: 0x1a1412, tie: true, tieColor: 0x6b6f78, glasses: true, lanyard: false, sleeves: 'long' },
+    { realFace: true, id: 'dig', height: 1.02, skin: 0xF0C6A3, hair: 0x111111, hairStyle: 'full', jacket: 0x3b3f46, bottom: 0x3b3f46, shoes: 0x2a1a12, tie: true, tieColor: 0x1f3a5f, lanyard: false, sleeves: 'long' },
+    { realFace: true, id: 'log', height: 1.0, skin: 0xEEC5A2, hair: 0x111111, hairStyle: 'full', jacket: 0x1f2633, bottom: 0x1f2633, shoes: 0x1a1412, tie: true, tieColor: 0x5e1a24, lanyard: false, sleeves: 'long' },
   ];
   const cast = {};
   defs.forEach((d, i) => { cast[d.id] = new Character({ ...d, role: roles[d.id] || d.id, seed: i * 1.7 + 0.3 }); });
