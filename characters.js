@@ -132,7 +132,10 @@ function headPos(nx, ny, nz, out = new THREE.Vector3()) {
   const d = faceRelief(nx, ny, nz);
   const jaw = clamp((-ny - 0.12) / 0.8, 0, 1);                          // narrower jaw and neck below the cheeks
   const sx = 0.086 * (1 - 0.24 * jaw), sy = 0.112, sz = 0.1 * (nz < 0 ? 1.05 - 0.12 * jaw : 1 - 0.04 * jaw);
-  return out.set(nx * sx * (1 + d), ny * sy * (1 + d), nz * sz * (1 + d));
+  // the underside behind the chin is flattened so the head meets the neck
+  let yy = ny;
+  if (ny < -0.5) { const k = 1 - smoothstep(0.25, 0.75, nz); yy = ny + ((-0.5 - (-0.5 - ny) * 0.35) - ny) * k; }
+  return out.set(nx * sx * (1 + d), yy * sy * (1 + d), nz * sz * (1 + d));
 }
 function headPoint(nx, ny) { return headPos(nx, ny, Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny))); }
 function sculptedHead() {
@@ -149,7 +152,7 @@ function faceMaterial(o) {
   const W = 512, H = 256, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const ctx = cv.getContext('2d'), img = ctx.createImageData(W, H), px = img.data;
   const sk = new THREE.Color(o.skin), hr = new THREE.Color(o.hair ?? 0x15110e), lipC = sk.clone().multiplyScalar(0.72).lerp(new THREE.Color(0x9b4a45), 0.35), warm = new THREE.Color(0xc0605a);
-  const c = new THREE.Color();
+  const c = new THREE.Color(), cs = new THREE.Color();
   for (let y = 0; y < H; y++) {
     const theta = (y + 0.5) / H * Math.PI;
     for (let x = 0; x < W; x++) {
@@ -174,7 +177,8 @@ function faceMaterial(o) {
       const upperLip = G(nx / 0.2, (ny + 0.33) / 0.035) * front;
       const beard = o.beard ? Math.min(0.85, lower * 0.9 + upperLip * 0.75) : (lower * 0.16 + upperLip * 0.1);
       c.lerp(hr, beard * (0.75 + 0.25 * Math.sin(x * 7.3 + y * 5.1)));
-      const i = (y * W + x) * 4; px[i] = c.r * 255; px[i + 1] = c.g * 255; px[i + 2] = c.b * 255; px[i + 3] = 255;
+      cs.copy(c).convertLinearToSRGB();
+      const i = (y * W + x) * 4; px[i] = cs.r * 255; px[i + 1] = cs.g * 255; px[i + 2] = cs.b * 255; px[i + 3] = 255;
     }
   }
   ctx.putImageData(img, 0, 0);
@@ -260,18 +264,18 @@ export class Character {
     const head = j.head = new THREE.Group(); head.position.y = 0.08; neck.add(head);
     if (o.realFace) {
       // sculpted head with a painted skin texture (brows, lips, stubble, soft shading)
-      const HC = new THREE.Vector3(0, 0.112, 0.004);
+      const HC = new THREE.Vector3(0, 0.094, 0.006);
       add(head, sculptedHead(), faceMaterial(o), HC.x, HC.y, HC.z);
       for (const sx of [-1, 1]) {
-        const ear = add(head, sphere(0.021), skin, sx * 0.087, 0.112, -0.006); ear.scale.set(0.42, 1.25, 0.8);
+        const ear = add(head, sphere(0.021), skin, sx * 0.085, 0.094, -0.006); ear.scale.set(0.42, 1.25, 0.8);
         // eyes set into the sockets
         const c = headPoint(sx * 0.33, 0.14).multiplyScalar(0.935).add(HC);
         const dir = new THREE.Vector3(sx * 0.12, 0.02, 1).normalize();
         const ew = add(head, sphere(0.0128), eyeW, c.x, c.y, c.z); ew.scale.set(1.12, 0.82, 0.9);
         const ir = add(head, sphere(0.0068), iris, c.x + dir.x * 0.0105, c.y + dir.y * 0.0105, c.z + dir.z * 0.0105); ir.scale.set(1, 1, 0.45);
         const pu = add(head, sphere(0.0034), pupil, c.x + dir.x * 0.0118, c.y + dir.y * 0.0118, c.z + dir.z * 0.0118); pu.scale.set(1, 1, 0.4);
-        const lid = add(head, sphere(0.0138), skin, c.x, c.y + 0.0042, c.z + 0.0008); lid.scale.set(1.14, 0.55, 0.95);
-        const lidL = add(head, sphere(0.0132), skin, c.x, c.y - 0.0058, c.z - 0.0004); lidL.scale.set(1.1, 0.35, 0.92);
+        const lid = add(head, sphere(0.0138), skin, c.x, c.y + 0.0072, c.z - 0.0006); lid.scale.set(1.14, 0.42, 0.95);
+        const lidL = add(head, sphere(0.0132), skin, c.x, c.y - 0.0072, c.z - 0.0008); lidL.scale.set(1.1, 0.3, 0.92);
       }
     } else {
       const skull = add(head, sphere(0.1), skin, 0, 0.12, 0); skull.scale.set(0.9, 1.08, 1.0);
@@ -295,19 +299,20 @@ export class Character {
       const lower = add(head, geo('lipL', () => new RoundedBoxGeometry(0.03, 0.007, 0.01, 1, 0.003)), lip, 0, 0.053, 0.093); lower.rotation.x = -0.2;
       if (o.beard) { const bd = add(head, sphere(0.08), hairM, 0, 0.055, 0.02); bd.scale.set(1.0, 0.75, 0.98); }
     }
+    const hy = o.realFace ? -0.02 : 0, hk = o.realFace ? 0.95 : 1; // hair follows the sculpted head
     if (o.hairStyle !== 'bald' && !o.hardhat) {
-      const cap = add(head, geo('hairCap', () => new THREE.SphereGeometry(0.104, 26, 14, 0, Math.PI * 2, 0, Math.PI * 0.55)), hairM, 0, 0.13, -0.008);
-      cap.scale.set(0.95, 1.0, 1.06); cap.rotation.x = -0.28;
-      const back = add(head, sphere(0.098), hairM, 0, 0.115, -0.03); back.scale.set(0.93, 0.98, 0.9);
-      for (const sx of [-1, 1]) { const side = add(head, sphere(0.04), hairM, sx * 0.083, 0.135, -0.01); side.scale.set(0.5, 1.0, 1.3); }
-      if (o.hairStyle === 'short') { const quiff = add(head, sphere(0.05), hairM, 0.02, 0.2, 0.05); quiff.scale.set(1.4, 0.45, 0.9); }
+      const cap = add(head, geo('hairCap', () => new THREE.SphereGeometry(0.104, 26, 14, 0, Math.PI * 2, 0, Math.PI * 0.55)), hairM, 0, 0.13 + hy, -0.008);
+      cap.scale.set(0.95 * hk, 1.0 * hk, 1.06 * hk); cap.rotation.x = -0.28;
+      const back = add(head, sphere(0.098), hairM, 0, 0.115 + hy, -0.03); back.scale.set(0.93 * hk, 0.98 * hk, 0.9 * hk);
+      for (const sx of [-1, 1]) { const side = add(head, sphere(0.04), hairM, sx * 0.083 * hk, 0.135 + hy, -0.01); side.scale.set(0.5, 1.0, 1.3); }
+      if (o.hairStyle === 'short') { const quiff = add(head, sphere(0.05), hairM, 0.02, 0.2 + hy, 0.05); quiff.scale.set(1.4, 0.45, 0.9); }
       if (o.hairStyle === 'long') {
         add(head, geo('hairLong', () => new RoundedBoxGeometry(0.2, 0.3, 0.07, 3, 0.03)), hairM, 0, 0.02, -0.07);
         for (const sx of [-1, 1]) { const st = add(head, geo('strand', () => new RoundedBoxGeometry(0.035, 0.22, 0.06, 2, 0.015)), hairM, sx * 0.088, 0.05, -0.005); st.rotation.z = sx * 0.06; }
       }
       if (o.hairStyle === 'bun') add(head, sphere(0.048), hairM, 0, 0.19, -0.085);
     } else if (o.hairStyle === 'bald' && !o.hardhat) {
-      const ring = add(head, sphere(0.099), hairM, 0, 0.1, -0.022); ring.scale.set(0.95, 0.6, 0.92); // short sides
+      const ring = add(head, sphere(0.099), hairM, 0, 0.1 + hy, -0.022); ring.scale.set(0.95 * hk, 0.6 * hk, 0.92 * hk); // short sides
     }
     if (o.hardhat) {
       const hh = mat(o.hardhatColor ?? C.white, { rough: 0.3 });
