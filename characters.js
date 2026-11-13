@@ -107,6 +107,82 @@ export const GESTURES = {
   handOnChest: { fn: () => ({ rSh: [-0.35, 0, 0.42], rEl: [-1.95, 0, 0], head: [0.1, 0, 0] }) },
 };
 
+// ---------- sculpted head (used for the Plant Head and the BPS team) ----------
+const smoothstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const G = (dx, dy) => Math.exp(-(dx * dx + dy * dy));
+// radial offset of the face surface for a unit direction (front = +z)
+function faceRelief(nx, ny, nz) {
+  const front = smoothstep(0.15, 0.75, nz), ax = Math.abs(nx);
+  let d = 0;
+  d += 0.05 * G(nx / 0.55, (ny - 0.27) / 0.09) * front;                 // brow ridge
+  d -= 0.065 * G((ax - 0.33) / 0.15, (ny - 0.13) / 0.095) * front;       // eye sockets
+  d += 0.1 * G(nx / 0.085, (ny + 0.0) / 0.2) * front;                    // nose bridge
+  d += 0.14 * G(nx / 0.12, (ny + 0.19) / 0.09) * front;                  // nose tip
+  d += 0.04 * G((ax - 0.11) / 0.07, (ny + 0.23) / 0.055) * front;        // nostril wings
+  d += 0.038 * G((ax - 0.5) / 0.17, (ny + 0.04) / 0.13) * smoothstep(0, 0.6, nz); // cheekbones
+  d -= 0.025 * G((ax - 0.42) / 0.16, (ny + 0.3) / 0.12) * front;         // under the cheekbones
+  d += 0.035 * G(nx / 0.19, (ny + 0.39) / 0.045) * front;                // upper lip
+  d -= 0.018 * G(nx / 0.21, (ny + 0.445) / 0.02) * front;                // mouth line
+  d += 0.03 * G(nx / 0.16, (ny + 0.5) / 0.045) * front;                  // lower lip
+  d += 0.055 * G(nx / 0.22, (ny + 0.72) / 0.12) * front;                 // chin
+  d -= 0.03 * G((ax - 0.86) / 0.2, (ny - 0.22) / 0.25);                  // temples
+  return d;
+}
+function headPos(nx, ny, nz, out = new THREE.Vector3()) {
+  const d = faceRelief(nx, ny, nz);
+  const jaw = clamp((-ny - 0.12) / 0.8, 0, 1);                          // narrower jaw and neck below the cheeks
+  const sx = 0.086 * (1 - 0.24 * jaw), sy = 0.112, sz = 0.1 * (nz < 0 ? 1.05 - 0.12 * jaw : 1 - 0.04 * jaw);
+  return out.set(nx * sx * (1 + d), ny * sy * (1 + d), nz * sz * (1 + d));
+}
+function headPoint(nx, ny) { return headPos(nx, ny, Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny))); }
+function sculptedHead() {
+  return geo('sculptedHead', () => {
+    const g = new THREE.SphereGeometry(1, 80, 60), p = g.attributes.position, v = new THREE.Vector3();
+    for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).normalize(); headPos(v.x, v.y, v.z, v); p.setXYZ(i, v.x, v.y, v.z); }
+    g.computeVertexNormals(); return g;
+  });
+}
+const faceMats = new Map();
+function faceMaterial(o) {
+  const key = [o.skin, o.hair, !!o.beard].join('|');
+  if (faceMats.has(key)) return faceMats.get(key);
+  const W = 512, H = 256, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d'), img = ctx.createImageData(W, H), px = img.data;
+  const sk = new THREE.Color(o.skin), hr = new THREE.Color(o.hair ?? 0x15110e), lipC = sk.clone().multiplyScalar(0.72).lerp(new THREE.Color(0x9b4a45), 0.35), warm = new THREE.Color(0xc0605a);
+  const c = new THREE.Color();
+  for (let y = 0; y < H; y++) {
+    const theta = (y + 0.5) / H * Math.PI;
+    for (let x = 0; x < W; x++) {
+      const phi = (x + 0.5) / W * Math.PI * 2;
+      const nx = -Math.cos(phi) * Math.sin(theta), ny = Math.cos(theta), nz = Math.sin(phi) * Math.sin(theta);
+      const front = smoothstep(0.15, 0.75, nz), ax = Math.abs(nx);
+      c.copy(sk);
+      // soft variation
+      const n = Math.sin(x * 0.9) * Math.sin(y * 1.3) * 0.012; c.offsetHSL(0, 0, n);
+      c.lerp(warm, 0.1 * G((ax - 0.45) / 0.2, (ny + 0.12) / 0.15) * front);                 // cheeks
+      c.multiplyScalar(1 - 0.14 * G((ax - 0.33) / 0.17, (ny - 0.12) / 0.08) * front);       // eye shadow
+      c.multiplyScalar(1 - 0.08 * G((ax - 0.12) / 0.06, (ny + 0.25) / 0.04) * front);       // nostrils
+      const lips = Math.max(G(nx / 0.16, (ny + 0.395) / 0.03), G(nx / 0.14, (ny + 0.49) / 0.035)) * front;
+      c.lerp(lipC, Math.min(1, lips * 1.1));
+      c.multiplyScalar(1 - 0.35 * G(nx / 0.17, (ny + 0.445) / 0.012) * front);              // mouth line
+      // eyebrows: an arch over each eye
+      const by = 0.255 + 0.03 * Math.cos((ax - 0.33) / 0.16 * 1.2);
+      const brow = G((ax - 0.34) / 0.15, (ny - by) / 0.028) * front;
+      c.lerp(hr, Math.min(0.9, brow * 1.3));
+      // stubble or beard on the lower face
+      const lower = smoothstep(-0.25, -0.5, ny) * smoothstep(-0.05, 0.35, nz) * (1 - Math.min(1, lips * 2));
+      const upperLip = G(nx / 0.2, (ny + 0.33) / 0.035) * front;
+      const beard = o.beard ? Math.min(0.85, lower * 0.9 + upperLip * 0.75) : (lower * 0.16 + upperLip * 0.1);
+      c.lerp(hr, beard * (0.75 + 0.25 * Math.sin(x * 7.3 + y * 5.1)));
+      const i = (y * W + x) * 4; px[i] = c.r * 255; px[i + 1] = c.g * 255; px[i + 2] = c.b * 255; px[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const m = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.52, metalness: 0 });
+  faceMats.set(key, m); return m;
+}
+
 const smooth = x => x * x * (3 - 2 * x);
 
 export class Character {
@@ -182,26 +258,43 @@ export class Character {
     const neck = j.neck = new THREE.Group(); neck.position.y = 0.21; chest.add(neck);
     add(neck, taper(0.047, 0.054, 0.12), skin, 0, 0.03, 0.005);
     const head = j.head = new THREE.Group(); head.position.y = 0.08; neck.add(head);
-    const skull = add(head, sphere(0.1), skin, 0, 0.12, 0); skull.scale.set(0.9, 1.08, 1.0);
-    const jaw = add(head, sphere(0.078), skin, 0, 0.06, 0.022); jaw.scale.set(0.98, 0.82, 0.98);
-    const chin = add(head, sphere(0.03), skin, 0, 0.03, 0.074); chin.scale.set(1.2, 0.8, 0.8);
-    for (const sx of [-1, 1]) {
-      const cheek = add(head, sphere(0.034), skin, sx * 0.048, 0.085, 0.066); cheek.scale.set(1, 0.9, 0.7);
-      const ear = add(head, sphere(0.022), skin, sx * 0.09, 0.11, -0.005); ear.scale.set(0.45, 1.25, 0.85);
-      // eyes: white, iris, pupil
-      const ex = sx * 0.033;
-      const ew = add(head, sphere(0.0155), eyeW, ex, 0.123, 0.081); ew.scale.set(1.15, 0.85, 0.75);
-      add(head, sphere(0.0085), iris, ex, 0.123, 0.0915);
-      add(head, sphere(0.0042), pupil, ex, 0.123, 0.0965);
-      const lid = add(head, sphere(0.0165), skin, ex, 0.128, 0.079); lid.scale.set(1.18, 0.5, 0.8); // upper eyelid
-      const brow = add(head, geo('brow', () => new RoundedBoxGeometry(0.034, 0.008, 0.01, 1, 0.003)), hairM, ex, 0.146, 0.091); brow.rotation.z = -sx * 0.12;
+    if (o.realFace) {
+      // sculpted head with a painted skin texture (brows, lips, stubble, soft shading)
+      const HC = new THREE.Vector3(0, 0.112, 0.004);
+      add(head, sculptedHead(), faceMaterial(o), HC.x, HC.y, HC.z);
+      for (const sx of [-1, 1]) {
+        const ear = add(head, sphere(0.021), skin, sx * 0.087, 0.112, -0.006); ear.scale.set(0.42, 1.25, 0.8);
+        // eyes set into the sockets
+        const c = headPoint(sx * 0.33, 0.14).multiplyScalar(0.935).add(HC);
+        const dir = new THREE.Vector3(sx * 0.12, 0.02, 1).normalize();
+        const ew = add(head, sphere(0.0128), eyeW, c.x, c.y, c.z); ew.scale.set(1.12, 0.82, 0.9);
+        const ir = add(head, sphere(0.0068), iris, c.x + dir.x * 0.0105, c.y + dir.y * 0.0105, c.z + dir.z * 0.0105); ir.scale.set(1, 1, 0.45);
+        const pu = add(head, sphere(0.0034), pupil, c.x + dir.x * 0.0118, c.y + dir.y * 0.0118, c.z + dir.z * 0.0118); pu.scale.set(1, 1, 0.4);
+        const lid = add(head, sphere(0.0138), skin, c.x, c.y + 0.0042, c.z + 0.0008); lid.scale.set(1.14, 0.55, 0.95);
+        const lidL = add(head, sphere(0.0132), skin, c.x, c.y - 0.0058, c.z - 0.0004); lidL.scale.set(1.1, 0.35, 0.92);
+      }
+    } else {
+      const skull = add(head, sphere(0.1), skin, 0, 0.12, 0); skull.scale.set(0.9, 1.08, 1.0);
+      const jaw = add(head, sphere(0.078), skin, 0, 0.06, 0.022); jaw.scale.set(0.98, 0.82, 0.98);
+      const chin = add(head, sphere(0.03), skin, 0, 0.03, 0.074); chin.scale.set(1.2, 0.8, 0.8);
+      for (const sx of [-1, 1]) {
+        const cheek = add(head, sphere(0.034), skin, sx * 0.048, 0.085, 0.066); cheek.scale.set(1, 0.9, 0.7);
+        const ear = add(head, sphere(0.022), skin, sx * 0.09, 0.11, -0.005); ear.scale.set(0.45, 1.25, 0.85);
+        // eyes: white, iris, pupil
+        const ex = sx * 0.033;
+        const ew = add(head, sphere(0.0155), eyeW, ex, 0.123, 0.081); ew.scale.set(1.15, 0.85, 0.75);
+        add(head, sphere(0.0085), iris, ex, 0.123, 0.0915);
+        add(head, sphere(0.0042), pupil, ex, 0.123, 0.0965);
+        const lid = add(head, sphere(0.0165), skin, ex, 0.128, 0.079); lid.scale.set(1.18, 0.5, 0.8); // upper eyelid
+        const brow = add(head, geo('brow', () => new RoundedBoxGeometry(0.034, 0.008, 0.01, 1, 0.003)), hairM, ex, 0.146, 0.091); brow.rotation.z = -sx * 0.12;
+      }
+      const nose = add(head, geo('nose', () => { const g = new THREE.ConeGeometry(0.016, 0.05, 4); g.rotateX(-Math.PI / 2 + 0.35); return g; }), skin, 0, 0.1, 0.098);
+      nose.rotation.z = Math.PI / 4;
+      add(head, sphere(0.011), skin, 0, 0.088, 0.105).scale.set(1.25, 0.8, 0.9); // nose tip
+      const mouth = add(head, geo('lips', () => new RoundedBoxGeometry(0.036, 0.009, 0.01, 1, 0.004)), lip, 0, 0.061, 0.095); mouth.rotation.x = -0.1;
+      const lower = add(head, geo('lipL', () => new RoundedBoxGeometry(0.03, 0.007, 0.01, 1, 0.003)), lip, 0, 0.053, 0.093); lower.rotation.x = -0.2;
+      if (o.beard) { const bd = add(head, sphere(0.08), hairM, 0, 0.055, 0.02); bd.scale.set(1.0, 0.75, 0.98); }
     }
-    const nose = add(head, geo('nose', () => { const g = new THREE.ConeGeometry(0.016, 0.05, 4); g.rotateX(-Math.PI / 2 + 0.35); return g; }), skin, 0, 0.1, 0.098);
-    nose.rotation.z = Math.PI / 4;
-    add(head, sphere(0.011), skin, 0, 0.088, 0.105).scale.set(1.25, 0.8, 0.9); // nose tip
-    const mouth = add(head, geo('lips', () => new RoundedBoxGeometry(0.036, 0.009, 0.01, 1, 0.004)), lip, 0, 0.061, 0.095); mouth.rotation.x = -0.1;
-    const lower = add(head, geo('lipL', () => new RoundedBoxGeometry(0.03, 0.007, 0.01, 1, 0.003)), lip, 0, 0.053, 0.093); lower.rotation.x = -0.2;
-    if (o.beard) { const bd = add(head, sphere(0.08), hairM, 0, 0.055, 0.02); bd.scale.set(1.0, 0.75, 0.98); }
     if (o.hairStyle !== 'bald' && !o.hardhat) {
       const cap = add(head, geo('hairCap', () => new THREE.SphereGeometry(0.104, 26, 14, 0, Math.PI * 2, 0, Math.PI * 0.55)), hairM, 0, 0.13, -0.008);
       cap.scale.set(0.95, 1.0, 1.06); cap.rotation.x = -0.28;
@@ -512,12 +605,12 @@ export function makeCast(data) {
   const roles = Object.fromEntries((data.cast || []).map(c => [c.id, c.role]));
   // All men, business dress as in the reference: suits and ties, Indian skin tones
   const defs = [
-    { id: 'ph', height: 1.03, skin: 0xB07A58, hair: 0x8f8b87, hairStyle: 'short', jacket: 0x3a3d43, bottom: 0x3a3d43, shoes: 0x1a1412, tie: true, tieColor: 0x9e1b2a, glasses: false, lanyard: false, sleeves: 'long' },
-    { id: 'bps', height: 1.0, skin: 0xA87554, hair: 0x141110, hairStyle: 'short', jacket: 0x1f2a44, bottom: 0x1f2a44, shoes: 0x1a1412, tie: true, tieColor: 0x8e1c2c, lanyard: false, sleeves: 'long' },
-    { id: 'prod', height: 1.01, skin: 0x8D5B3F, hair: 0x15110e, hairStyle: 'short', jacket: 0x55595f, bottom: 0x55595f, shoes: 0x1a1412, tie: true, tieColor: 0x3c4658, lanyard: false, sleeves: 'long', beard: true },
-    { id: 'qual', height: 0.99, skin: 0xC08A68, hair: 0x1a1512, hairStyle: 'short', jacket: 0x4a4e55, bottom: 0x4a4e55, shoes: 0x1a1412, tie: true, tieColor: 0x2f3a4e, glasses: true, lanyard: false, sleeves: 'long' },
-    { id: 'dig', height: 1.02, skin: 0xB98466, hair: 0x141110, hairStyle: 'short', jacket: 0x283246, bottom: 0x283246, shoes: 0x2a1a12, tie: true, tieColor: 0x5a6478, lanyard: false, sleeves: 'long' },
-    { id: 'log', height: 1.0, skin: 0x9A6A4E, hair: 0x0f0c0a, hairStyle: 'bald', jacket: 0x3d4148, bottom: 0x3d4148, shoes: 0x1a1412, tie: true, tieColor: 0x7a1b26, lanyard: false, sleeves: 'long', beard: true },
+    { realFace: true, id: 'ph', height: 1.03, skin: 0xB07A58, hair: 0x8f8b87, hairStyle: 'short', jacket: 0x3a3d43, bottom: 0x3a3d43, shoes: 0x1a1412, tie: true, tieColor: 0x9e1b2a, glasses: false, lanyard: false, sleeves: 'long' },
+    { realFace: true, id: 'bps', height: 1.0, skin: 0xA87554, hair: 0x141110, hairStyle: 'short', jacket: 0x1f2a44, bottom: 0x1f2a44, shoes: 0x1a1412, tie: true, tieColor: 0x8e1c2c, lanyard: false, sleeves: 'long' },
+    { realFace: true, id: 'prod', height: 1.01, skin: 0x8D5B3F, hair: 0x15110e, hairStyle: 'short', jacket: 0x55595f, bottom: 0x55595f, shoes: 0x1a1412, tie: true, tieColor: 0x3c4658, lanyard: false, sleeves: 'long', beard: true },
+    { realFace: true, id: 'qual', height: 0.99, skin: 0xC08A68, hair: 0x1a1512, hairStyle: 'short', jacket: 0x4a4e55, bottom: 0x4a4e55, shoes: 0x1a1412, tie: true, tieColor: 0x2f3a4e, glasses: true, lanyard: false, sleeves: 'long' },
+    { realFace: true, id: 'dig', height: 1.02, skin: 0xB98466, hair: 0x141110, hairStyle: 'short', jacket: 0x283246, bottom: 0x283246, shoes: 0x2a1a12, tie: true, tieColor: 0x5a6478, lanyard: false, sleeves: 'long' },
+    { realFace: true, id: 'log', height: 1.0, skin: 0x9A6A4E, hair: 0x0f0c0a, hairStyle: 'bald', jacket: 0x3d4148, bottom: 0x3d4148, shoes: 0x1a1412, tie: true, tieColor: 0x7a1b26, lanyard: false, sleeves: 'long', beard: true },
   ];
   const cast = {};
   defs.forEach((d, i) => { cast[d.id] = new Character({ ...d, role: roles[d.id] || d.id, seed: i * 1.7 + 0.3 }); });
