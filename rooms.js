@@ -161,7 +161,8 @@ function wrap(ctx, text, maxW) {
 class KpiWall {
   constructor(data, logoImg) {
     this.data = data; this.logoImg = logoImg; this.p = 1; this.animating = false;
-    this.hl = { pillar: null, row: null }; this.layouts = { house: {}, roadmap: {}, kpi: {}, house27: {} }; this.mode = 'kpi'; this.hits = []; this.hover = null;
+    this.hl = { pillar: null, row: null }; this.layouts = { house: {}, roadmap: {}, kpi: {}, house27: {} }; this.mode = 'kpi';
+    this.h27 = { drop: 1, dropT: 1, rev: [1, 1, 1, 1], shown: 4 }; this.hits = []; this.hover = null;
     this.ct = new CanvasTex(TEX_W, TEX_H, (ctx, W, H) => this.draw(ctx, W, H));
     this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(KPI_WALL.w, KPI_WALL.h), new THREE.MeshBasicMaterial({ map: this.ct.tex, toneMapped: false }));
     this.mesh.userData.kpiWall = true;
@@ -174,7 +175,22 @@ class KpiWall {
   setMode(m) { if (m === this.mode) return; this.mode = m; this.hl = { pillar: null, row: null }; this.replay(); this.ct.redraw(); this.onMode?.(m); }
   highlight(pillar = null, row = null) { this.hl = { pillar, row }; this.ct.redraw(); }
   setHover(h) { const k = h ? h.type + h.id : null; if (k === this.hoverKey) return; this.hoverKey = k; this.hover = h; this.ct.redraw(); }
-  update(dt) { if (!this.animating) return; this.p = Math.min(1, this.p + dt / 2.2); this.ct.redraw(); if (this.p >= 1) this.animating = false; }
+  // 2027 house: dropIn = house visible (drops from the top), shown = how many pillars have their content
+  set27(dropIn, shown, snap = false) {
+    const r = this.h27; r.dropT = dropIn ? 1 : 0; r.shown = shown;
+    if (snap) { r.drop = r.dropT; r.rev = r.rev.map((_, i) => (i < shown ? 1 : 0)); }
+    this.ct.redraw();
+  }
+  update(dt) {
+    let dirty = false;
+    if (this.animating) { this.p = Math.min(1, this.p + dt / 2.2); dirty = true; if (this.p >= 1) this.animating = false; }
+    if (this.mode === 'house27') {
+      const r = this.h27;
+      if (r.drop !== r.dropT) { r.drop = r.dropT > r.drop ? Math.min(r.dropT, r.drop + dt / 1.3) : Math.max(r.dropT, r.drop - dt / 0.6); dirty = true; }
+      r.rev = r.rev.map((v, i) => { const t = i < r.shown ? 1 : 0; if (v === t) return v; dirty = true; return t > v ? Math.min(1, v + dt / 0.9) : 0; });
+    }
+    if (dirty) this.ct.redraw();
+  }
   // world position of a spot on the screen, u,v in 0..1 from top-left
   spot(u, v) { this.mesh.updateMatrixWorld(true); return this.mesh.localToWorld(V((u - 0.5) * KPI_WALL.w, (0.5 - v) * KPI_WALL.h, 0.05)); }
   rowSpot(id) { const l = this.layout[id]; return l ? this.spot(l.u, l.v) : this.spot(0.5, 0.5); }
@@ -291,7 +307,18 @@ function icon(ctx, kind, cx, cy, r, col) {
 function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht = 'house') {
   const hl = w.hl, isH = (t, id) => isHover(ht, id);
   const x0 = 520, x1 = W - 520, top = HH + 40;
-  const k = i => clamp(p * 1.6 - i * 0.12, 0, 1);
+  const is27 = ht === 'house27', R = w.h27;
+  const dk = is27 ? ease.out(R.drop) : 1;
+  const k = i => (is27 ? 1 : clamp(p * 1.6 - i * 0.12, 0, 1));
+  if (is27 && dk < 1) {
+    // blank screen first: BPS GO!+ 2027
+    ctx.globalAlpha = 1 - dk;
+    if (w.logoImg && w.logoImg.complete && w.logoImg.naturalWidth) { const lh = 300, lw = w.logoImg.naturalWidth * lh / w.logoImg.naturalHeight; ctx.drawImage(w.logoImg, W / 2 - lw / 2, H * 0.3, lw, lh); }
+    ctx.fillStyle = '#0A6EBD'; ctx.font = `800 240px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText('2027', W / 2, H * 0.3 + 560); ctx.textAlign = 'left';
+    ctx.globalAlpha = 1;
+    if (dk <= 0.001) return;
+  }
+  ctx.save(); ctx.translate(0, -(1 - dk) * H * 0.9);
   const dim = id => (hl.pillar && hl.pillar !== id ? 0.3 : 1);
   // roof
   ctx.globalAlpha = k(0) * (hl.pillar && hl.pillar !== 'h-house' ? 0.45 : 1);
@@ -314,7 +341,13 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
     ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.font = `800 54px ${FONT}`;
     const words = pl.name.split(' '), mid = Math.ceil(words.length / 2), l1 = words.slice(0, mid).join(' '), l2 = words.slice(mid).join(' ');
     ctx.fillText(l1, x + pw / 2, py + 180); if (l2) ctx.fillText(l2, x + pw / 2, py + 240);
-    ctx.fillStyle = '#12161C'; ctx.font = `800 52px ${FONT}`; ctx.fillText(pl.driver, x + pw / 2, py + headH + 78);
+    // pillar content: in the 2027 house it slides in from the right when revealed
+    const rk = is27 ? ease.out(R.rev[i] ?? 1) : 1;
+    hits.push({ type: ht, id: pl.id, x, y: py, w: pw, h: ph }); L[pl.id] = { u: (x + pw / 2) / W, v: (py + ph / 2) / H };
+    ctx.textAlign = 'left';
+    if (rk <= 0.001) return;
+    ctx.save(); ctx.beginPath(); ctx.rect(x + 4, py + headH, pw - 8, ph - headH - 4); ctx.clip(); ctx.translate((1 - rk) * pw, 0); ctx.globalAlpha *= rk;
+    ctx.fillStyle = '#12161C'; ctx.font = `800 52px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText(pl.driver, x + pw / 2, py + headH + 78);
     ctx.textAlign = 'left'; ctx.font = `600 44px ${FONT}`; ctx.fillStyle = '#1d2228';
     // shrink the bullet text until all items fit in the pillar
     let fs = 44;
@@ -325,7 +358,7 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
     let ty = py + headH + 150 - (44 - fs);
     for (const bl of blocks) { ctx.fillStyle = bl.isNew ? '#1E9E3C' : '#1d2228'; ctx.font = `${bl.isNew ? 800 : 600} ${fs}px ${FONT}`; bl.lines.forEach((ln, li) => { if (li === 0) { ctx.beginPath(); ctx.arc(x + 42, ty - fs * 0.32, 8, 0, Math.PI * 2); ctx.fill(); } ctx.fillText(ln, x + 64, ty); ty += fs * 1.22; }); ty += 8; }
     if ((hov || on) && ty < py + ph - 60) { ctx.fillStyle = pl.color; ctx.font = `700 34px ${FONT}`; ctx.fillText('Click for details ›', x + 40, py + ph - 26); }
-    hits.push({ type: ht, id: pl.id, x, y: py, w: pw, h: ph }); L[pl.id] = { u: (x + pw / 2) / W, v: (py + ph / 2) / H };
+    ctx.restore();
   });
   // system boosters
   const by = py + ph + 36, bh = 250;
@@ -352,6 +385,7 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
   ctx.fillStyle = '#18A8E0'; ctx.fillRect(0, H - 150, W, 150);
   ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; const fs = fitText(ctx, h.statement, W - 200, 66, 600); ctx.font = `600 ${fs}px ${FONT}`; ctx.fillText(h.statement, W / 2, H - 52); ctx.textAlign = 'left';
   ctx.globalAlpha = 1;
+  ctx.restore();
 }
 // ---------- Roadmap 2026 (rows grouped by pillar, quarters with ticks) ----------
 function drawRoadmap(w, ctx, W, H, HH, p, L, hits, isHover) {

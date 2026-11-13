@@ -583,3 +583,6 @@ body.screen-view #panel, body.screen-view #panelTab, body.screen-view #captions,
 .dt-list li.new27 { color: #7FE08F; font-weight: 700; }
 .tag27 { margin-left: 8px; font-size: 11px; font-weight: 700; padding: 1px 6px; border: 1px solid #7FE08F; color: #7FE08F; border-radius: 2px; vertical-align: 1px; }
 .dt-list.was26 li { color: var(--grey); }
+
+#stepHint { position: fixed; z-index: 13; right: 24px; bottom: calc(var(--rail-h) + var(--lb) + 16px); margin: 0; padding: 7px 12px; font-size: 13px; color: var(--grey2); background: rgba(10, 13, 18, .82); border: 1px solid var(--line2); border-left: 3px solid #29d3ff; opacity: 0; transform: translateY(6px); transition: opacity .3s, transform .3s; pointer-events: none; }
+#stepHint.on { opacity: 1; transform: none; }

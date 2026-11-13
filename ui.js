@@ -194,6 +194,8 @@ export class UI {
     if (!text) { el.classList.remove('on'); this.cancel('year'); return; }
     $('h2', el).textContent = text; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
   }
+  // 'Press → for the next step' hint in stepped chapters
+  stepHint(on) { const el = $('#stepHint'); if (el) el.classList.toggle('on', !!on); const b = $('#btnSkip'); if (b) b.firstChild.textContent = on ? 'Next step ' : 'Skip scene '; }
   hideTitleCard() { $('#titlecard').classList.remove('on'); this.cancel('tc'); }
   bigTitle(text, { hold } = {}) {
     const b = $('#bigtitle'); b.innerHTML = '';

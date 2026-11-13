@@ -43,7 +43,7 @@ export const CHAPTERS = [
   { id: 'flashback', title: '2026 Flashback', sub: 'Through the main gate, between NHA and VE Pump', loc: 'gate', dur: 24 },
   { id: 'house', title: 'House of BPS GO!+', sub: 'Where 2026 started: one operating system', loc: 'wall', dur: 30 },
   { id: 'kpis', title: 'KPI wall', sub: 'Every element of the house, target against YTD', loc: 'wall', dur: 30 },
-  { id: 'future', title: 'How 2027 looks like', sub: 'Back through the gate, into the plant of 2027', loc: 'gate', dur: 40 },
+  { id: 'future', title: 'How 2027 looks like', sub: 'Back through the gate, into the plant of 2027', loc: 'gate', dur: 40, stepped: true },
   { id: 'plant', title: 'Picture of Future', sub: 'A walk through the modern plant', loc: 'floor', dur: 36 },
   { id: 'closing', title: 'Lead. Work. Win.', sub: 'Creating value. Together.', loc: 'close', dur: 18 },
 ];
@@ -137,11 +137,11 @@ export class Director {
         this.placeGroup(WALLTEAM, this.yawTo(W.x, W.z)); c.ph.place(-4.6, 24.4, Math.atan2(W.x + 4.6, W.z - 24.4));
         this.setWorld({ gate: true, screen: { house: 'house', roadmap: 'roadmap', kpis: 'kpi' }[id] }); a.rig.cut(SHOT.k_wall); break;
       case 'future':
-        this.placeGroup(WAIT, () => 0); c.ph.place(0, 40.5, PI); this.setWorld({ gate: false, future: true, screen: 'house27' }); a.rig.cut(SHOT.g_door); break;
+        this.placeGroup(WAIT, () => 0); c.ph.place(0, 40.5, PI); this.setWorld({ gate: false, future: true, screen: 'house27' }); a.entrance.wall.set27(false, 0, true); a.rig.cut(SHOT.g_door); break;
       case 'plant':
         this.placeGroup(WAIT, () => PI); c.qual.place(23.4, 5.7, -PI * 0.75); c.ph.place(0, 21.5, PI); c.bps.place(0.9, 22.2, PI); this.setWorld({ gate: true, digital: true, future: true }); a.rig.cut(SHOT.p_high); break;
       case 'closing':
-        this.placeGroup(WAIT, () => PI); c.ph.place(-0.6, 26.8, PI); this.setWorld({ gate: true, future: true, screen: 'house27' }); a.rig.cut(SHOT.c_low); break;
+        this.placeGroup(WAIT, () => PI); c.ph.place(-0.6, 26.8, PI); this.setWorld({ gate: true, future: true, screen: 'house27' }); a.entrance.wall.set27(true, 4, true); a.rig.cut(SHOT.c_low); break;
     }
   }
   // final state of each chapter (used by "Skip scene")
@@ -151,7 +151,7 @@ export class Director {
     switch (id) {
       case 'flashback': a.factory.gate.snap(true); this.placeGroup(WAIT, () => 0); c.ph.place(0, 27.4, PI); c.bps.place(-0.6, 26.3, PI * 0.75); lookAll(c.ph); a.rig.cut(SHOT.in_both); break;
       case 'house': case 'roadmap': case 'kpis': a.rig.cut(SHOT.k_wall); lookAll(this.wallCenter()); break;
-      case 'future': a.factory.gate.snap(true); this.placeGroup(WALLTEAM, this.yawTo(KPI_WALL.x, KPI_WALL.z)); c.ph.place(-4.6, 24.4, Math.atan2(KPI_WALL.x + 4.6, KPI_WALL.z - 24.4)); lookAll(this.wallCenter()); a.rig.cut(SHOT.k_wall); break;
+      case 'future': a.factory.gate.snap(true); this.placeGroup(WALLTEAM, this.yawTo(KPI_WALL.x, KPI_WALL.z)); c.ph.place(-4.6, 24.4, Math.atan2(KPI_WALL.x + 4.6, KPI_WALL.z - 24.4)); lookAll(this.wallCenter()); a.entrance.wall.set27(true, 4, true); a.rig.cut(SHOT.k_wall); break;
       case 'plant': c.ph.place(22.2, 5.0, 0.6); c.bps.place(21.1, 4.6, 0.6); c.qual.place(23.4, 5.7, -2.4); a.rig.cut(SHOT.p_cell); break;
       case 'closing': this.rowTeam(true); a.rig.cut(SHOT.c_crane); break;
     }
@@ -169,6 +169,7 @@ export class Director {
     const app = this.app, ui = app.ui, ch = CHAPTERS[i];
     const gt = ++this.goToken;
     this.makeCtx(); // cancels running script
+    this.stepRes = null; app.timeScale = 1; ui.stepHint(false);
     app.rig.stop(); this.userCam = false; ui.showResetView(false); ui.clearCaptions(); ui.setPins([]); ui.closePanel(true); ui.showSkip(false); ui.closeRoadmap();
     if (this.index >= 0) { ui.fade(1, 0.45); await new Promise(r => setTimeout(r, 470)); if (gt !== this.goToken) return; }
     this.index = i; this.chapterTime = 0; this.scriptDone = false;
@@ -186,13 +187,29 @@ export class Director {
   }
   finish(id) {
     const ui = this.app.ui;
-    this.scriptDone = true; this.doneAt = this.chapterTime; ui.showSkip(false); ui.letterbox(false);
+    this.scriptDone = true; this.doneAt = this.chapterTime; this.app.timeScale = 1; this.stepRes = null; ui.stepHint(false); ui.showSkip(false); ui.letterbox(false);
     if (id !== 'opening') ui.openPanel();
     ui.setPins(this.pinsFor(id));
     if (id === 'flashback' && !ui.rolesByUser) { ui.toggleRoles(true); ui.rolesAuto = true; }
   }
+  // stepped chapters: the script waits here until Next (→, Space, clicker) is pressed
+  waitStep(ctx, autoAfter = null) {
+    this.app.timeScale = 1;
+    const auto = autoAfter ?? (this.app.ui.autoplay ? 4 : null);
+    return new Promise(res => {
+      const done = () => { if (this.stepRes === done) this.stepRes = null; res(); };
+      this.stepRes = done;
+      if (auto) ctx.later(auto, done);
+      this.app.ui.stepHint(true);
+    }).then(() => this.app.ui.stepHint(false));
+  }
   skip() {
     const ch = CHAPTERS[this.index]; if (!ch || this.scriptDone) return;
+    if (ch.stepped) {
+      if (this.stepRes) { this.stepRes(); return; }
+      this.app.timeScale = 5; // fast-forward the current animation to the next step
+      return;
+    }
     const ctx = this.makeCtx(); this.app.rig.stop(); this.app.ui.clearCaptions(); this.app.ui.hideTitleCard();
     this.app.ui.fade(1, 0.25);
     setTimeout(() => { if (!ctx.alive()) return; this.end(ch.id); this.app.ui.fade(0, 0.5); this.finish(ch.id); this.ambient(ctx, ch.id); }, 280);
@@ -419,12 +436,14 @@ export class Director {
   }
 
   async future(ctx) {
-    const { ph, bps, prod, qual } = this.cast, a = this.app, gate = a.factory.gate, wall = a.entrance.wall, H = a.data.house2027;
+    const { ph } = this.cast, a = this.app, gate = a.factory.gate, wall = a.entrance.wall, H = a.data.house2027;
     const team = this.all();
-    // the screens go dark: a black card asks the question
+    // step 1: the screens go dark, a black card asks the question
     a.ui.fade(1, 0.01); a.ui.yearCard('How 2027 looks like');
-    await ctx.wait(3.4);
-    a.ui.yearCard(null); a.ui.fade(0, 1.2);
+    wall.set27(false, 0, true);
+    await this.waitStep(ctx, 4);
+    a.ui.yearCard(null); a.ui.fade(0, 1.0);
+    // step 2: back to the gate, doors read 2027 | FUTURE
     ctx.cap('Main gate · 2027', { kind: 'marker' });
     ctx.cam(SHOT.g_doorClose, 3.2, { easing: ease.inOutSine, arc: 0 });
     ctx.cap('Back at the main gate. This time the doors read 2027.');
@@ -442,27 +461,33 @@ export class Director {
     await ctx.wait(5.0);
     gate.glow(false);
     await walkIn;
-    // the team turns to the screen: House of BPS GO!+ 2027
     this.placeGroup(WALLTEAM, this.yawTo(KPI_WALL.x, KPI_WALL.z));
     await ctx.walk(ph, [[-4.6, 24.4]], { speed: 1.6 });
     ph.faceTo(this.wallCenter());
+    // step 3: the screen shows BPS GO!+ 2027
     ctx.cam(SHOT.k_wall, 2.4);
-    wall.setMode('house27'); wall.replay();
     const c = wall.spot(0.5, 0.4); team.forEach(m => m.lookAt(c)); ph.lookAt(c);
-    ctx.cap('And on the screen: the House of BPS GO!+ for 2027.');
-    await ctx.wait(3.2);
-    for (const p of H.pillars.filter(x => x.items.some(it => it.includes('**')))) {
-      const s = wall.rowSpot(p.id);
-      wall.highlight(p.id, null); ph.lookAt(s); ph.gesture('point', 2.6, { target: s }); team.forEach(m => m.lookAt(s));
-      ctx.cap(`${p.name} 2027: ${p.items.filter(it => it.includes('**')).map(it => it.split('**')[1]).join(', ')}.`);
-      await ctx.wait(3.6);
+    ctx.cap('On the screen: BPS GO!+ 2027.', { hold: 600 });
+    await this.waitStep(ctx);
+    // step 4: the house drops in, its pillars still empty
+    wall.set27(true, 0);
+    ph.gesture('present', 2.6);
+    ctx.cap('The House of BPS GO!+ for 2027.', { hold: 600 });
+    await this.waitStep(ctx);
+    // steps 5-8: each Next fills one pillar from the right
+    for (let i = 0; i < H.pillars.length; i++) {
+      const p = H.pillars[i], s = wall.rowSpot(p.id);
+      wall.set27(true, i + 1);
+      wall.highlight(p.id, null); ph.lookAt(s); ph.gesture('point', 2.4, { target: s }); team.forEach(m => m.lookAt(s));
+      ctx.cap(`${p.name}. ${p.driver}: ${p.items.map(it => it.replace(/\*\*/g, '')).join(', ')}.`, { hold: 600 });
+      if (i < H.pillars.length - 1) await this.waitStep(ctx);
     }
+    await this.waitStep(ctx);
     wall.highlight(null, null); ph.lookAt(null); ph.faceYaw(PI * 0.6); team.forEach(m => m.lookAt(ph));
     ph.gesture('armsOpen', 2.6);
     team.forEach((m, i) => ctx.later(0.6 + i * 0.15, () => m.gesture('clap', 2.4)));
     ctx.cap(H.statement + '.');
     await ctx.wait(3.4);
-    void bps; void prod; void qual;
   }
 
   async plant(ctx) {
