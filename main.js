@@ -4,7 +4,7 @@ import { buildFactory } from './factory.js';
 import { buildMeetingRoom, buildEntrance } from './rooms.js';
 import { makeCast, makeOperator } from './characters.js';
 import { CameraRig } from './camera.js';
-import { Director, CHAPTERS } from './director.js';
+import { Director, CHAPTERS, OPS_COUNT } from './director.js';
 import { UI } from './ui.js';
 
 // This experience is intentionally silent: no audio elements, no Web Audio, no speech synthesis.
@@ -57,7 +57,7 @@ async function boot() {
   app.entrance = buildEntrance(scene, data, document.getElementById('bpsLogoImg')); ui.setLoading(0.62); await nextFrame();
   app.cast = makeCast(data);
   Object.values(app.cast).forEach(c => scene.add(c.root));
-  app.ops = Array.from({ length: 7 }, (_, i) => makeOperator(i));
+  app.ops = Array.from({ length: OPS_COUNT }, (_, i) => makeOperator(i));
   app.ops.forEach(o => scene.add(o.root));
   scene.traverse(o => { if (o.isMesh && o.material && o.material.transparent) o.castShadow = false; });
   ui.setLoading(0.75); await nextFrame();
@@ -70,7 +70,7 @@ async function boot() {
   composer.addPass(new OutputPass());
 
   // ---------- quality ----------
-  const Q = { high: { dpr: 1.75, shadow: 2048, bloom: true, shadows: true }, medium: { dpr: 1.25, shadow: 1024, bloom: true, shadows: true }, low: { dpr: 1, shadow: 512, bloom: false, shadows: false } };
+  const Q = { high: { dpr: 2, shadow: 2048, bloom: true, shadows: true }, medium: { dpr: 1.25, shadow: 1024, bloom: true, shadows: true }, low: { dpr: 1, shadow: 512, bloom: false, shadows: false } };
   // ?quality=low|medium|high in the URL forces a level (handy on weak laptops or projectors)
   const qParam = new URLSearchParams(location.search).get('quality');
   let quality = Q[qParam] ? qParam : isCoarse ? 'medium' : 'high';
@@ -93,6 +93,31 @@ async function boot() {
     else { controls.enabled = false; rig.pos.copy(camera.position); rig.tgt.copy(controls.target); rig.enabled = true; }
   };
   const director = app.director = new Director(app);
+  app.entrance.wall.setAnisotropy(renderer.capabilities.getMaxAnisotropy());
+
+  // ---------- clicking the KPI screen opens a details tile ----------
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  const screenHit = e => {
+    const r = canvas.getBoundingClientRect();
+    ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const hit = ray.intersectObject(app.entrance.wall.mesh, false)[0];
+    return hit && hit.uv ? app.entrance.wall.hitTest(hit.uv) : null;
+  };
+  let downAt = null, hoverQueued = null;
+  canvas.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; });
+  canvas.addEventListener('pointerup', e => {
+    if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 6) return;
+    downAt = null;
+    if (!document.body.classList.contains('entered')) return;
+    const h = screenHit(e); if (h) ui.showDetail(h);
+  });
+  canvas.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') hoverQueued = e; });
+  app.hoverScreen = () => {
+    if (!hoverQueued) return;
+    const h = document.body.classList.contains('entered') ? screenHit(hoverQueued) : null; hoverQueued = null;
+    app.entrance.wall.setHover(h); canvas.style.cursor = h ? 'pointer' : '';
+  };
 
   // ---------- sizing (with view offset so the scene centres beside the panel) ----------
   let W = innerWidth, H = innerHeight;
@@ -134,12 +159,13 @@ async function boot() {
       sun.position.set(focus.x + uz * 10 - ux * 6, 22, focus.z - ux * 10 - uz * 6); }
     // view offset toward the free area beside the panel
     const narrow = W <= 900;
-    const tx = ui.panelOpen && !narrow ? Math.min(ui.panelSize().w, W * 0.4) / 2 : 0;
-    const ty = ui.panelOpen && narrow ? Math.min(ui.panelSize().h, H * 0.55) / 2 : 0;
+    const tx = ui.sideOpen() && !narrow ? Math.min(ui.panelSize().w, W * 0.4) / 2 : 0;
+    const ty = ui.sideOpen() && narrow ? Math.min(ui.panelSize().h, H * 0.55) / 2 : 0;
     shift.x = damp(shift.x, tx, 4, dt); shift.y = damp(shift.y, ty, 4, dt);
     if (Math.abs(shift.x) > 0.5 || Math.abs(shift.y) > 0.5) camera.setViewOffset(W, H, shift.x, shift.y, W, H); else if (camera.view && camera.view.enabled) camera.clearViewOffset();
     if (Q[quality].bloom) composer.render(); else renderer.render(scene, camera);
     ui.updatePins(camera, W, H);
+    app.hoverScreen();
     // adaptive quality after the visitor has entered
     if (document.body.classList.contains('entered') && !document.hidden) {
       fpsAcc += rawDt; fpsN++; fpsCheck += rawDt;

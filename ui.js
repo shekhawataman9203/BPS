@@ -61,6 +61,7 @@ export class UI {
     $('#btnHelp').onclick = () => this.toggleHelp();
     $('#btnBpsGo').onclick = () => this.roadmapOpen ? this.closeRoadmap() : this.openRoadmap();
     $('#pauseBadge').onclick = () => this.togglePause(false);
+    $('#detailClose').onclick = () => this.closeDetail();
     $('#btnSkip').onclick = () => this.app.director.skip();
     $('#btnReset').onclick = () => this.app.director.resetView();
     $('#panelToggle').onclick = () => this.panelOpen ? this.closePanel() : this.openPanel();
@@ -91,6 +92,7 @@ export class UI {
       const d = this.app.director;
       if (!document.body.classList.contains('entered')) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.enter(false); } return; }
       const k = e.key;
+      if (k === 'Escape' && this.detailOpen && !this.roadmapOpen) { this.closeDetail(); return; }
       if (k === 'Escape') { if (!$('#help').hidden) this.toggleHelp(false); else if (this.roadmapOpen) { if (this.rmFocus) this.zoomTo(null); else this.closeRoadmap(); } else if (this.explore) this.toggleExplore(false); return; }
       if (k === 'k' || k === 'K' || k === 'Pause') { e.preventDefault(); this.togglePause(); return; }
       if (k === 'b' || k === 'B') { this.roadmapOpen ? this.closeRoadmap() : this.openRoadmap(); return; }
@@ -191,7 +193,7 @@ export class UI {
 
   // ------------------------------------------------------------ rail / progress
   setChapter(i) {
-    this.chapter = i;
+    this.chapter = i; this.closeDetail();
     document.querySelectorAll('.station').forEach(b => { const k = +b.dataset.i; b.classList.toggle('done', k < i); b.classList.toggle('current', k === i); b.setAttribute('aria-current', k === i ? 'step' : 'false'); });
     $('#hudChapter').textContent = i ? `${pad(i)} / ${pad(CHAPTERS.length - 1)}` : '';
     $('#hudTitle').textContent = CHAPTERS[i].title;
@@ -214,7 +216,70 @@ export class UI {
   // ------------------------------------------------------------ panel
   openPanel() { const ch = CHAPTERS[this.chapter]; if (!ch || ch.id === 'opening') return; this.panelOpen = true; document.body.classList.add('panel-open'); this.pressed('#panelToggle', true); $('#panelToggle').textContent = 'Hide'; }
   closePanel() { this.panelOpen = false; document.body.classList.remove('panel-open'); this.pressed('#panelToggle', false); $('#panelToggle').textContent = 'Show'; }
-  panelSize() { const p = $('#panel'); return { w: p.offsetWidth, h: p.offsetHeight }; }
+  panelSize() { const p = this.detailOpen ? $('#detail') : $('#panel'); return { w: p.offsetWidth, h: p.offsetHeight }; }
+  sideOpen() { return this.panelOpen || this.detailOpen; }
+
+  // ------------------------------------------------------------ details tile (opened by clicking the KPI screen)
+  showDetail(hit) {
+    if (!hit) return;
+    const d = this.data, rm = d.roadmap, rf = d.reflection, body = $('#detailBody'), el = $('#detail');
+    const rows = allRows(d);
+    body.innerHTML = ''; body.scrollTop = 0;
+    let color = '#1E88D9', kicker = '', title = '';
+    const btn = (label, fn, primary) => h('button', { class: primary ? 'primary' : '', onclick: fn }, label);
+    const statusBadge = s => h('span', { class: 'badge st-' + s }, STATUS_LABEL[s]);
+    if (hit.type === 'kpi') {
+      const r = rows.find(x => x.id === hit.id); if (!r) return;
+      color = r.color; kicker = `${r.pillarName} › ${r.groupName}`; title = r.kpi;
+      body.append(h('p', { class: 'dt-el' }, r.element));
+      body.append(h('div', { class: 'dt-nums' },
+        h('div', {}, h('small', {}, 'Target 2026'), h('b', {}, r.target)),
+        h('div', {}, h('small', {}, rm.ytdLabel), h('b', {}, r.ytd)),
+        h('div', {}, h('small', {}, 'Status'), statusBadge(r.status))));
+      body.append(h('h4', {}, 'Plan by quarter'));
+      const ol = h('ol', { class: 'dt-q' });
+      r.q.forEach(([txt, done], i) => ol.append(h('li', { class: done ? 'done' : '' }, h('span', { class: 'qn' }, rm.quarters[i]), h('span', {}, txt || '–'), h('i', { 'aria-label': done ? 'done' : 'open' }, done ? '✓' : ''))));
+      body.append(ol);
+      const sib = rows.filter(x => x.group === r.group && x.id !== r.id);
+      if (sib.length) { body.append(h('h4', {}, `Also in ${r.groupName}`)); sib.forEach(x => body.append(h('button', { class: 'dt-link', onclick: () => this.showDetail({ type: 'kpi', id: x.id }) }, h('span', {}, x.kpi), statusBadge(x.status)))); }
+      body.append(h('div', { class: 'actions' }, btn('Zoom into the roadmap', () => { this.openRoadmap(r.group); setTimeout(() => this.pickRow(r.id), 900); }, true)));
+      this.app.entrance.wall.highlight(r.pillar, r.id); this.app.director.select('kpi', r.id, { fly: false });
+    } else if (hit.type === 'pillar' && hit.id !== rf.id) {
+      const p = rm.pillars.find(x => x.id === hit.id); if (!p) return;
+      const pr = rows.filter(r => r.pillar === p.id);
+      color = p.color; kicker = 'BPS GO!+ pillar'; title = p.name;
+      body.append(h('p', { class: 'dt-motto', style: `--c:${p.color}` }, h('em', {}, p.motto), ' ', h('b', {}, p.tag)));
+      body.append(h('div', { class: 'status-sum' }, ...['ok', 'watch', 'behind'].map(s => h('div', { class: 'ss s-' + s }, h('b', {}, pr.filter(r => r.status === s).length), h('span', {}, STATUS_LABEL[s])))));
+      p.groups.forEach(g => {
+        body.append(h('h4', {}, g.name));
+        g.rows.forEach(r => body.append(h('button', { class: 'dt-link', onclick: () => this.showDetail({ type: 'kpi', id: r.id }) }, h('span', {}, r.kpi, h('small', {}, `Target ${r.target} · ${rm.ytdLabel} ${r.ytd}`)), statusBadge(r.status))));
+      });
+      body.append(h('div', { class: 'actions' }, btn(`Zoom into ${p.name} in the roadmap`, () => this.openRoadmap(p.id), true)));
+      this.app.entrance.highlight(p.id); this.app.director.select('pillar', p.id);
+    } else if (hit.type === 'pillar' || hit.type === 'reflection') {
+      const boxes = hit.type === 'reflection' ? rf.boxes.filter(b => b.id === hit.id) : rf.boxes;
+      color = rf.color; kicker = hit.type === 'reflection' ? rf.title : 'Fourth pillar'; title = hit.type === 'reflection' ? boxes[0].title : rf.title;
+      boxes.forEach(b => { if (boxes.length > 1) body.append(h('h4', {}, b.title)); const ul = h('ul', { class: 'dt-list' }); b.items.forEach(it => ul.append(h('li', {}, rich(it)))); body.append(ul); });
+      if (hit.type === 'reflection') { const others = rf.boxes.filter(b => b.id !== hit.id); body.append(h('h4', {}, 'More from the reflection')); others.forEach(b => body.append(h('button', { class: 'dt-link', onclick: () => this.showDetail({ type: 'reflection', id: b.id }) }, h('span', {}, b.title)))); }
+      body.append(h('div', { class: 'actions' }, btn('Open the reflection slide', () => this.openRoadmap(hit.type === 'reflection' ? hit.id : rf.id), true)));
+      this.app.entrance.wall.highlight(rf.id, hit.type === 'reflection' ? hit.id : null);
+    } else if (hit.type === 'logo') {
+      color = '#0A6EBD'; kicker = 'Roadmap 2026'; title = 'BPS GO!+';
+      body.append(h('div', { class: 'logo-card' }, h('img', { src: $('#bpsLogoImg').src, alt: 'BPS GO!+ Creating value. Together.' })));
+      body.append(this.pillarButtons());
+      body.append(h('div', { class: 'actions' }, btn('Open the full roadmap', () => this.openRoadmap(), true)));
+      this.app.director.select('logo', 'logo');
+    } else return;
+    el.style.setProperty('--c', color);
+    $('#detailKicker').textContent = kicker; $('#detailTitle').textContent = title;
+    if (!this.detailOpen) { this.detailOpen = true; el.hidden = false; void el.offsetWidth; document.body.classList.add('detail-open'); }
+  }
+  closeDetail() {
+    if (!this.detailOpen) return;
+    this.detailOpen = false; document.body.classList.remove('detail-open');
+    setTimeout(() => { if (!this.detailOpen) $('#detail').hidden = true; }, 400);
+    this.app.entrance?.wall.highlight(null, null); this.app.entrance?.highlight(null);
+  }
   renderPanel(i) {
     const ch = CHAPTERS[i], body = $('#panelBody');
     $('#panelNum').textContent = pad(i); $('#panelTitle').textContent = ch.title;
@@ -257,7 +322,7 @@ export class UI {
       list.innerHTML = '';
       d.roadmap.pillars.filter(p => pf === 'all' || p.id === pf).forEach(p => {
         list.append(h('div', { class: 'kl-head', style: `--c:${p.color}` }, p.name, h('small', {}, `${p.motto} ${p.tag}`)));
-        rows.filter(r => r.pillar === p.id).forEach(r => list.append(h('button', { class: 'kl-row' + (this.sel.kpi === r.id ? ' sel' : ''), 'data-id': r.id, 'aria-pressed': this.sel.kpi === r.id ? 'true' : 'false', style: `--c:${p.color}`, onclick: () => { this.sel.kpi = r.id; render(); this.select('kpi', r.id); } },
+        rows.filter(r => r.pillar === p.id).forEach(r => list.append(h('button', { class: 'kl-row' + (this.sel.kpi === r.id ? ' sel' : ''), 'data-id': r.id, 'aria-pressed': this.sel.kpi === r.id ? 'true' : 'false', style: `--c:${p.color}`, onclick: () => { this.sel.kpi = r.id; render(); this.showDetail({ type: 'kpi', id: r.id }); } },
           h('span', { class: 'kl-name' }, r.kpi, h('small', {}, r.element)),
           h('span', { class: 'kl-num' }, h('small', {}, 'Target'), r.target),
           h('span', { class: 'kl-num' }, h('small', {}, d.roadmap.ytdLabel), h('b', {}, r.ytd)),
@@ -265,7 +330,7 @@ export class UI {
       });
     };
     [['all', 'All'], ...d.roadmap.pillars.map(p => [p.id, p.name])].forEach(([id, name]) => chips.append(h('button', { 'aria-pressed': id === 'all' ? 'true' : 'false', onclick: e => { pf = id; chips.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === e.currentTarget)); render(); if (id !== 'all') this.select('kpiPillar', id); else this.app.entrance.wall.highlight(null, null); } }, name)));
-    b.append(chips, list, h('p', { class: 'hint' }, 'Pick a KPI to highlight it on the wall.'));
+    b.append(chips, list, h('p', { class: 'hint' }, 'Pick a KPI here, or click any tile on the screen, to open its details.'));
     render();
   }
 

@@ -21,7 +21,12 @@ export const HALL = { x0: -32, x1: 32, z0: -24, z1: 32, h: 11 };
 export const GATE = { w: 8, h: 6.2 };
 let GATE_TEXT = { left: 'NHA', right: 'VE PUMP' };
 const PPM = 32; // floor texture pixels per metre
-const BENCH_X = [-26, -21, -16, -11]; // NHA assembly benches
+// Assembly lines (both run along x at z = 11; operators stand on the +z side facing -z)
+export const LINES = {
+  nha: { x0: -28, x1: -6, z: 11, n: 8 },   // Nozzle holder assembly (NHA), left half
+  ve: { x0: 3.5, x1: 17, z: 11, n: 6 },    // VE pump assembly, right half
+};
+export const stationX = (l, i) => l.x0 + (i + 0.5) * (l.x1 - l.x0) / l.n;
 
 function roundedRectPath(x0, z0, x1, z1, r, seg = 6) {
   const pts = [];
@@ -71,8 +76,8 @@ function floorTexture() {
     hatch(8.6, -2.6, 15.6, -2.0); hatch(8.6, 2.0, 15.6, 2.6);
     // 5S outlines at Line B benches and Line A stations
     ctx.strokeStyle = 'rgba(225,229,234,0.45)'; ctx.lineWidth = 0.06 * PPM;
-    for (const x of BENCH_X) ctx.strokeRect(X(x - 1.1), Z(10.3), 2.2 * PPM, 2.4 * PPM);
-    for (const x of [-18, -11, -4]) ctx.strokeRect(X(x - 1), Z(-2.4), 2 * PPM, 2 * PPM);
+    for (const l of Object.values(LINES)) { ctx.strokeRect(X(l.x0 - 0.4), Z(l.z - 1.7), (l.x1 - l.x0 + 2.4) * PPM, 3.4 * PPM); for (let i = 1; i < l.n; i++) { const x = l.x0 + i * (l.x1 - l.x0) / l.n; ctx.beginPath(); ctx.moveTo(X(x), Z(l.z + 0.5)); ctx.lineTo(X(x), Z(l.z + 1.7)); ctx.stroke(); } }
+    for (const x of [-22, -16, -10]) ctx.strokeRect(X(x - 1), Z(-2.4), 2 * PPM, 2 * PPM);
     // supermarket lanes
     for (const x of [21, 24.5, 28]) { ctx.strokeStyle = 'rgba(225,229,234,0.35)'; ctx.strokeRect(X(x - 0.8), Z(-17.5), 1.6 * PPM, 15 * PPM); }
     // finish goods store lanes
@@ -206,20 +211,20 @@ export function buildFactory(scene, renderer, data = {}) {
   fixtures.forEach(([x, z], i) => { m4.makeTranslation(x, 8.15, z); fixIM.setMatrixAt(i, m4); m4.makeTranslation(x, 8.24, z); fixHousing.setMatrixAt(i, m4); });
   root.add(fixIM, fixHousing);
 
-  // ---------- Line A conveyor ----------
+  // ---------- NHA component line (machining + robots), left half ----------
   const lineA = new THREE.Group(); root.add(lineA);
   const beltCT = new CanvasTex(512, 64, (ctx, w, h) => { ctx.fillStyle = '#16181c'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#23262c'; for (let x = 0; x < w; x += 32) ctx.fillRect(x, 0, 14, h); });
-  beltCT.tex.wrapS = THREE.RepeatWrapping; beltCT.tex.repeat.set(27, 1);
-  const beltLen = 27, beltX = -10.5;
+  beltCT.tex.wrapS = THREE.RepeatWrapping; beltCT.tex.repeat.set(20, 1);
+  const beltLen = 20, beltX = -17;
   const belt = box(beltLen, 0.06, 0.9, new THREE.MeshStandardMaterial({ map: beltCT.tex, roughness: 0.8 }), beltX, 0.86, 0, lineA);
   const railM = mat(0xaeb5bd, { rough: 0.3, metal: 0.85 });
   box(beltLen, 0.12, 0.06, railM, beltX, 0.88, 0.48, lineA); box(beltLen, 0.12, 0.06, railM, beltX, 0.88, -0.48, lineA);
   box(beltLen, 0.08, 0.95, mat(0x2a2f37, { rough: 0.5, metal: 0.5 }), beltX, 0.78, 0, lineA);
-  const legIM = new THREE.InstancedMesh(new THREE.BoxGeometry(0.08, 0.78, 0.08), railM, 28);
-  for (let i = 0; i < 14; i++) { const x = -23.5 + i * 2; m4.makeTranslation(x, 0.39, 0.42); legIM.setMatrixAt(i * 2, m4); m4.makeTranslation(x, 0.39, -0.42); legIM.setMatrixAt(i * 2 + 1, m4); }
+  const legIM = new THREE.InstancedMesh(new THREE.BoxGeometry(0.08, 0.78, 0.08), railM, 22);
+  for (let i = 0; i < 11; i++) { const x = -26.5 + i * 2; m4.makeTranslation(x, 0.39, 0.42); legIM.setMatrixAt(i * 2, m4); m4.makeTranslation(x, 0.39, -0.42); legIM.setMatrixAt(i * 2 + 1, m4); }
   lineA.add(legIM);
   // products on belt
-  const PCOUNT = 22;
+  const PCOUNT = 16;
   const prodGeo = new RoundedBoxGeometry(0.36, 0.22, 0.36, 2, 0.04);
   const prodIM = new THREE.InstancedMesh(prodGeo, mat(0xdfe3e8, { rough: 0.3, metal: 0.35 }), PCOUNT);
   prodIM.castShadow = true; lineA.add(prodIM);
@@ -227,7 +232,7 @@ export function buildFactory(scene, renderer, data = {}) {
   anim.push((dt, t) => {
     beltCT.tex.offset.x -= dt * 0.035;
     for (let i = 0; i < PCOUNT; i++) {
-      const x = -24 + ((t * 0.45 + i * (beltLen / PCOUNT)) % beltLen);
+      const x = -27 + ((t * 0.45 + i * (beltLen / PCOUNT)) % beltLen);
       m4.makeTranslation(x, 1.0, 0); prodIM.setMatrixAt(i, m4);
       m4.makeTranslation(x, 1.135, 0); prodCap.setMatrixAt(i, m4);
     }
@@ -235,7 +240,7 @@ export function buildFactory(scene, renderer, data = {}) {
   });
   // robots on line A
   const robots = [];
-  [-18, -11, -4].forEach((x, i) => {
+  [-22, -16, -10].forEach((x, i) => {
     const r = makeRobot(); r.g.position.set(x, 0, -1.45); r.g.rotation.y = 0; lineA.add(r.g); r.o = i * 1.9; robots.push(r);
     // andon tower
     const tower = new THREE.Group(); tower.position.set(x + 1.1, 0, -0.8); lineA.add(tower);
@@ -245,8 +250,8 @@ export function buildFactory(scene, renderer, data = {}) {
     const l2 = cyl(0.07, 0.07, 0.14, lamps[1], 14, tower); l2.position.y = 2.0;
     anim.push((dt, t) => { l2.visible = i === 1 ? (Math.floor(t * 2) % 2 === 0) && (t % 20 < 6) : false; });
   });
-  hotspots.vsm = V(-11, 1.9, 0.2);
-  hotspots.pdm = V(-4, 2.6, -1.45);
+  hotspots.vsm = V(-16, 1.9, 0.2);
+  hotspots.pdm = V(-10, 2.6, -1.45);
   anim.push((dt, t) => {
     for (const r of robots) {
       const k = t * 0.9 + r.o;
@@ -364,25 +369,149 @@ export function buildFactory(scene, renderer, data = {}) {
   }
   hotspots.kanban = V(24.5, 3.1, -9);
 
-  // ---------- Line B manual workstations ----------
-  const benchM = mat(0xcfd4da, { rough: 0.4, metal: 0.3 }), benchTop = mat(0x2a3038, { rough: 0.6 });
-  const swCT = new CanvasTex(256, 160, (ctx, w, h) => {
-    ctx.fillStyle = '#0d1014'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = CSS.red; ctx.fillRect(0, 0, w, 8);
-    ctx.fillStyle = '#F4F6F8'; ctx.font = `700 22px ${FONT}`; ctx.fillText('Standard work', 14, 40);
-    ctx.fillStyle = '#9AA3AE'; ctx.font = `500 16px ${FONT}`; ['1  Pick housing', '2  Fit seal', '3  Torque 4.5 Nm', '4  Scan and pass'].forEach((s, i) => ctx.fillText(s, 14, 70 + i * 22));
+  // ---------- Assembly lines: NHA (left) and VE pump (right) ----------
+  const frameDark = mat(0x2a2f37, { rough: 0.5, metal: 0.5 }), alu = mat(0xc4cad1, { rough: 0.3, metal: 0.8 });
+  const swText = {
+    nha: ['Standard work · NHA', '1  Load holder body', '2  Press-fit nozzle', '3  Torque 35 Nm', '4  Leak test, scan'],
+    ve: ['Standard work · VE pump', '1  Fit drive shaft', '2  Mount cam plate', '3  Torque housing', '4  Seal, label, scan'],
+  };
+  const swTex = {};
+  for (const [k, lines] of Object.entries(swText)) swTex[k] = new CanvasTex(512, 320, (ctx, w, h) => {
+    ctx.fillStyle = '#0d1014'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = k === 'nha' ? '#0E9384' : '#8E2C8C'; ctx.fillRect(0, 0, w, 14);
+    ctx.fillStyle = '#F4F6F8'; ctx.font = `800 40px ${FONT}`; ctx.fillText(lines[0], 22, 72);
+    ctx.fillStyle = '#C3C9D1'; ctx.font = `600 32px ${FONT}`; lines.slice(1).forEach((s, i) => ctx.fillText(s, 22, 128 + i * 46));
+    ctx.fillStyle = '#3FBF8F'; ctx.fillRect(w - 120, 30, 90, 26);
+  }).tex;
+  const binSmallGeo = new RoundedBoxGeometry(0.3, 0.18, 0.4, 2, 0.02);
+  const rackBins = { red: [], grey: [], blue: [] };
+  const lineProducts = [];
+  const buildLine = (key, l, accent) => {
+    const g = new THREE.Group(); g.name = key + '-line'; root.add(g);
+    const len = l.x1 - l.x0, cx = (l.x0 + l.x1) / 2, z = l.z;
+    const bt = beltCT.tex.clone(); bt.wrapS = THREE.RepeatWrapping; bt.repeat.set(len, 1); bt.needsUpdate = true;
+    box(len, 0.05, 0.62, new THREE.MeshStandardMaterial({ map: bt, roughness: 0.8 }), cx, 0.9, z, g);
+    box(len, 0.1, 0.05, alu, cx, 0.93, z + 0.33, g); box(len, 0.1, 0.05, alu, cx, 0.93, z - 0.33, g);
+    box(len, 0.1, 0.7, frameDark, cx, 0.82, z, g);
+    box(len, 0.035, 0.02, glow(accent, 1.7), cx, 0.8, z + 0.36, g);
+    const legs = []; for (let x = l.x0 + 0.3; x <= l.x1 - 0.2; x += 1.5) legs.push(x);
+    const legIM2 = new THREE.InstancedMesh(new THREE.BoxGeometry(0.07, 0.8, 0.07), alu, legs.length * 2);
+    legs.forEach((x, i) => { m4.makeTranslation(x, 0.4, z + 0.3); legIM2.setMatrixAt(i * 2, m4); m4.makeTranslation(x, 0.4, z - 0.3); legIM2.setMatrixAt(i * 2 + 1, m4); });
+    g.add(legIM2);
+    const step = len / l.n;
+    for (let i = 0; i < l.n; i++) {
+      const sx = stationX(l, i);
+      // station frame with light bar
+      for (const dx of [-step / 2 + 0.12, step / 2 - 0.12]) box(0.06, 2.3, 0.06, alu, sx + dx, 1.15, z - 0.75, g);
+      box(step - 0.1, 0.06, 0.06, alu, sx, 2.3, z - 0.75, g);
+      box(step - 0.4, 0.04, 0.16, glow(0xffffff, 1.3), sx, 2.24, z - 0.45, g);
+      // press-fit / screwing unit over the belt
+      box(0.12, 1.25, 0.12, frameDark, sx - 0.35, 1.55, z - 0.42, g);
+      box(0.55, 0.18, 0.22, mat(0xE9ECEF, { rough: 0.35 }), sx - 0.18, 2.06, z - 0.32, g);
+      box(0.08, 0.5, 0.08, mat(0x3a414c, { rough: 0.35, metal: 0.7 }), sx - 0.05, 1.72, z - 0.22, g);
+      // flow rack with bins behind the line
+      box(step - 0.3, 0.04, 0.55, alu, sx, 1.05, z - 1.05, g); box(step - 0.3, 0.04, 0.55, alu, sx, 1.45, z - 1.08, g);
+      for (let k = 0; k < Math.floor((step - 0.4) / 0.34); k++) {
+        const bx = sx - (step - 0.4) / 2 + 0.17 + k * 0.34;
+        rackBins[(k + i) % 3 === 0 ? 'red' : key === 'nha' ? 'grey' : 'blue'].push([bx, 1.16, z - 1.05], [bx, 1.56, z - 1.08]);
+      }
+      // standard work screen on an arm
+      const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.46, 0.29), new THREE.MeshBasicMaterial({ map: swTex[key], toneMapped: false }));
+      scr.position.set(sx + step / 2 - 0.45, 1.5, z - 0.5); scr.rotation.x = -0.2; g.add(scr);
+      box(0.5, 0.33, 0.03, frameDark, sx + step / 2 - 0.45, 1.5, z - 0.53, g).rotation.x = -0.2;
+      // andon lamp
+      const lampOn = i === (key === 'nha' ? 5 : 2);
+      cyl(0.045, 0.045, 0.16, lampOn ? glow(0xF2B233, 1.8) : glow(0x3FBF8F, 1.5), 12, g).position.set(sx + step / 2 - 0.12, 2.44, z - 0.75);
+      // anti-fatigue mat where the operator stands
+      box(step - 0.3, 0.015, 0.8, mat(0x22262c, { rough: 0.95 }), sx, 0.008, z + 0.95, g);
+    }
+    // end of line test cell
+    const tc = new THREE.Group(); tc.position.set(l.x1 + 0.75, 0, z); g.add(tc);
+    tc.add(new THREE.Mesh(new RoundedBoxGeometry(1.2, 1.9, 1.3, 3, 0.05), mat(0xE9ECEF, { rough: 0.35 }))).position.y = 0.95;
+    box(0.7, 0.6, 0.02, new THREE.MeshStandardMaterial({ color: 0x1a2028, roughness: 0.1, metalness: 0.4, transparent: true, opacity: 0.7 }), 0, 1.15, 0.66, tc);
+    box(1.22, 0.08, 0.02, glow(accent, 1.7), 0, 1.7, 0.66, tc);
+    box(0.32, 0.22, 0.02, glow(0x3FBF8F, 1.2), 0.35, 1.62, 0.67, tc);
+    shadows(g, true, true);
+    lineProducts.push({ key, l });
+  };
+  buildLine('nha', LINES.nha, 0x0E9384);
+  buildLine('ve', LINES.ve, 0x8E2C8C);
+  for (const [k, col] of [['red', C.red], ['grey', 0x59616c], ['blue', 0x1E88D9]]) {
+    if (!rackBins[k].length) continue;
+    const im = new THREE.InstancedMesh(binSmallGeo, mat(col, { rough: 0.6 }), rackBins[k].length);
+    rackBins[k].forEach(([x, y, z], i) => { m4.makeTranslation(x, y, z); im.setMatrixAt(i, m4); }); root.add(im);
+  }
+  // products moving along the lines: nozzle holders (slim) and VE pumps (chunky), each on a work carrier
+  const carrierGeo = new THREE.BoxGeometry(0.34, 0.04, 0.34);
+  const nhaGeo = new THREE.CylinderGeometry(0.055, 0.075, 0.34, 16); nhaGeo.rotateZ(Math.PI / 2);
+  const vePumpGeo = new RoundedBoxGeometry(0.28, 0.24, 0.26, 2, 0.04);
+  const veShaftGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.16, 12); veShaftGeo.rotateZ(Math.PI / 2);
+  const flows = lineProducts.map(({ key, l }) => {
+    const n = Math.round((l.x1 - l.x0) / 0.9);
+    const carrier = new THREE.InstancedMesh(carrierGeo, mat(0x3a414b, { rough: 0.5, metal: 0.5 }), n);
+    const body = new THREE.InstancedMesh(key === 'nha' ? nhaGeo : vePumpGeo, mat(key === 'nha' ? 0xcfd5dc : 0x9aa2ac, { rough: 0.28, metal: 0.75 }), n);
+    const extra = new THREE.InstancedMesh(key === 'nha' ? new THREE.CylinderGeometry(0.03, 0.03, 0.08, 10) : veShaftGeo, mat(key === 'nha' ? 0x2b313a : 0xd8dde3, { rough: 0.3, metal: 0.8 }), n);
+    body.castShadow = true; root.add(carrier, body, extra);
+    return { key, l, n, carrier, body, extra };
   });
-  for (const x of BENCH_X) {
-    const st = new THREE.Group(); st.position.set(x, 0, 11); root.add(st);
-    box(1.8, 0.06, 0.85, benchTop, 0, 0.92, 0, st);
-    for (const [lx, lz] of [[-0.85, -0.38], [0.85, -0.38], [-0.85, 0.38], [0.85, 0.38]]) box(0.05, 0.9, 0.05, benchM, lx, 0.45, lz, st);
-    box(1.8, 0.05, 0.4, benchM, 0, 1.5, -0.3, st);
-    for (const bx of [-0.6, 0, 0.6]) { const b = new THREE.Mesh(binGeo, mat(bx === 0 ? C.red : 0x59616c, { rough: 0.6 })); b.scale.set(0.8, 0.7, 0.6); b.position.set(bx, 1.64, -0.3); st.add(b); }
-    for (const sx of [-0.88, 0.88]) box(0.04, 1.1, 0.04, benchM, sx, 1.45, -0.42, st);
-    const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.31), new THREE.MeshBasicMaterial({ map: swCT.tex, toneMapped: false }));
-    scr.position.set(0.55, 1.22, -0.2); scr.rotation.x = -0.15; st.add(scr);
-    box(0.4, 0.12, 0.3, mat(0xdfe3e8, { rough: 0.3, metal: 0.35 }), -0.2, 1.01, 0.05, st);
-    box(1.7, 0.04, 0.12, glow(0xffffff, 1.2), 0, 2.02, -0.2, st);
-    shadows(st, true, true);
+  anim.push((dt, t) => {
+    for (const f of flows) {
+      const len = f.l.x1 - f.l.x0;
+      for (let i = 0; i < f.n; i++) {
+        // indexed flow: each carrier moves one station, then dwells while the operator works
+        const u = (t * 0.018 * f.l.n / 6 + i / f.n) % 1, raw = u * f.l.n, k = Math.floor(raw), fr = raw - k;
+        const px = f.l.x0 + 0.2 + ((k + Math.min(1, fr * 2.5)) / f.l.n) * (len - 0.4);
+        const y = 0.945;
+        m4.makeTranslation(px, y, f.l.z); f.carrier.setMatrixAt(i, m4);
+        m4.makeTranslation(px, y + (f.key === 'nha' ? 0.1 : 0.14), f.l.z); f.body.setMatrixAt(i, m4);
+        m4.makeTranslation(f.key === 'nha' ? px - 0.12 : px + 0.2, y + (f.key === 'nha' ? 0.19 : 0.14), f.l.z); f.extra.setMatrixAt(i, m4);
+      }
+      f.carrier.instanceMatrix.needsUpdate = f.body.instanceMatrix.needsUpdate = f.extra.instanceMatrix.needsUpdate = true;
+    }
+  });
+
+  // ---------- CNC machining centres ----------
+  const hmiCT = new CanvasTex(256, 192, (ctx, w, h) => {
+    ctx.fillStyle = '#0d1014'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#1E88D9'; ctx.fillRect(0, 0, w, 10);
+    ctx.fillStyle = '#F4F6F8'; ctx.font = `800 26px ${FONT}`; ctx.fillText('RUN  ·  OP 20', 14, 48);
+    ctx.fillStyle = '#9AA3AE'; ctx.font = `600 18px ${FONT}`; ['Spindle 8,000 rpm', 'Cycle 42 s', 'Parts 318 / 340'].forEach((s, i) => ctx.fillText(s, 14, 86 + i * 30));
+    ctx.fillStyle = '#3FBF8F'; ctx.fillRect(14, 170, 200, 8);
+  });
+  const cncBody = mat(0xE6E9ED, { rough: 0.38, metal: 0.1 }), cncDark = mat(0x2b313a, { rough: 0.4, metal: 0.5 });
+  const glassDark = new THREE.MeshStandardMaterial({ color: 0x24303c, roughness: 0.08, metalness: 0.3, transparent: true, opacity: 0.78 });
+  const cncGeo = new RoundedBoxGeometry(2.1, 2.0, 1.6, 3, 0.06);
+  const machines = [];
+  const cnc = (x, z, ry, accent) => {
+    const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; root.add(g);
+    const body = new THREE.Mesh(cncGeo, cncBody); body.position.y = 1.0; g.add(body);
+    box(2.12, 0.1, 1.62, cncDark, 0, 2.03, 0, g);
+    box(2.12, 0.16, 1.62, cncDark, 0, 0.08, 0, g);
+    box(1.0, 0.9, 0.03, glassDark, -0.25, 1.25, 0.8, g);
+    box(1.08, 0.04, 0.04, cncDark, -0.25, 1.72, 0.82, g); box(1.08, 0.04, 0.04, cncDark, -0.25, 0.78, 0.82, g);
+    box(0.06, 0.3, 0.06, cncDark, 0.32, 1.25, 0.84, g);
+    box(2.12, 0.07, 0.02, glow(accent, 1.6), 0, 1.88, 0.81, g);
+    const hmiBox = box(0.42, 0.55, 0.1, cncDark, 0.72, 1.32, 0.86, g);
+    const hmi = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.27), new THREE.MeshBasicMaterial({ map: hmiCT.tex, toneMapped: false })); hmi.position.set(0.72, 1.42, 0.915); g.add(hmi); void hmiBox;
+    box(0.55, 0.55, 1.0, cncDark, 1.36, 0.3, 0.1, g); // chip conveyor
+    cyl(0.025, 0.025, 0.5, alu, 8, g).position.set(0.95, 2.3, -0.6);
+    cyl(0.05, 0.05, 0.1, glow(0x3FBF8F, 1.6), 12, g).position.set(0.95, 2.58, -0.6);
+    // light inside the work area
+    box(0.9, 0.02, 0.5, glow(0xdfefff, 1.4), -0.25, 1.68, 0.4, g);
+    shadows(g, true, true); machines.push(g); return g;
+  };
+  // NHA machining (front-left row, back-left area) and VE machining (front-right row)
+  for (const x of [-27.6, -24.8, -22.0, -19.2, -16.4]) cnc(x, -8.9, 0, 0x0E9384);
+  for (const x of [11.2, 14.0, 16.8]) cnc(x, -8.9, 0, 0x8E2C8C);
+  for (const z of [22.4, 27.4]) for (const x of [-28.4, -25.6, -22.8, -20.0, -17.2]) cnc(x, z, Math.PI, 0x0E9384);
+  // VE pump end of line test and packing (back-right)
+  for (const x of [12.5, 15.3, 18.1, 20.9]) cnc(x, 22.4, Math.PI, 0x8E2C8C);
+  { // packing: pallets with cartons
+    const pal = [], car = [];
+    for (const x of [12.5, 14.4, 16.3, 18.2, 20.1, 22.0]) for (const z of [27.0, 29.2]) { pal.push([x, 0.07, z]); car.push([x, 0.42, z]); if ((x + z) % 2 < 1) car.push([x, 0.98, z]); }
+    const pIM = new THREE.InstancedMesh(new THREE.BoxGeometry(1.2, 0.14, 1.0), mat(0xb08a5a, { rough: 0.8 }), pal.length);
+    pal.forEach(([x, y, z], i) => { m4.makeTranslation(x, y, z); pIM.setMatrixAt(i, m4); });
+    const cIM = new THREE.InstancedMesh(new RoundedBoxGeometry(1.1, 0.54, 0.9, 2, 0.03), mat(0xc9a77c, { rough: 0.85 }), car.length);
+    car.forEach(([x, y, z], i) => { m4.makeTranslation(x, y, z); cIM.setMatrixAt(i, m4); });
+    cIM.castShadow = true; root.add(pIM, cIM);
   }
 
   // ---------- Digital cell ----------
@@ -414,7 +543,7 @@ export function buildFactory(scene, renderer, data = {}) {
   shadows(dc, true, true);
 
   // ---------- AGVs ----------
-  const agvPath = roundedRectPath(-26, -6, 17, 15.5, 2.4);
+  const agvPath = roundedRectPath(-30, -6, 19.4, 15.5, 2.4);
   const agvLen = agvPath.getLength();
   const agvs = [0, 0.34, 0.68].map(u0 => { const g = makeAGV(); root.add(g); return { g, u: u0 }; });
   const tmpT = new THREE.Vector3();
@@ -442,7 +571,7 @@ export function buildFactory(scene, renderer, data = {}) {
   digital.add(dashIM);
   // data streams machine -> cloud node
   const node = V(4, 9.2, 6);
-  const sources = [V(-18, 2.2, -1.45), V(-11, 2.2, -1.45), V(-4, 2.2, -1.45), V(12, 4.2, 0), V(15.9, 2.2, -2.3), V(23, 2.6, 9), V(26.5, 2.2, 10.6), V(-13, 2.8, -8.6), V(-10, 6.2, 3.2), V(24.5, 2.6, -9), V(-21, 1.6, 11), V(-11, 1.6, 11)];
+  const sources = [V(-22, 2.2, -1.45), V(-16, 2.2, -1.45), V(-10, 2.2, -1.45), V(12, 4.2, 0), V(15.9, 2.2, -2.3), V(23, 2.6, 9), V(26.5, 2.2, 10.6), V(-13, 2.8, -8.6), V(-10, 6.2, 3.2), V(24.5, 2.6, -9), V(-21.1, 2.2, 11), V(-10.1, 2.2, 11), V(9.7, 2.2, 11), V(14.6, 2.2, 11), V(-22.9, 2.6, 22), V(15.3, 2.6, 22)];
   const curves = sources.map(s => new THREE.QuadraticBezierCurve3(s, V((s.x + node.x) / 2, Math.max(s.y, node.y) + 2.5, (s.z + node.z) / 2), node));
   const PER = 14, NP = curves.length * PER;
   const pGeo = new THREE.BufferGeometry(); const pPos = new Float32Array(NP * 3); const pCol = new Float32Array(NP * 3);
@@ -476,7 +605,7 @@ export function buildFactory(scene, renderer, data = {}) {
   hotspots.twin = V(25, 4.0, 15.5);
   // pulsing rings at project locations
   const ringGeo = new THREE.RingGeometry(0.9, 1.0, 48);
-  const rings = [V(-4, 0.03, -1.45), V(23, 0.03, 9), V(-10, 0.03, 3.2), V(15.9, 0.03, -2.3), V(25, 0.03, 15.5)].map(p => { const r = new THREE.Mesh(ringGeo, dmat(C.red, 0.9)); r.rotation.x = -Math.PI / 2; r.position.copy(p); digital.add(r); return r; });
+  const rings = [V(-10, 0.03, -1.45), V(23, 0.03, 9), V(-10, 0.03, 3.2), V(15.9, 0.03, -2.3), V(25, 0.03, 15.5)].map(p => { const r = new THREE.Mesh(ringGeo, dmat(C.red, 0.9)); r.rotation.x = -Math.PI / 2; r.position.copy(p); digital.add(r); return r; });
 
   let digitalLevel = 0, digitalTarget = 0;
   anim.push((dt, t) => {
@@ -553,8 +682,11 @@ export function buildFactory(scene, renderer, data = {}) {
     for (const sx of [-w * 0.4, w * 0.4]) box(0.02, HALL.h - y, 0.02, railM, sx, (HALL.h - y) / 2 + w / 8, 0, g);
     signs.push(g); return g;
   };
-  zoneSign('NHA', 'Component manufacturing', -16, 6.6, -1.2, 0, '#0E9384');
-  zoneSign('NHA', 'Assembly · standard work', -18.5, 5.4, 9.2, 0, '#0E9384');
+  zoneSign('NHA', 'Component manufacturing', -18, 6.6, -1.2, 0, '#0E9384');
+  zoneSign('NHA', 'Nozzle holder assembly line', -17, 5.4, 9.0, 0, '#0E9384');
+  zoneSign('VE Pump', 'Pump assembly line', 10.2, 5.4, 9.0, 0, '#8E2C8C');
+  zoneSign('NHA', 'Machining · holder bodies', -22.8, 5.6, 20.6, 0, '#0E9384');
+  zoneSign('VE Pump', 'End of line test · packing', 16.7, 5.6, 20.6, 0, '#8E2C8C');
   zoneSign('VE Pump', 'Component manufacturing · SMED', 12, 6.8, -1.6, 0, '#8E2C8C');
   zoneSign('VE Pump', 'Calibration · AI vision', 25, 5.4, 6.0, 0, '#8E2C8C');
   zoneSign('ABE Store', 'Inbound · Kanban supermarket', 24.5, 5.4, -1.4, 0, '#1E88D9');
@@ -655,7 +787,7 @@ export function buildFactory(scene, renderer, data = {}) {
   hotspots.gate = V(0, GATE.h + 0.9, fz + 3.2);
   // tour stops
   Object.assign(hotspots, {
-    supplier: V(HALL.x0 + 1.5, 3.2, -14), inbound: V(24.5, 2.2, -9), nha: V(-11, 2.2, 0), assembly: V(-18.5, 1.8, 11),
+    supplier: V(HALL.x0 + 1.5, 3.2, -14), inbound: V(24.5, 2.2, -9), nha: V(-16, 2.2, 0), assembly: V(-17, 2.4, 11), veAssembly: V(10.2, 2.4, 11), machiningNha: V(-22.8, 2.6, 22.4), veTest: V(16.7, 2.6, 22.4),
     ve: V(12, 3.4, 0), calibration: V(23, 2.6, 9), scrum: V(0, 3.4, -10), customer: V(HALL.x1 - 1.5, 3.2, -14),
   });
 

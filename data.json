@@ -12,108 +12,692 @@
     "sampleNotice": "Edit the workshop-data block in this file to update figures. YTD = year to date (September)."
   },
   "cast": [
-    { "id": "ph",   "role": "Plant Head" },
-    { "id": "bps",  "role": "BPS Lead" },
-    { "id": "prod", "role": "Production Manager" },
-    { "id": "qual", "role": "Quality Manager" },
-    { "id": "dig",  "role": "Digital Lead" },
-    { "id": "log",  "role": "Logistics Lead" }
+    {
+      "id": "ph",
+      "role": "Plant Head"
+    },
+    {
+      "id": "bps",
+      "role": "BPS Lead"
+    },
+    {
+      "id": "prod",
+      "role": "Production Manager"
+    },
+    {
+      "id": "qual",
+      "role": "Quality Manager"
+    },
+    {
+      "id": "dig",
+      "role": "Digital Lead"
+    },
+    {
+      "id": "log",
+      "role": "Logistics Lead"
+    }
   ],
   "roadmap": {
     "title": "BPS GO!+ ROADMAP 2026",
-    "quarters": ["1Q/2026", "2Q/2026", "3Q/2026", "4Q/2026"],
+    "quarters": [
+      "1Q/2026",
+      "2Q/2026",
+      "3Q/2026",
+      "4Q/2026"
+    ],
     "ytdLabel": "YTD'09",
     "pillars": [
       {
-        "id": "people", "name": "People", "color": "#0E9384", "light": "#CDEDEA",
-        "motto": "Foster Competency & Learning", "tag": "#Lead with Competent People",
+        "id": "people",
+        "name": "People",
+        "color": "#0E9384",
+        "light": "#CDEDEA",
+        "motto": "Foster Competency & Learning",
+        "tag": "#Lead with Competent People",
         "groups": [
-          { "id": "leadership", "name": "Leadership commitment", "rows": [
-            { "id": "bps-training", "element": "BPS Training (BLI + VSDiA)", "q": [["BLDP framework, VSDiA training: 03 nos.", true], ["BLDP focus week training, VSDiA training: 2 nos.", true], ["BLDP project training", true], ["BLDP transfer task & certification", false]], "kpi": "No. of BLDP experts / Ind. area coverage under VSDiA", "target": "1 / 5", "ytd": "0 / 4", "status": "behind" },
-            { "id": "dlpc", "element": "DLPC adherence on BPS topic", "q": [["Rollout of DLPC: control loops", true], ["Rollout of DLPC: DLR", true], [">85% adherence through DLPC tool", true], [">90% adherence through DLPC tool", false]], "kpi": "DLR maturity", "target": ">80%", "ytd": "65%", "status": "behind" },
-            { "id": "competency", "element": "BPS competency", "q": [["PGL training basic 96%", true], ["LBP for planners 96.5%", true], ["BPS basics 97%", true], ["LLB 98%", false]], "kpi": "BPS qualification rate (%)", "target": "98%", "ytd": "97%", "status": "watch" },
-            { "id": "wats", "element": "WaTS training for workmen", "q": [["Training plan (trainers)", true], ["Certification of trainers: 3 nos., 25% coverage (A/P)", true], ["50% coverage (A/P)", true], ["100% coverage (A/P)", false]], "kpi": "WaTS training penetration", "target": "100% (A/P)", "ytd": "107%", "status": "ok" }
-          ]},
-          { "id": "everybody-cip", "name": "Everybody CIP", "rows": [
-            { "id": "agile", "element": "Agile projects (Scrum + SW)", "q": [["Scrum: 04, SW: 08", true], ["Scrum: 08, SW: 16", true], ["Scrum: 12, SW: 24", true], ["Scrum: 16, SW: 32", false]], "kpi": "SCIP project completion rate", "target": ">90%", "ytd": "80%", "status": "watch" },
-            { "id": "involvement", "element": "Individual involvement", "q": [["Individual contribution: 30%", true], ["Individual contribution: 60%", true], ["Individual contribution: 90%", true], ["Individual contribution: 100%", false]], "kpi": "Individual contribution", "target": "100%", "ytd": "97%", "status": "watch" },
-            { "id": "ideas", "element": "Theme based idea scheme", "q": [["Theme launch: 3", true], ["Theme launch: 3", true], ["Theme launch: 3", true], ["Theme launch: 3", false]], "kpi": "Ideas / associate", "target": ">28", "ytd": "20.3", "status": "watch" }
-          ]}
+          {
+            "id": "leadership",
+            "name": "Leadership commitment",
+            "rows": [
+              {
+                "id": "bps-training",
+                "element": "BPS Training (BLI + VSDiA)",
+                "q": [
+                  [
+                    "BLDP framework, VSDiA training: 03 nos.",
+                    true
+                  ],
+                  [
+                    "BLDP focus week training, VSDiA training: 2 nos.",
+                    true
+                  ],
+                  [
+                    "BLDP project training",
+                    true
+                  ],
+                  [
+                    "BLDP transfer task & certification",
+                    false
+                  ]
+                ],
+                "kpi": "No. of BLDP experts / Ind. area coverage under VSDiA",
+                "target": "1 / 5",
+                "ytd": "0 / 4",
+                "status": "behind"
+              },
+              {
+                "id": "dlpc",
+                "element": "DLPC adherence on BPS topic",
+                "q": [
+                  [
+                    "Rollout of DLPC: control loops",
+                    true
+                  ],
+                  [
+                    "Rollout of DLPC: DLR",
+                    true
+                  ],
+                  [
+                    ">85% adherence through DLPC tool",
+                    true
+                  ],
+                  [
+                    ">90% adherence through DLPC tool",
+                    false
+                  ]
+                ],
+                "kpi": "DLR maturity",
+                "target": ">80%",
+                "ytd": "65%",
+                "status": "behind"
+              },
+              {
+                "id": "competency",
+                "element": "BPS competency",
+                "q": [
+                  [
+                    "PGL training basic 96%",
+                    true
+                  ],
+                  [
+                    "LBP for planners 96.5%",
+                    true
+                  ],
+                  [
+                    "BPS basics 97%",
+                    true
+                  ],
+                  [
+                    "LLB 98%",
+                    false
+                  ]
+                ],
+                "kpi": "BPS qualification rate (%)",
+                "target": "98%",
+                "ytd": "97%",
+                "status": "watch"
+              },
+              {
+                "id": "wats",
+                "element": "WaTS training for workmen",
+                "q": [
+                  [
+                    "Training plan (trainers)",
+                    true
+                  ],
+                  [
+                    "Certification of trainers: 3 nos., 25% coverage (A/P)",
+                    true
+                  ],
+                  [
+                    "50% coverage (A/P)",
+                    true
+                  ],
+                  [
+                    "100% coverage (A/P)",
+                    false
+                  ]
+                ],
+                "kpi": "WaTS training penetration",
+                "target": "100% (A/P)",
+                "ytd": "107%",
+                "status": "ok"
+              }
+            ]
+          },
+          {
+            "id": "everybody-cip",
+            "name": "Everybody CIP",
+            "rows": [
+              {
+                "id": "agile",
+                "element": "Agile projects (Scrum + SW)",
+                "q": [
+                  [
+                    "Scrum: 04, SW: 08",
+                    true
+                  ],
+                  [
+                    "Scrum: 08, SW: 16",
+                    true
+                  ],
+                  [
+                    "Scrum: 12, SW: 24",
+                    true
+                  ],
+                  [
+                    "Scrum: 16, SW: 32",
+                    false
+                  ]
+                ],
+                "kpi": "SCIP project completion rate",
+                "target": ">90%",
+                "ytd": "80%",
+                "status": "watch"
+              },
+              {
+                "id": "involvement",
+                "element": "Individual involvement",
+                "q": [
+                  [
+                    "Individual contribution: 30%",
+                    true
+                  ],
+                  [
+                    "Individual contribution: 60%",
+                    true
+                  ],
+                  [
+                    "Individual contribution: 90%",
+                    true
+                  ],
+                  [
+                    "Individual contribution: 100%",
+                    false
+                  ]
+                ],
+                "kpi": "Individual contribution",
+                "target": "100%",
+                "ytd": "97%",
+                "status": "watch"
+              },
+              {
+                "id": "ideas",
+                "element": "Theme based idea scheme",
+                "q": [
+                  [
+                    "Theme launch: 3",
+                    true
+                  ],
+                  [
+                    "Theme launch: 3",
+                    true
+                  ],
+                  [
+                    "Theme launch: 3",
+                    true
+                  ],
+                  [
+                    "Theme launch: 3",
+                    false
+                  ]
+                ],
+                "kpi": "Ideas / associate",
+                "target": ">28",
+                "ytd": "20.3",
+                "status": "watch"
+              }
+            ]
+          }
         ]
       },
       {
-        "id": "process", "name": "Process", "color": "#1E88D9", "light": "#D3E8F8",
-        "motto": "Set Base right", "tag": "#Work with basics",
+        "id": "process",
+        "name": "Process",
+        "color": "#1E88D9",
+        "light": "#D3E8F8",
+        "motto": "Set Base right",
+        "tag": "#Work with basics",
         "groups": [
-          { "id": "waste-free", "name": "Waste free stable flow", "rows": [
-            { "id": "line-walk", "element": "TPT line walk", "q": [["No. of line walks: 3", true], ["No. of line walks: 3", true], ["No. of line walks: 3", true], ["No. of line walks: 3", false]], "kpi": "No. of line walks", "target": "12", "ytd": "9", "status": "ok" },
-            { "id": "vsp", "element": "VSP maturity", "q": [["Gradual VSD", true], ["Flow project implement: 01/VS", true], ["Flow project implement: 01/VS", true], ["Flow project implement: 01/VS", false]], "kpi": "TPT VE / TPT NHA", "target": "14.02 / 10.19 days", "ytd": "14.1 / 10.79 days", "status": "watch" },
-            { "id": "pull", "element": "Pull maturity (%)", "q": [["Pull maturity: >75%", true], ["Pull maturity: >85%", false], ["Pull maturity: >90%", false], ["Pull maturity: >90%", false]], "kpi": "TCT", "target": "38.4 days", "ytd": "39.9 days", "status": "watch" }
-          ]},
-          { "id": "cip-indirect", "name": "CIP in indirect areas", "rows": [
-            { "id": "indirect", "element": "Improvement projects in indirect areas", "q": [["VSDiA: min 1, WEP: 8", true], ["VSDiA: 2, WEP: 16", true], ["VSDiA: 3, WEP: 24", true], ["VSDiA: 4, WEP: 32", false]], "kpi": "CIPiiA participation (%)", "target": "100%", "ytd": "80%", "status": "behind" },
-            { "id": "health", "element": "Internal health check", "q": [["Consumption control", true], ["Standardized work (SMD)", true], ["SCIP project & DLR (SMD)", false], ["Levelling / customer interface & SCIP", false]], "kpi": "No. of internal health checks", "target": "6", "ytd": "2", "status": "behind" }
-          ]}
+          {
+            "id": "waste-free",
+            "name": "Waste free stable flow",
+            "rows": [
+              {
+                "id": "line-walk",
+                "element": "TPT line walk",
+                "q": [
+                  [
+                    "No. of line walks: 3",
+                    true
+                  ],
+                  [
+                    "No. of line walks: 3",
+                    true
+                  ],
+                  [
+                    "No. of line walks: 3",
+                    true
+                  ],
+                  [
+                    "No. of line walks: 3",
+                    false
+                  ]
+                ],
+                "kpi": "No. of line walks",
+                "target": "12",
+                "ytd": "9",
+                "status": "ok"
+              },
+              {
+                "id": "vsp",
+                "element": "VSP maturity",
+                "q": [
+                  [
+                    "Gradual VSD",
+                    true
+                  ],
+                  [
+                    "Flow project implement: 01/VS",
+                    true
+                  ],
+                  [
+                    "Flow project implement: 01/VS",
+                    true
+                  ],
+                  [
+                    "Flow project implement: 01/VS",
+                    false
+                  ]
+                ],
+                "kpi": "TPT VE / TPT NHA",
+                "target": "14.02 / 10.19 days",
+                "ytd": "14.1 / 10.79 days",
+                "status": "watch"
+              },
+              {
+                "id": "pull",
+                "element": "Pull maturity (%)",
+                "q": [
+                  [
+                    "Pull maturity: >75%",
+                    true
+                  ],
+                  [
+                    "Pull maturity: >85%",
+                    false
+                  ],
+                  [
+                    "Pull maturity: >90%",
+                    false
+                  ],
+                  [
+                    "Pull maturity: >90%",
+                    false
+                  ]
+                ],
+                "kpi": "TCT",
+                "target": "38.4 days",
+                "ytd": "39.9 days",
+                "status": "watch"
+              }
+            ]
+          },
+          {
+            "id": "cip-indirect",
+            "name": "CIP in indirect areas",
+            "rows": [
+              {
+                "id": "indirect",
+                "element": "Improvement projects in indirect areas",
+                "q": [
+                  [
+                    "VSDiA: min 1, WEP: 8",
+                    true
+                  ],
+                  [
+                    "VSDiA: 2, WEP: 16",
+                    true
+                  ],
+                  [
+                    "VSDiA: 3, WEP: 24",
+                    true
+                  ],
+                  [
+                    "VSDiA: 4, WEP: 32",
+                    false
+                  ]
+                ],
+                "kpi": "CIPiiA participation (%)",
+                "target": "100%",
+                "ytd": "80%",
+                "status": "behind"
+              },
+              {
+                "id": "health",
+                "element": "Internal health check",
+                "q": [
+                  [
+                    "Consumption control",
+                    true
+                  ],
+                  [
+                    "Standardized work (SMD)",
+                    true
+                  ],
+                  [
+                    "SCIP project & DLR (SMD)",
+                    false
+                  ],
+                  [
+                    "Levelling / customer interface & SCIP",
+                    false
+                  ]
+                ],
+                "kpi": "No. of internal health checks",
+                "target": "6",
+                "ytd": "2",
+                "status": "behind"
+              }
+            ]
+          }
         ]
       },
       {
-        "id": "system", "name": "System", "color": "#8E2C8C", "light": "#EBD5EA",
-        "motto": "Focusing on right enablers", "tag": "#Win More with less",
+        "id": "system",
+        "name": "System",
+        "color": "#8E2C8C",
+        "light": "#EBD5EA",
+        "motto": "Focusing on right enablers",
+        "tag": "#Win More with less",
         "groups": [
-          { "id": "digi-lean", "name": "Digi Lean (BPS + I4.0)", "rows": [
-            { "id": "digilean", "element": "Digi lean (BPS + i4.0)", "q": [["Data stream mapping", true], ["Map digital solution 4.26 ver", true], ["Implementation of digital solution: plan vs actual", true], ["Implementation of digital solution: plan vs actual", false]], "kpi": "Digital maturity", "target": "85%", "ytd": "83%", "status": "watch" },
-            { "id": "platform", "element": "Platform project: Hunt Runner @RO-IN", "q": [["Digital KPI-KPR dashboard", true], ["Digital SM", true], ["Agentic AI suggestion scheme", false], ["Digital JIS", false]], "kpi": "No. of platform projects", "target": "4", "ytd": "2", "status": "watch" }
-          ]},
-          { "id": "investment", "name": "Investment efficiency", "rows": [
-            { "id": "mae", "element": "MAEs with technical loss < 3%", "q": [["MAEs with tech. loss < 3%: 75%", true], ["MAEs with tech. loss < 3%: 80%", true], ["MAEs with tech. loss < 3%: 85%", false], ["MAEs with tech. loss < 3%: 90%", false]], "kpi": "MAEs with tech. loss < 3%", "target": ">90% MAE", "ytd": "69.0%", "status": "behind" },
-            { "id": "obsolescence", "element": "Obsolescence management of MAE", "q": [["", false], ["De-risking MAEs: 02", true], ["De-risking MAEs: 03", false], ["De-risking MAEs: 05", false]], "kpi": "De-risking MAEs", "target": "10", "ytd": "2", "status": "behind" }
-          ]}
+          {
+            "id": "digi-lean",
+            "name": "Digi Lean (BPS + I4.0)",
+            "rows": [
+              {
+                "id": "digilean",
+                "element": "Digi lean (BPS + i4.0)",
+                "q": [
+                  [
+                    "Data stream mapping",
+                    true
+                  ],
+                  [
+                    "Map digital solution 4.26 ver",
+                    true
+                  ],
+                  [
+                    "Implementation of digital solution: plan vs actual",
+                    true
+                  ],
+                  [
+                    "Implementation of digital solution: plan vs actual",
+                    false
+                  ]
+                ],
+                "kpi": "Digital maturity",
+                "target": "85%",
+                "ytd": "83%",
+                "status": "watch"
+              },
+              {
+                "id": "platform",
+                "element": "Platform project: Hunt Runner @RO-IN",
+                "q": [
+                  [
+                    "Digital KPI-KPR dashboard",
+                    true
+                  ],
+                  [
+                    "Digital SM",
+                    true
+                  ],
+                  [
+                    "Agentic AI suggestion scheme",
+                    false
+                  ],
+                  [
+                    "Digital JIS",
+                    false
+                  ]
+                ],
+                "kpi": "No. of platform projects",
+                "target": "4",
+                "ytd": "2",
+                "status": "watch"
+              }
+            ]
+          },
+          {
+            "id": "investment",
+            "name": "Investment efficiency",
+            "rows": [
+              {
+                "id": "mae",
+                "element": "MAEs with technical loss < 3%",
+                "q": [
+                  [
+                    "MAEs with tech. loss < 3%: 75%",
+                    true
+                  ],
+                  [
+                    "MAEs with tech. loss < 3%: 80%",
+                    true
+                  ],
+                  [
+                    "MAEs with tech. loss < 3%: 85%",
+                    false
+                  ],
+                  [
+                    "MAEs with tech. loss < 3%: 90%",
+                    false
+                  ]
+                ],
+                "kpi": "MAEs with tech. loss < 3%",
+                "target": ">90% MAE",
+                "ytd": "69.0%",
+                "status": "behind"
+              },
+              {
+                "id": "obsolescence",
+                "element": "Obsolescence management of MAE",
+                "q": [
+                  [
+                    "",
+                    false
+                  ],
+                  [
+                    "De-risking MAEs: 02",
+                    true
+                  ],
+                  [
+                    "De-risking MAEs: 03",
+                    false
+                  ],
+                  [
+                    "De-risking MAEs: 05",
+                    false
+                  ]
+                ],
+                "kpi": "De-risking MAEs",
+                "target": "10",
+                "ytd": "2",
+                "status": "behind"
+              }
+            ]
+          }
         ]
       }
     ]
   },
   "reflection": {
-    "id": "reflection", "name": "Reflection", "color": "#0A6EBD", "light": "#F7F2E6",
+    "id": "reflection",
+    "name": "Reflection",
+    "color": "#0A6EBD",
+    "light": "#F7F2E6",
     "title": "Reflection 2026",
     "boxes": [
-      { "id": "well", "title": "What went well", "items": [
-        "BPS maturity **Level 2 NHA MTS (with ver4)**",
-        "3 Toyota Kata coaches & pioneer projects in LOG",
-        "Strong performance in ideas per associate across the organization with 100% individual involvement"
-      ]},
-      { "id": "gap", "title": "Gap", "items": [
-        "Lack of prioritization of **BPS basics** (e.g. VSM, VSD, KPI tree, 5S)",
-        "**Outdated Kaizen / suggestion** process requiring manual efforts and limiting transparency"
-      ]},
-      { "id": "better", "title": "Where we can do better", "items": [
-        "**LPC maturity** on key BPS elements",
-        "**DLR maturity** & 5 elements of **standardized work**",
-        "Positioning JaP for the **BPS Award**"
-      ]},
-      { "id": "learnings", "title": "Positive learnings", "items": [
-        "**Gemba drives results.** Use of Gemba: not just a Gemba walk, rather “think together in Gemba”. It helps to identify the real cause.",
-        "**Agile methods work.** Agile methods improve SCIP completion effectiveness."
-      ]}
+      {
+        "id": "well",
+        "title": "What went well",
+        "items": [
+          "BPS maturity **Level 2 NHA MTS (with ver4)**",
+          "3 Toyota Kata coaches & pioneer projects in LOG",
+          "Strong performance in ideas per associate across the organization with 100% individual involvement"
+        ]
+      },
+      {
+        "id": "gap",
+        "title": "Gap",
+        "items": [
+          "Lack of prioritization of **BPS basics** (e.g. VSM, VSD, KPI tree, 5S)",
+          "**Outdated Kaizen / suggestion** process requiring manual efforts and limiting transparency"
+        ]
+      },
+      {
+        "id": "better",
+        "title": "Where we can do better",
+        "items": [
+          "**LPC maturity** on key BPS elements",
+          "**DLR maturity** & 5 elements of **standardized work**",
+          "Positioning JaP for the **BPS Award**"
+        ]
+      },
+      {
+        "id": "learnings",
+        "title": "Positive learnings",
+        "items": [
+          "**Gemba drives results.** Use of Gemba: not just a Gemba walk, rather “think together in Gemba”. It helps to identify the real cause.",
+          "**Agile methods work.** Agile methods improve SCIP completion effectiveness."
+        ]
+      }
     ]
   },
   "plant": {
     "title": "JaP Picture of Future (2025–2027)",
     "intro": "From supplier to customer: one connected plant, with BPS as the base and digital as the enabler.",
     "zones": [
-      { "id": "supplier", "name": "Supplier interface", "items": ["100% ASN via EDI", "Vendor inventory portal (supplier stock)", "BOT trigger mechanism for pull extension"] },
-      { "id": "inbound", "name": "Inbound · ABE store", "items": ["One click GR", "CMS & EMS", "Celonis", "AGV milk run, RFID based dock management"] },
-      { "id": "nha", "name": "NHA · Component manufacturing", "items": ["100% traceability for product & A-class components", "Vision system empowered by AI, MAS, MES", "AI driven HEP, predictive maintenance"] },
-      { "id": "assembly", "name": "NHA · Assembly", "items": ["Standard work at every station", "Digital twin for machines, cobot, digital KPI tree", "Real time data on the line"] },
-      { "id": "ve", "name": "VE Pump · Component manufacturing", "items": ["Anomaly detection (MAS)", "Energy analytics with connected utilities", "SMED on bottleneck machines"] },
-      { "id": "calibration", "name": "VE Pump · Calibration", "items": ["AI visual inspection, CAQ integration", "GenAI use cases, AI agent, agentic AI", "3D printing hub, standard solution portfolio"] },
-      { "id": "scrum", "name": "SCRUM review", "items": ["Agile projects: Scrum 16, SW 32 by Q4", "SCIP completion effectiveness", "Think together in Gemba"] },
-      { "id": "customer", "name": "Customer interface & PPC · Outbound", "items": ["Pull with local customer / MTO", "Procon utilization / extension", "Auto invoicing, Shipster, AVP, lead time monitoring plant to customer"] }
+      {
+        "id": "supplier",
+        "name": "Supplier interface",
+        "items": [
+          "100% ASN via EDI",
+          "Vendor inventory portal (supplier stock)",
+          "BOT trigger mechanism for pull extension"
+        ]
+      },
+      {
+        "id": "inbound",
+        "name": "Inbound · ABE store",
+        "items": [
+          "One click GR",
+          "CMS & EMS",
+          "Celonis",
+          "AGV milk run, RFID based dock management"
+        ]
+      },
+      {
+        "id": "nha",
+        "name": "NHA · Component manufacturing",
+        "items": [
+          "100% traceability for product & A-class components",
+          "Vision system empowered by AI, MAS, MES",
+          "AI driven HEP, predictive maintenance"
+        ]
+      },
+      {
+        "id": "assembly",
+        "name": "NHA · Nozzle holder assembly line",
+        "items": [
+          "8 stations in one-piece flow, takt 42 s",
+          "Standard work and andon at every station",
+          "100% traceability, leak test at end of line"
+        ]
+      },
+      {
+        "id": "machiningNha",
+        "name": "NHA · Machining",
+        "items": [
+          "Holder bodies machined in-house on 10 CNC centres",
+          "Digital twin for machines, predictive maintenance",
+          "AI driven HEP on spindle and tool data"
+        ]
+      },
+      {
+        "id": "ve",
+        "name": "VE Pump · Component manufacturing",
+        "items": [
+          "Anomaly detection (MAS)",
+          "Energy analytics with connected utilities",
+          "SMED on bottleneck machines"
+        ]
+      },
+      {
+        "id": "veAssembly",
+        "name": "VE Pump · Assembly line",
+        "items": [
+          "6 stations: shaft, cam plate, housing, seal",
+          "Cobot screwing with torque traceability",
+          "Real time data on the line"
+        ]
+      },
+      {
+        "id": "calibration",
+        "name": "VE Pump · Calibration",
+        "items": [
+          "AI visual inspection, CAQ integration",
+          "GenAI use cases, AI agent, agentic AI",
+          "3D printing hub, standard solution portfolio"
+        ]
+      },
+      {
+        "id": "veTest",
+        "name": "VE Pump · End of line test & packing",
+        "items": [
+          "Every pump tested before packing",
+          "CAQ integration: results to the customer record",
+          "Packed to order for pull with local customer / MTO"
+        ]
+      },
+      {
+        "id": "scrum",
+        "name": "SCRUM review",
+        "items": [
+          "Agile projects: Scrum 16, SW 32 by Q4",
+          "SCIP completion effectiveness",
+          "Think together in Gemba"
+        ]
+      },
+      {
+        "id": "customer",
+        "name": "Customer interface & PPC · Outbound",
+        "items": [
+          "Pull with local customer / MTO",
+          "Procon utilization / extension",
+          "Auto invoicing, Shipster, AVP, lead time monitoring plant to customer"
+        ]
+      }
     ],
-    "enablers": ["SAP S/4HANA", "NEXEED MAS", "Power BI", "Collaboration", "Standard solution", "AOI, MMA, DIA Brain", "Competency development", "BABTEC"]
+    "enablers": [
+      "SAP S/4HANA",
+      "NEXEED MAS",
+      "Power BI",
+      "Collaboration",
+      "Standard solution",
+      "AOI, MMA, DIA Brain",
+      "Competency development",
+      "BABTEC"
+    ]
   },
   "closing": {
     "title": "Lead. Work. Win.",
     "sub": "BPS GO!+ Creating value. Together.",
-    "commitments": ["Prioritize BPS basics: VSM, VSD, KPI tree, 5S", "Raise LPC and DLR maturity on key BPS elements", "Digitize the Kaizen and suggestion process", "Position JaP for the BPS Award"]
+    "commitments": [
+      "Prioritize BPS basics: VSM, VSD, KPI tree, 5S",
+      "Raise LPC and DLR maturity on key BPS elements",
+      "Digitize the Kaizen and suggestion process",
+      "Position JaP for the BPS Award"
+    ]
   }
 }
