@@ -1,4 +1,4 @@
-import { THREE, OrbitControls, EffectComposer, RenderPass, UnrealBloomPass, OutputPass, RoomEnvironment } from './lib.js';
+import { THREE, OrbitControls, EffectComposer, RenderPass, UnrealBloomPass, OutputPass, RoomEnvironment, GLTFLoader, cloneSkinned, GTAOPass } from './lib.js';
 import { C, damp, clamp } from './util.js';
 import { buildFactory } from './factory.js';
 import { buildMeetingRoom, buildEntrance } from './rooms.js';
@@ -30,7 +30,7 @@ async function boot() {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const scene = new THREE.Scene();
   // daylight sky behind the plant (vertical gradient)
@@ -59,24 +59,43 @@ async function boot() {
   Object.values(app.cast).forEach(c => scene.add(c.root));
   app.ops = Array.from({ length: OPS_COUNT }, (_, i) => makeOperator(i));
   app.ops.forEach(o => scene.add(o.root));
+  // realistic people, when GLB files were embedded (see assets/people)
+  try {
+    const files = JSON.parse(document.getElementById('people-models').textContent || '{}');
+    const names = Object.keys(files);
+    if (names.length) {
+      const loader = new GLTFLoader(), cache = {};
+      const load = async f => (cache[f] ||= loader.loadAsync(files[f]).then(g => g.scene));
+      const opFiles = names.filter(n => n.startsWith('operator'));
+      let done = 0;
+      for (const c of Object.values(app.cast)) if (files[c.id + '.glb']) { c.attachModel(cloneSkinned(await load(c.id + '.glb'))); ui.setLoading(0.62 + 0.12 * (++done / names.length)); }
+      if (opFiles.length) for (const [i, o] of app.ops.entries()) o.attachModel(cloneSkinned(await load(opFiles[i % opFiles.length])));
+    }
+  } catch (e) { console.warn('People models could not be loaded; using built-in people.', e); }
   scene.traverse(o => { if (o.isMesh && o.material && o.material.transparent) o.castShadow = false; });
   ui.setLoading(0.75); await nextFrame();
 
   // ---------- post-processing ----------
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.45, 0.5, 1.0);
+  // ambient occlusion: contact shadows under machines, people and racks (high quality only)
+  const gtao = new GTAOPass(scene, camera, innerWidth, innerHeight);
+  gtao.updateGtaoMaterial?.({ radius: 0.6, distanceExponent: 1.4, thickness: 1.2, scale: 1.0 });
+  gtao.blendIntensity = 0.85;
+  composer.addPass(gtao);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.35, 0.5, 1.0);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
 
   // ---------- quality ----------
-  const Q = { high: { dpr: 2, shadow: 2048, bloom: true, shadows: true }, medium: { dpr: 1.25, shadow: 1024, bloom: true, shadows: true }, low: { dpr: 1, shadow: 512, bloom: false, shadows: false } };
+  const Q = { high: { dpr: 2, shadow: 4096, bloom: true, shadows: true, ao: true }, medium: { dpr: 1.25, shadow: 2048, bloom: true, shadows: true, ao: false }, low: { dpr: 1, shadow: 512, bloom: false, shadows: false, ao: false } };
   // ?quality=low|medium|high in the URL forces a level (handy on weak laptops or projectors)
   const qParam = new URLSearchParams(location.search).get('quality');
   let quality = Q[qParam] ? qParam : isCoarse ? 'medium' : 'high';
   const applyQuality = () => {
     const q = Q[quality];
     renderer.setPixelRatio(Math.min(devicePixelRatio || 1, q.dpr));
+    gtao.enabled = q.ao;
     renderer.shadowMap.enabled = q.shadows; sun.castShadow = q.shadows;
     if (sun.shadow.map && sun.shadow.mapSize.x !== q.shadow) { sun.shadow.map.dispose(); sun.shadow.map = null; }
     sun.shadow.mapSize.set(q.shadow, q.shadow);

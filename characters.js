@@ -262,6 +262,78 @@ export class Character {
     this.root.traverse(m => { if (m.isMesh) { m.userData.character = this; m.castShadow = true; m.receiveShadow = false; } });
   }
 
+  // ----- realistic model (GLB, Mixamo-style skeleton) driven by this rig -----
+  // The procedural rig keeps doing all the animation; its joints are copied onto the model's bones
+  // as world-space rotation deltas, so any Mixamo-compatible character works without its own clips.
+  attachModel(model) {
+    const bones = {};
+    model.traverse(o => { if (o.isBone) bones[o.name.replace(/^mixamorig:?/i, '').replace(/^.*[:|]/, '')] = o; });
+    const need = ['Hips', 'Spine', 'Neck', 'Head', 'LeftArm', 'LeftForeArm', 'RightArm', 'RightForeArm', 'LeftUpLeg', 'LeftLeg', 'RightUpLeg', 'RightLeg'];
+    if (need.some(n => !bones[n])) { console.warn('Model skipped: missing bones', need.filter(n => !bones[n])); return false; }
+    const holder = new THREE.Group(); holder.add(model);
+    model.updateMatrixWorld(true);
+    // scale to this character's height, feet on the ground
+    const wp = n => bones[n] ? bones[n].getWorldPosition(new THREE.Vector3()) : null;
+    const top = wp('HeadTop_End') || wp('Head').add(new THREE.Vector3(0, 0.18 * (wp('Head').y - wp('Hips').y) / 0.62, 0));
+    const feet = Math.min(...['LeftToeBase', 'RightToeBase', 'LeftFoot', 'RightFoot'].map(wp).filter(Boolean).map(v => v.y));
+    const k = 1.76 / (top.y - feet + 0.04);
+    model.scale.multiplyScalar(k); model.position.y -= (feet - 0.03) * k;
+    model.updateMatrixWorld(true);
+    // bring the bind pose (usually a T-pose) to the rig's rest pose: arms and legs straight down
+    const align = (b, c, dir) => {
+      if (!bones[b] || !bones[c]) return;
+      const bw = bones[b].getWorldPosition(new THREE.Vector3()), cw = bones[c].getWorldPosition(new THREE.Vector3());
+      const q = new THREE.Quaternion().setFromUnitVectors(cw.sub(bw).normalize(), dir.clone().normalize());
+      const wq = bones[b].getWorldQuaternion(new THREE.Quaternion()).premultiply(q);
+      const pq = bones[b].parent.getWorldQuaternion(new THREE.Quaternion()).invert();
+      bones[b].quaternion.copy(pq.multiply(wq)); bones[b].updateMatrixWorld(true);
+    };
+    const down = new THREE.Vector3(0, -1, 0);
+    align('LeftArm', 'LeftForeArm', new THREE.Vector3(0.12, -1, 0)); align('LeftForeArm', 'LeftHand', new THREE.Vector3(0.08, -1, 0.04));
+    align('RightArm', 'RightForeArm', new THREE.Vector3(-0.12, -1, 0)); align('RightForeArm', 'RightHand', new THREE.Vector3(-0.08, -1, 0.04));
+    align('LeftUpLeg', 'LeftLeg', down); align('LeftLeg', 'LeftFoot', down);
+    align('RightUpLeg', 'RightLeg', down); align('RightLeg', 'RightFoot', down);
+    // map rig joints to bones; spine is shared over Spine and Spine1, chest drives Spine2
+    const map = [['hips', 'Hips'], ['spine', 'Spine'], ['chest', bones.Spine2 ? 'Spine2' : bones.Spine1 ? 'Spine1' : 'Spine'], ['neck', 'Neck'], ['head', 'Head'],
+      ['lSh', 'LeftArm'], ['lEl', 'LeftForeArm'], ['rSh', 'RightArm'], ['rEl', 'RightForeArm'],
+      ['lHip', 'LeftUpLeg'], ['lKnee', 'LeftLeg'], ['rHip', 'RightUpLeg'], ['rKnee', 'RightLeg']]
+      .filter(([, b], i, arr) => arr.findIndex(x => x[1] === b) === i);
+    this.root.add(holder); this.root.updateMatrixWorld(true);
+    const rootInv = new THREE.Quaternion();
+    this.root.getWorldQuaternion(rootInv).invert();
+    const rel = o => o.getWorldQuaternion(new THREE.Quaternion()).premultiply(rootInv);
+    const order = [];
+    model.traverse(o => { if (o.isBone && map.some(([, b]) => bones[b] === o)) order.push(o); }); // parents before children
+    this.retarget = {
+      holder, bones,
+      list: order.map(bone => ({ bone, joint: this.j[map.find(([, b]) => bones[b] === bone)[0]], rest: rel(bone) })),
+      hips: bones.Hips, hipsRest: bones.Hips.position.clone(), hipsRestWorld: bones.Hips.getWorldPosition(new THREE.Vector3()).applyMatrix4(new THREE.Matrix4().copy(this.root.matrixWorld).invert()),
+      tq: new THREE.Quaternion(), pq: new THREE.Quaternion(), ri: new THREE.Quaternion(), v: new THREE.Vector3(),
+    };
+    // hide the procedural body; keep its joints as the animation source
+    for (const g of Object.values(this.j)) for (const c of g.children) if (c.isMesh) c.visible = false;
+    for (const c of this.root.children) if (c.isMesh) c.visible = false;
+    model.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; if (o.material) { const ms = Array.isArray(o.material) ? o.material : [o.material]; ms.forEach(m => { if (m.metalness !== undefined) m.metalness = Math.min(m.metalness, 0.2); }); } } });
+    return true;
+  }
+  applyRetarget() {
+    const R = this.retarget; if (!R) return;
+    this.root.updateMatrixWorld(true);
+    this.root.getWorldQuaternion(R.ri).invert();
+    // hips height and sway follow the rig
+    const hipOff = R.v.set(0, this.pose.hipY, this.pose.hipZ);
+    const wpos = R.hipsRestWorld.clone().add(hipOff).applyMatrix4(this.root.matrixWorld);
+    R.hips.parent.updateMatrixWorld(true);
+    R.hips.position.copy(R.hips.parent.worldToLocal(wpos));
+    for (const e of R.list) {
+      // target rotation relative to the character root = joint delta * bone rest
+      e.joint.getWorldQuaternion(R.tq).premultiply(R.ri).multiply(e.rest);
+      e.bone.parent.getWorldQuaternion(R.pq).premultiply(R.ri).invert();
+      e.bone.quaternion.copy(R.pq.multiply(R.tq));
+      e.bone.updateMatrixWorld(true);
+    }
+  }
+
   // ----- control API -----
   setBase(name, dur = 0.4) {
     if (name === this.base) return;
@@ -372,6 +444,7 @@ export class Character {
       j.rEl.rotation.x = lerp(j.rEl.rotation.x, -0.08, this.aim.g.w);
       j.rEl.rotation.z = lerp(j.rEl.rotation.z, 0, this.aim.g.w);
     }
+    if (this.retarget) this.applyRetarget();
   }
 }
 

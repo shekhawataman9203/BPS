@@ -55,11 +55,11 @@ function floorTexture() {
     for (let x = HALL.x0; x <= HALL.x1; x += 6) { ctx.beginPath(); ctx.moveTo(X(x), 0); ctx.lineTo(X(x), H); ctx.stroke(); }
     for (let z = HALL.z0; z <= HALL.z1; z += 6) { ctx.beginPath(); ctx.moveTo(0, Z(z)); ctx.lineTo(W, Z(z)); ctx.stroke(); }
     // mint walkways (as in the Picture of Future)
-    const fill = (x0, z0, x1, z1, col = 'rgba(126,222,190,0.42)') => { ctx.fillStyle = col; ctx.fillRect(X(x0), Z(z0), (x1 - x0) * PPM, (z1 - z0) * PPM); };
+    const fill = (x0, z0, x1, z1, col = 'rgba(160,170,180,0.28)') => { ctx.fillStyle = col; ctx.fillRect(X(x0), Z(z0), (x1 - x0) * PPM, (z1 - z0) * PPM); };
     fill(-30, 4.6, 18, 7.6); fill(4.6, -9.6, 7.4, 4.6); fill(-30, 17, 18, 19.6); fill(-2.2, 7.6, 2.2, 32);
-    fill(-6, 20, 6, 32, 'rgba(126,222,190,0.18)');
+    fill(-6, 20, 6, 32, 'rgba(160,170,180,0.16)');
     // walkway lines
-    const line = (x0, z0, x1, z1, col = 'rgba(225,229,234,0.55)', w = 0.1) => { ctx.strokeStyle = col; ctx.lineWidth = w * PPM; ctx.beginPath(); ctx.moveTo(X(x0), Z(z0)); ctx.lineTo(X(x1), Z(z1)); ctx.stroke(); };
+    const line = (x0, z0, x1, z1, col = 'rgba(244,196,30,0.95)', w = 0.1) => { ctx.strokeStyle = col; ctx.lineWidth = w * PPM; ctx.beginPath(); ctx.moveTo(X(x0), Z(z0)); ctx.lineTo(X(x1), Z(z1)); ctx.stroke(); };
     line(-30, 4.6, 18, 4.6); line(-30, 7.6, 18, 7.6);           // main aisle
     line(4.6, -9.6, 4.6, 4.6); line(7.4, -9.6, 7.4, 4.6);        // cross aisle to meeting room
     line(-30, -4.6, 18, -4.6); line(-30, -7.4, 18, -7.4);
@@ -88,9 +88,9 @@ function floorTexture() {
   });
 }
 
-function makeRobot(accent = true) {
+function makeRobot(accent = true, body = 0xEEF0F2) {
   const g = new THREE.Group();
-  const white = mat(0xEEF0F2, { rough: 0.32, metal: 0.05 });
+  const white = mat(body, { rough: 0.32, metal: 0.05 });
   const dark = mat(0x22262d, { rough: 0.5, metal: 0.4 });
   const red = mat(C.red, { rough: 0.4 });
   const base = cyl(0.34, 0.4, 0.28, dark, 24, g); base.position.y = 0.14;
@@ -134,7 +134,7 @@ export function buildFactory(scene, renderer, data = {}) {
   // ---------- floor ----------
   const ft = floorTexture();
   ft.tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-  const floorMat = new THREE.MeshStandardMaterial({ map: ft.tex, roughness: 0.48, metalness: 0.0, envMapIntensity: 0.9 });
+  const floorMat = new THREE.MeshStandardMaterial({ map: ft.tex, roughness: 0.3, metalness: 0.0, envMapIntensity: 1.15 });
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(HALL.x1 - HALL.x0, HALL.z1 - HALL.z0), floorMat);
   floor.rotation.x = -Math.PI / 2; floor.position.set((HALL.x0 + HALL.x1) / 2, 0, (HALL.z0 + HALL.z1) / 2);
   floor.receiveShadow = true; root.add(floor);
@@ -162,8 +162,15 @@ export function buildFactory(scene, renderer, data = {}) {
   root.add(ribIM);
   // clerestory light bands
   const bandM = glow(0xcfe0ff, 0.9);
-  box(0.05, 1.1, D - 4, bandM, HALL.x0 + 0.3, 8.4, 4, root);
-  box(0.05, 1.1, D - 4, bandM, HALL.x1 - 0.3, 8.4, 4, root);
+  // tall daylight windows along both side walls (instanced panes with mullions)
+  {
+    const panes = [];
+    for (let z = HALL.z0 + 3; z < HALL.z1 - 2; z += 3.2) for (const x of [HALL.x0 + 0.17, HALL.x1 - 0.17]) panes.push([x, z]);
+    const paneIM = new THREE.InstancedMesh(new THREE.BoxGeometry(0.04, 2.6, 2.7), glow(0xe6f0ff, 1.05), panes.length);
+    const mullIM = new THREE.InstancedMesh(new THREE.BoxGeometry(0.08, 2.7, 0.08), mat(0x8d949d, { rough: 0.4, metal: 0.6 }), panes.length * 2);
+    panes.forEach(([x, z], i) => { m4.makeTranslation(x, 7.6, z); paneIM.setMatrixAt(i, m4); m4.makeTranslation(x, 7.6, z - 0.45); mullIM.setMatrixAt(i * 2, m4); m4.makeTranslation(x, 7.6, z + 0.45); mullIM.setMatrixAt(i * 2 + 1, m4); });
+    root.add(paneIM, mullIM); void bandM;
+  }
   // red base band on walls
   const redBand = glow(C.red, 1.6);
   box(sideW - 0.4, 0.12, 0.05, redBand, HALL.x0 + sideW / 2, 1.2, HALL.z1 - 0.2, root);
@@ -241,7 +248,7 @@ export function buildFactory(scene, renderer, data = {}) {
   // robots on line A
   const robots = [];
   [-22, -16, -10].forEach((x, i) => {
-    const r = makeRobot(); r.g.position.set(x, 0, -1.45); r.g.rotation.y = 0; lineA.add(r.g); r.o = i * 1.9; robots.push(r);
+    const r = makeRobot(false, 0xF07B12); r.g.position.set(x, 0, -1.45); r.g.rotation.y = 0; lineA.add(r.g); r.o = i * 1.9; robots.push(r);
     // andon tower
     const tower = new THREE.Group(); tower.position.set(x + 1.1, 0, -0.8); lineA.add(tower);
     cyl(0.03, 0.03, 1.8, railM, 8, tower).position.y = 0.9;
@@ -543,7 +550,7 @@ export function buildFactory(scene, renderer, data = {}) {
   shadows(dc, true, true);
 
   // ---------- AGVs ----------
-  const agvPath = roundedRectPath(-30, -6, 19.4, 15.5, 2.4);
+  const agvPath = roundedRectPath(-30, -6, 19.4, 15.9, 2.4);
   const agvLen = agvPath.getLength();
   const agvs = [0, 0.34, 0.68].map(u0 => { const g = makeAGV(); root.add(g); return { g, u: u0 }; });
   const tmpT = new THREE.Vector3();
@@ -635,6 +642,52 @@ export function buildFactory(scene, renderer, data = {}) {
   const dust = new THREE.Points(dGeo, new THREE.PointsMaterial({ size: 0.05, map: dotTex.tex, color: 0xc8d2e0, transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending }));
   root.add(dust);
   anim.push((dt, t) => { for (let i = 0; i < DUST; i++) { dPos[i * 3 + 1] += dt * 0.05 * Math.sin(t * 0.3 + dSeed[i]); dPos[i * 3] += dt * 0.04 * Math.cos(t * 0.2 + dSeed[i]); } dGeo.attributes.position.needsUpdate = true; });
+
+  // ---------- overhead gantry cranes (yellow) ----------
+  const craneM = mat(0xF2B417, { rough: 0.45, metal: 0.3 }), craneDark = mat(0x2b313a, { rough: 0.45, metal: 0.5 });
+  box(0.4, 0.4, D - 2, craneDark, HALL.x0 + 1.0, 8.9, 4, root); box(0.4, 0.4, D - 2, craneDark, HALL.x1 - 1.0, 8.9, 4, root); // runway rails
+  const cranes = [];
+  for (const [z0, sp] of [[-4, 0.05], [14, 0.04]]) {
+    const c = new THREE.Group(); c.position.set(0, 9.25, z0); root.add(c);
+    box(W - 2.4, 0.7, 0.45, craneM, 0, 0, -0.5, c); box(W - 2.4, 0.7, 0.45, craneM, 0, 0, 0.5, c);
+    for (const sx of [-1, 1]) box(0.8, 0.5, 1.8, craneM, sx * (W / 2 - 1.2), 0.0, 0, c);
+    const trolley = new THREE.Group(); trolley.position.y = -0.2; c.add(trolley);
+    box(1.4, 0.5, 1.5, craneDark, 0, 0.1, 0, trolley);
+    cyl(0.015, 0.015, 3.2, mat(0x111111, { rough: 0.5 }), 6, trolley).position.y = -1.6;
+    box(0.4, 0.25, 0.25, craneM, 0, -3.25, 0, trolley);
+    box(W - 2.4, 0.05, 0.03, glow(0xffffff, 0.9), 0, -0.37, 0.75, c);
+    cranes.push({ c, trolley, z0, sp });
+    shadows(c, true, false);
+  }
+  anim.push((dt, t) => { for (const k of cranes) { k.trolley.position.x = Math.sin(t * k.sp * 2.4) * 18; k.c.position.z = k.z0 + Math.sin(t * k.sp) * 3; } });
+
+  // ---------- Kaizen board (continuous improvement) at the end of the NHA line ----------
+  const kzCT = new CanvasTex(1024, 640, (ctx, w, h) => {
+    ctx.fillStyle = '#F7F8FA'; ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#12161C'; ctx.font = `800 52px ${FONT}`; ctx.fillText('CONTINUOUS IMPROVEMENT / KAIZEN', 36, 74);
+    ctx.fillStyle = '#0E9384'; ctx.fillRect(36, 92, 160, 8);
+    const cols = ['Idea', 'In progress', 'Done', 'Standardised'];
+    cols.forEach((c, i) => { const x = 36 + i * 244; ctx.fillStyle = '#4a525d'; ctx.font = `700 28px ${FONT}`; ctx.fillText(c, x, 150); ctx.strokeStyle = '#c9ced5'; ctx.lineWidth = 2; ctx.strokeRect(x, 166, 226, 440);
+      const notes = [5, 4, 6, 3][i];
+      for (let k = 0; k < notes; k++) { ctx.fillStyle = ['#FFE066', '#9BE7A0', '#FFB3B3', '#A7D3FF'][(k + i) % 4]; const nx = x + 12 + (k % 2) * 106, ny = 182 + Math.floor(k / 2) * 132; ctx.fillRect(nx, ny, 96, 100); ctx.fillStyle = 'rgba(0,0,0,0.35)'; for (let l = 0; l < 4; l++) ctx.fillRect(nx + 10, ny + 22 + l * 18, 60 + ((k + l) % 3) * 8, 4); }
+      ctx.fillStyle = i === 2 ? '#3FBF8F' : '#E20015'; ctx.beginPath(); ctx.arc(x + 204, 148, 10, 0, Math.PI * 2); ctx.fill(); });
+  });
+  const kz = new THREE.Group(); kz.position.set(-3.7, 0, 14.0); kz.rotation.y = 0.5; root.add(kz);
+  box(2.5, 1.6, 0.06, mat(0xb9c0c8, { rough: 0.4, metal: 0.6 }), 0, 1.55, -0.04, kz);
+  const kzFace = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.5), new THREE.MeshStandardMaterial({ map: kzCT.tex, roughness: 0.6, emissive: 0xffffff, emissiveMap: kzCT.tex, emissiveIntensity: 0.3 }));
+  kzFace.position.set(0, 1.55, 0); kz.add(kzFace);
+  for (const sx of [-1.15, 1.15]) { box(0.05, 0.8, 0.05, alu, sx, 0.4, 0, kz); box(0.06, 0.04, 0.6, alu, sx, 0.02, 0, kz); }
+  shadows(kz, true, true);
+
+  // ---------- national flag on the back wall ----------
+  const flagCT = new CanvasTex(600, 400, (ctx, w, h) => {
+    ctx.fillStyle = '#FF9933'; ctx.fillRect(0, 0, w, h / 3); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, h / 3, w, h / 3); ctx.fillStyle = '#138808'; ctx.fillRect(0, 2 * h / 3, w, h / 3);
+    const cx = w / 2, cy = h / 2, r = h / 6 * 0.92; ctx.strokeStyle = '#000080'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+    ctx.lineWidth = 1.6; for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); ctx.stroke(); }
+    ctx.fillStyle = '#000080'; ctx.beginPath(); ctx.arc(cx, cy, r * 0.18, 0, Math.PI * 2); ctx.fill();
+  });
+  const flag = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 2.8), new THREE.MeshStandardMaterial({ map: flagCT.tex, roughness: 0.8, emissive: 0xffffff, emissiveMap: flagCT.tex, emissiveIntensity: 0.25 }));
+  flag.position.set(-6, 7.4, HALL.z0 + 0.17); root.add(flag);
 
   // ---------- finish goods store ----------
   const fgs = new THREE.Group(); root.add(fgs);

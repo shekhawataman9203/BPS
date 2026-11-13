@@ -19,6 +19,12 @@ const dataUri = (f, type) => `data:${type};base64,${fs.readFileSync(src(f)).toSt
 const images = { __BPS_LOGO__: dataUri('assets/bps-go-logo.png', 'image/png'), __LWW__: dataUri('assets/lead-work-win.jpg', 'image/jpeg'), __REFL__: dataUri('assets/reflection.jpg', 'image/jpeg') };
 JSON.parse(data); // validate
 for (const [k, v] of Object.entries(images)) html = html.replaceAll(k, v);
+// people models: assets/people/<role id>.glb (ph, bps, prod, qual, dig, log) and operator*.glb; PEOPLE_DIR overrides the folder
+const peopleDir = process.env.PEOPLE_DIR || src('assets/people');
+const people = {};
+if (fs.existsSync(peopleDir)) for (const f of fs.readdirSync(peopleDir).sort()) if (/\.glb$/i.test(f)) people[f.toLowerCase()] = `data:model/gltf-binary;base64,${fs.readFileSync(path.join(peopleDir, f)).toString('base64')}`;
+console.log('people models:', Object.keys(people).join(', ') || 'none (procedural people)');
+html = html.replace('__PEOPLE__', () => JSON.stringify(people));
 html = html.replace('/*__CSS__*/', () => css)
   .replace('__DATA__', () => esc(data))
   .replace('/*__VENDOR__*/', () => esc(vendor.outputFiles[0].text))
