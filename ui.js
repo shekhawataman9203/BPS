@@ -162,7 +162,7 @@ export class UI {
     tc.classList.remove('on'); void tc.offsetWidth;
     $('.tc-num', tc).textContent = pad(i);
     const t = $('.tc-title', tc); t.innerHTML = '';
-    [...title].forEach((ch, k) => t.append(h('span', { style: `--k:${k}` }, ch === ' ' ? ' ' : ch)));
+    [...title].forEach((ch, k) => t.append(h('span', { style: `--k:${k}` }, ch === ' ' ? '\u00a0' : ch)));
     $('.tc-sub', tc).textContent = sub || '';
     tc.classList.add('on');
     this.later('tc', 3300, () => tc.classList.remove('on'));

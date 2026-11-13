@@ -172,7 +172,8 @@ export class Director {
     ui.setChapter(i);
     this.stage(ch.id);
     ui.fade(0, 0.8);
-    if (ch.id !== 'opening' && !skipTitle) ui.titleCard(i, ch.title, ch.sub);
+    // the gate chapter has no title card: '2026 Flashback' is written on the doors
+    if (ch.id !== 'opening' && ch.id !== 'flashback' && !skipTitle) ui.titleCard(i, ch.title, ch.sub);
     const ctx = this.makeCtx();
     ui.showSkip(ch.id !== 'opening'); ui.letterbox(ch.id !== 'opening');
     try { await this[ch.id](ctx); } catch (e) { console.error(e); }
@@ -272,7 +273,6 @@ export class Director {
     a.ui.flash();
     await ctx.wait(0.3);
     ctx.cut(SHOT.in_entry);
-    a.ui.bigTitle('2026 Flashback', { hold: 2.2 });
     team.forEach(m => m.lookAt(ph));
     ph.place(0, 31.2, PI);
     const walkIn = ctx.walk(ph, [[0, 27.4]], { speed: 1.9 });
