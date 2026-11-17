@@ -183,7 +183,8 @@ async function boot() {
     const ty = ui.sideOpen() && narrow ? Math.min(ui.panelSize().h, H * 0.55) / 2 : 0;
     shift.x = damp(shift.x, tx, 4, dt); shift.y = damp(shift.y, ty, 4, dt);
     if (Math.abs(shift.x) > 0.5 || Math.abs(shift.y) > 0.5) camera.setViewOffset(W, H, shift.x, shift.y, W, H); else if (camera.view && camera.view.enabled) camera.clearViewOffset();
-    if (Q[quality].bloom) composer.render(); else renderer.render(scene, camera);
+    // a full-screen card (Glimpses, 'How 2027 looks like') hides the scene: skip drawing it so the card animates smoothly
+    if (!ui.covering()) { if (Q[quality].bloom) composer.render(); else renderer.render(scene, camera); }
     ui.updatePins(camera, W, H);
     app.hoverScreen();
     // adaptive quality after the visitor has entered

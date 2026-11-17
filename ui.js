@@ -233,6 +233,7 @@ export class UI {
       sec.classList.toggle('focus', action === 'full');
     }
   }
+  covering() { const g = document.getElementById('glimpses'), y = document.getElementById('yearcard'); return (g && !g.hidden && g.dataset.state) || (y && y.classList.contains('on')); }
   // 'Press → for the next step' hint in stepped chapters
   stepHint(on) { const el = $('#stepHint'); if (el) el.classList.toggle('on', !!on); const b = $('#btnSkip'); if (b) b.firstChild.textContent = on ? 'Next step ' : 'Skip scene '; }
   hideTitleCard() { $('#titlecard').classList.remove('on'); this.cancel('tc'); }
