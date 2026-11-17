@@ -586,3 +586,27 @@ body.screen-view #panel, body.screen-view #panelTab, body.screen-view #captions,
 
 #stepHint { position: fixed; z-index: 13; right: 24px; bottom: calc(var(--rail-h) + var(--lb) + 16px); margin: 0; padding: 7px 12px; font-size: 13px; color: var(--grey2); background: rgba(10, 13, 18, .82); border: 1px solid var(--line2); border-left: 3px solid #29d3ff; opacity: 0; transform: translateY(6px); transition: opacity .3s, transform .3s; pointer-events: none; }
 #stepHint.on { opacity: 1; transform: none; }
+
+/* ---------------- Glimpses ---------------- */
+#glimpses { position: fixed; inset: 0; z-index: 29; background: #000; overflow: hidden; }
+#glimpses > div { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; opacity: 0; pointer-events: none; transition: opacity .7s; }
+#glimpses[data-state="cover"] .gl-cover, #glimpses[data-state="month"] .gl-month, #glimpses[data-state="slide"] .gl-stage { opacity: 1; pointer-events: auto; }
+.gl-icons { margin: 0 0 18px; font-size: clamp(30px, 4vw, 56px); letter-spacing: .25em; transform: translateY(10px); transition: transform 1s var(--ease) .2s; }
+.gl-title, .gl-m-title { margin: 0; font-weight: 800; font-stretch: 118%; font-size: clamp(48px, 8vw, 140px); line-height: 1; color: #fff; transform: translateY(18px); transition: transform 1.1s var(--ease) .15s; }
+.gl-sub, .gl-m-event { margin: 22px 0 0; color: var(--grey2); font-size: clamp(16px, 1.6vw, 24px); }
+.gl-m-small { margin: 0 0 18px; color: #29d3ff; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: 15px; }
+.gl-bar { display: block; width: 220px; height: 8px; background: var(--red); margin-top: 30px; transform: scaleX(0); transition: transform 1.2s var(--ease) .5s; }
+#glimpses[data-state="cover"] .gl-icons, #glimpses[data-state="cover"] .gl-title, #glimpses[data-state="month"] .gl-m-title { transform: none; }
+#glimpses[data-state="cover"] .gl-bar { transform: scaleX(1); }
+.gl-slide { position: relative; width: min(96vw, calc(94vh * 16 / 9)); aspect-ratio: 16 / 9; background: #fff; color: #111; text-align: left; box-shadow: 0 30px 90px rgba(0, 0, 0, .6); overflow: hidden; }
+.gl-s-title { position: absolute; left: 2.1%; top: 2.5%; margin: 0; font: 400 clamp(22px, 3.6vw, 66px)/1.1 Arial, Helvetica, sans-serif; color: #1673C4; }
+.gl-s-event { position: absolute; left: 0; right: 0; top: 12.5%; margin: 0; text-align: center; font: 400 clamp(14px, 2.2vw, 38px)/1.1 Arial, Helvetica, sans-serif; color: #111; }
+.gl-s-logo { position: absolute; right: 1.4%; top: 1.2%; height: 7%; }
+.gl-s-foot { position: absolute; left: 0; right: 0; bottom: 0; height: 1.2%; background: linear-gradient(90deg, #b51e3a, #d4122e 25%, #4b2d82 45%, #1a5aa5 60%, #12a5d8 75%, #18a03e 90%, #7ac143); }
+.gl-img { position: absolute; object-fit: contain; background: #fff; box-shadow: 0 6px 22px rgba(0, 0, 0, .18); transition: left .95s var(--ease), top .95s var(--ease), width .95s var(--ease), height .95s var(--ease), opacity .6s, box-shadow .6s; }
+.gl-img[data-st="hidden"], .gl-img[data-st="placed-hidden"] { opacity: 0; }
+.gl-img[data-st="full"] { z-index: 3; box-shadow: 0 30px 90px rgba(0, 0, 0, .55); }
+#glimpses.focus .gl-slide::after { content: ""; position: absolute; inset: 0; background: rgba(10, 13, 18, .82); z-index: 2; }
+.gl-caption { position: absolute; left: 0; right: 0; bottom: 3.5vh; margin: 0; text-align: center; color: #fff; font-size: clamp(15px, 1.5vw, 22px); font-weight: 600; opacity: 0; transition: opacity .5s .4s; z-index: 4; text-shadow: 0 2px 10px rgba(0,0,0,.6); }
+.gl-caption.on { opacity: 1; }
+#stepHint { z-index: 32; }

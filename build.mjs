@@ -30,6 +30,10 @@ for (const dir of peopleDirs) if (fs.existsSync(dir)) for (const f of fs.readdir
 }
 console.log('people models:', Object.keys(people).join(', ') || 'none (procedural people)');
 html = html.replace('__PEOPLE__', () => JSON.stringify(people));
+// glimpses: assets/glimpses/*.jpg|png, embedded by file name
+const glimpses = {}, gDir = src('assets/glimpses');
+if (fs.existsSync(gDir)) for (const f of fs.readdirSync(gDir).sort()) if (/\.(jpe?g|png|webp)$/i.test(f)) glimpses[f] = dataUri('assets/glimpses/' + f, /png$/i.test(f) ? 'image/png' : /webp$/i.test(f) ? 'image/webp' : 'image/jpeg');
+html = html.replace('__GLIMPSES__', () => JSON.stringify(glimpses));
 html = html.replace('/*__CSS__*/', () => css)
   .replace('__DATA__', () => esc(data))
   .replace('/*__VENDOR__*/', () => esc(vendor.outputFiles[0].text))

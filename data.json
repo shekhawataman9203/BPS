@@ -848,5 +848,53 @@
         "roadmap": "cip-indirect"
       }
     ]
+  },
+  "glimpses": {
+    "title": "Glimpses 2026",
+    "icons": [
+      "📸",
+      "🤝",
+      "💡",
+      "🏭"
+    ],
+    "subtitle": "Moments that moved BPS GO!+ this year",
+    "months": [
+      {
+        "month": "April 2026",
+        "event": "Space Workshop 2026",
+        "images": [
+          {
+            "src": "space-team.jpg",
+            "caption": "Space Workshop 2026 · participants and team",
+            "slot": [
+              1.9,
+              18.7,
+              43.9,
+              36.1
+            ]
+          },
+          {
+            "src": "space-groupwork.jpg",
+            "caption": "Group work on the layout",
+            "slot": [
+              53.75,
+              18.9,
+              38.9,
+              38.9
+            ]
+          },
+          {
+            "src": "space-outcome.jpg",
+            "caption": "Outcome · Workshop OPL",
+            "slot": [
+              26.6,
+              57.2,
+              37.6,
+              36.3
+            ]
+          }
+        ]
+      }
+    ]
   }
 }

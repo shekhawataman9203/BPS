@@ -19,6 +19,7 @@
 <script type="application/json" id="workshop-data">__DATA__</script>
 <!-- realistic people: GLB files from assets/people, embedded at build time -->
 <script type="application/json" id="people-models">__PEOPLE__</script>
+<script type="application/json" id="glimpse-images">__GLIMPSES__</script>
 </head>
 <body data-chapter="opening">
 <canvas id="stage" aria-label="3D scene of the JaP plant, its main gate, the KPI wall and the BPS team"></canvas>
@@ -52,6 +53,12 @@
 <p id="marker" aria-hidden="true"></p>
 <div id="titlecard" aria-live="polite"><div class="tc-num"></div><h2 class="tc-title"></h2><p class="tc-sub"></p></div>
 <div id="bigtitle" aria-live="polite"></div>
+<section id="glimpses" aria-label="Glimpses" hidden>
+  <div class="gl-cover"><p class="gl-icons"></p><h2 class="gl-title"></h2><p class="gl-sub"></p><i class="gl-bar" aria-hidden="true"></i></div>
+  <div class="gl-month"><p class="gl-m-small">Glimpses 2026</p><h2 class="gl-m-title"></h2><p class="gl-m-event"></p></div>
+  <div class="gl-stage"><div class="gl-slide"><h2 class="gl-s-title"></h2><p class="gl-s-event"></p><img class="gl-s-logo" alt="BPS GO!+"><div class="gl-s-foot"></div></div></div>
+  <p class="gl-caption"></p>
+</section>
 <p id="stepHint" aria-hidden="true">Press <kbd>→</kbd> or the clicker for the next step</p>
 <div id="yearcard" aria-live="polite"><p class="yc-small">BPS GO!+</p><h2></h2><i class="yc-bar" aria-hidden="true"></i></div>
 <div id="captions" aria-live="polite"></div>
@@ -128,7 +135,7 @@
   <dl>
     <dt><kbd>→</kbd> <kbd>Space</kbd> <kbd>Page Down</kbd></dt><dd>Finish the scene, then go to the next chapter</dd>
     <dt><kbd>←</kbd> <kbd>Page Up</kbd></dt><dd>Previous chapter</dd>
-    <dt><kbd>1</kbd>–<kbd>6</kbd></dt><dd>Jump to a chapter</dd>
+    <dt><kbd>1</kbd>–<kbd>7</kbd></dt><dd>Jump to a chapter</dd>
     <dt><kbd>K</kbd></dt><dd>Pause or play the animation</dd>
     <dt><kbd>V</kbd></dt><dd>Full, sharp view of the big screen</dd>
     <dt><kbd>B</kbd></dt><dd>BPS GO!+ roadmap: click a block to zoom, <kbd>Esc</kbd> to zoom out</dd>

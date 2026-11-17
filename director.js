@@ -43,6 +43,7 @@ export const CHAPTERS = [
   { id: 'flashback', title: '2026 Flashback', sub: 'Through the main gate, between NHA and VE Pump', loc: 'gate', dur: 24 },
   { id: 'house', title: 'House of BPS GO!+', sub: 'Where 2026 started: one operating system', loc: 'wall', dur: 30 },
   { id: 'kpis', title: 'KPI wall', sub: 'Every element of the house, target against YTD', loc: 'wall', dur: 30 },
+  { id: 'glimpses', title: 'Glimpses 2026', sub: 'Moments from the year', loc: 'wall', dur: 30, stepped: true },
   { id: 'future', title: 'How 2027 looks like', sub: 'Back through the gate, into the plant of 2027', loc: 'gate', dur: 40, stepped: true },
   { id: 'plant', title: 'Picture of Future', sub: 'A walk through the modern plant', loc: 'floor', dur: 36 },
   { id: 'closing', title: 'Lead. Work. Win.', sub: 'Creating value. Together.', loc: 'close', dur: 18 },
@@ -115,7 +116,7 @@ export class Director {
   setWorld({ digital = false, gate = false, build = 1, screen = 'kpi', future = false } = {}) {
     const a = this.app;
     a.entrance.wall.setMode(screen);
-    a.factory.setDigital(digital); a.factory.setFuture(future); a.ui.yearCard(null);
+    a.factory.setDigital(digital); a.factory.setFuture(future); a.ui.yearCard(null); a.ui.glimpses('close');
     a.factory.gate.snap(gate);
     a.entrance.snapBuild(build); a.entrance.highlight(null); a.entrance.hideConfetti();
     a.entrance.wall.highlight(null, null);
@@ -133,9 +134,9 @@ export class Director {
         a.rig.orbit([0, 0, 4], 62, 44, 0.03, 1.1); break;
       case 'flashback':
         this.placeGroup(WAIT, () => 0); c.ph.place(0, 48, PI); this.setWorld({ gate: false, build: 1, screen: 'house' }); a.rig.cut(SHOT.g_far); break;
-      case 'house': case 'roadmap': case 'kpis':
+      case 'house': case 'roadmap': case 'kpis': case 'glimpses':
         this.placeGroup(WALLTEAM, this.yawTo(W.x, W.z)); c.ph.place(-4.6, 24.4, Math.atan2(W.x + 4.6, W.z - 24.4));
-        this.setWorld({ gate: true, screen: { house: 'house', roadmap: 'roadmap', kpis: 'kpi' }[id] }); a.rig.cut(SHOT.k_wall); break;
+        this.setWorld({ gate: true, screen: { house: 'house', roadmap: 'roadmap', kpis: 'kpi', glimpses: 'kpi' }[id] }); a.rig.cut(SHOT.k_wall); break;
       case 'future':
         this.placeGroup(WAIT, () => 0); c.ph.place(0, 40.5, PI); this.setWorld({ gate: false, future: true, screen: 'house27' }); a.entrance.wall.set27(false, 0, true); a.rig.cut(SHOT.g_door); break;
       case 'plant':
@@ -151,6 +152,7 @@ export class Director {
     switch (id) {
       case 'flashback': a.factory.gate.snap(true); this.placeGroup(WAIT, () => 0); c.ph.place(0, 27.4, PI); c.bps.place(-0.6, 26.3, PI * 0.75); lookAll(c.ph); a.rig.cut(SHOT.in_both); break;
       case 'house': case 'roadmap': case 'kpis': a.rig.cut(SHOT.k_wall); lookAll(this.wallCenter()); break;
+      case 'glimpses': { const G = a.data.glimpses, last = G.months.length - 1; a.ui.glimpses('month', last); a.ui.glimpses('compose', last); break; }
       case 'future': a.factory.gate.snap(true); this.placeGroup(WALLTEAM, this.yawTo(KPI_WALL.x, KPI_WALL.z)); c.ph.place(-4.6, 24.4, Math.atan2(KPI_WALL.x + 4.6, KPI_WALL.z - 24.4)); lookAll(this.wallCenter()); a.entrance.wall.set27(true, 4, true); a.rig.cut(SHOT.k_wall); break;
       case 'plant': c.ph.place(22.2, 5.0, 0.6); c.bps.place(21.1, 4.6, 0.6); c.qual.place(23.4, 5.7, -2.4); a.rig.cut(SHOT.p_cell); break;
       case 'closing': this.rowTeam(true); a.rig.cut(SHOT.c_crane); break;
@@ -177,7 +179,7 @@ export class Director {
     this.stage(ch.id);
     ui.fade(0, 0.8);
     // the gate chapter has no title card: '2026 Flashback' is written on the doors
-    if (ch.id !== 'opening' && ch.id !== 'flashback' && ch.id !== 'future' && !skipTitle) ui.titleCard(i, ch.title, ch.sub);
+    if (!['opening', 'flashback', 'future', 'glimpses'].includes(ch.id) && !skipTitle) ui.titleCard(i, ch.title, ch.sub);
     const ctx = this.makeCtx();
     ui.showSkip(ch.id !== 'opening'); ui.letterbox(ch.id !== 'opening');
     try { await this[ch.id](ctx); } catch (e) { console.error(e); }
@@ -433,6 +435,23 @@ export class Director {
     ph.faceTo(wall.spot(0.5, 0.5)); ph.lookAt(null); team.forEach(m => m.lookAt(wall.spot(0.5, 0.5)));
     ctx.cam(SHOT.k_wall, 2.6);
     await ctx.wait(2.0);
+  }
+
+  async glimpses(ctx) {
+    const ui = this.app.ui, G = this.app.data.glimpses;
+    // black cover: Glimpses 2026
+    ui.glimpses('cover');
+    await this.waitStep(ctx);
+    for (let m = 0; m < G.months.length; m++) {
+      ui.glimpses('month', m);                     // the month on black
+      await this.waitStep(ctx);
+      for (let i = 0; i < G.months[m].images.length; i++) {
+        ui.glimpses('full', m, i);                 // the photo fills the screen; the others are hidden
+        await this.waitStep(ctx);
+        ui.glimpses('place', m, i);                // it settles into its place on the slide
+        await this.waitStep(ctx);
+      }
+    }
   }
 
   async future(ctx) {

@@ -194,6 +194,45 @@ export class UI {
     if (!text) { el.classList.remove('on'); this.cancel('year'); return; }
     $('h2', el).textContent = text; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
   }
+  // ------------------------------------------------------------ Glimpses: photos zoom in full screen, then settle into their place on the slide
+  glimpses(action, a, b) {
+    const sec = $('#glimpses'), G = this.data.glimpses; if (!sec || !G) return;
+    const imgs = this._glImgs ||= JSON.parse(document.getElementById('glimpse-images')?.textContent || '{}');
+    const set = st => { sec.dataset.state = st; };
+    const slide = $('.gl-slide', sec);
+    const items = () => [...slide.querySelectorAll('.gl-img')];
+    const place = (el, r) => { el.style.left = r[0] + '%'; el.style.top = r[1] + '%'; el.style.width = r[2] + '%'; el.style.height = r[3] + '%'; };
+    if (action === 'close') { sec.hidden = true; set(''); return; }
+    sec.hidden = false;
+    if (action === 'cover') {
+      $('.gl-icons', sec).textContent = G.icons.join('  '); $('.gl-title', sec).textContent = G.title; $('.gl-sub', sec).textContent = G.subtitle || '';
+      set(''); void sec.offsetWidth; set('cover'); return;
+    }
+    const M = G.months[a ?? 0];
+    if (action === 'month') {
+      $('.gl-m-title', sec).textContent = M.month; $('.gl-m-event', sec).textContent = M.event;
+      // prepare the slide for this month, all photos hidden
+      $('.gl-s-title', sec).textContent = G.title; $('.gl-s-event', sec).textContent = M.event; $('.gl-s-logo', sec).src = $('#bpsLogoImg').src;
+      items().forEach(e => e.remove());
+      M.images.forEach((im, i) => {
+        const el = h('img', { class: 'gl-img', 'data-i': i, alt: im.caption || '', src: imgs[im.src] || '' });
+        place(el, [im.slot[0] + im.slot[2] * 0.3, im.slot[1] + im.slot[3] * 0.3, im.slot[2] * 0.4, im.slot[3] * 0.4]);
+        el.dataset.st = 'hidden'; slide.append(el);
+      });
+      set('month'); return;
+    }
+    if (action === 'full' || action === 'place' || action === 'compose') {
+      set('slide');
+      items().forEach((el, i) => {
+        const im = M.images[i];
+        if (action === 'compose' || (action === 'place' && i <= b) || (action === 'full' && i < b)) { el.dataset.st = action === 'full' ? 'placed-hidden' : 'placed'; place(el, im.slot); }
+        if (action === 'full' && i === b) { el.dataset.st = 'full'; place(el, [1.5, 1.5, 97, 97]); }
+      });
+      const cap = $('.gl-caption', sec);
+      cap.textContent = action === 'full' ? (M.images[b].caption || '') : ''; cap.classList.toggle('on', action === 'full');
+      sec.classList.toggle('focus', action === 'full');
+    }
+  }
   // 'Press → for the next step' hint in stepped chapters
   stepHint(on) { const el = $('#stepHint'); if (el) el.classList.toggle('on', !!on); const b = $('#btnSkip'); if (b) b.firstChild.textContent = on ? 'Next step ' : 'Skip scene '; }
   hideTitleCard() { $('#titlecard').classList.remove('on'); this.cancel('tc'); }
