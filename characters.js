@@ -105,6 +105,11 @@ export const GESTURES = {
   armsOpen: { fn: lt => ({ lSh: [-0.2, 0, 1.35 + 0.05 * S(lt * 2)], rSh: [-0.2, 0, -1.35 - 0.05 * S(lt * 2)], lEl: [-0.2, 0, 0], rEl: [-0.2, 0, 0], head: [-0.08, 0, 0], chest: [-0.06, 0, 0] }) },
   point: { fn: () => ({ lSh: [0.05, 0, 0.12], lEl: [-0.15, 0, 0] }) }, // arm aim applied separately
   handOnChest: { fn: () => ({ rSh: [-0.35, 0, 0.42], rEl: [-1.95, 0, 0], head: [0.1, 0, 0] }) },
+  // slumped and tired: head down, shoulders forward, arms hanging
+  tired: { fadeIn: 0.8, fadeOut: 0.6, fn: lt => ({ hipY: -0.025, spine: [0.22, 0, 0], chest: [0.12, 0, 0], neck: [0.18, 0, 0], head: [0.32 + 0.03 * S(lt * 1.4), 0, 0.04], lSh: [-0.12, 0, 0.03], rSh: [-0.12, 0, -0.03], lEl: [-0.1, 0, 0], rEl: [-0.1, 0, 0] }) },
+  wipeBrow: { fadeIn: 0.4, fn: lt => ({ rSh: [-1.55, 0, 0.42 + 0.12 * S(lt * 6)], rEl: [-2.05, 0, 0], head: [0.12, 0, 0] }) },
+  // writing on a clipboard held in the left hand
+  write: { fadeIn: 0.4, fn: lt => ({ lSh: [-0.75, 0, -0.32], lEl: [-1.25, 0, 0], rSh: [-0.7, 0, 0.22], rEl: [-1.35 + 0.06 * S(lt * 9), 0, 0.08 * S(lt * 5)], head: [0.32, 0, 0], neck: [0.1, 0, 0] }) },
 };
 
 // Front surface of the torso in chest-local coordinates (chest joint origin), from the lathe profiles above.
@@ -426,8 +431,26 @@ export class Character {
     leg('l'); leg('r');
     // merge the static parts of each joint by material: far fewer draw calls per person
     for (const g of [this.root, hips, spine, chest, neck, head, j.lSh, j.lEl, j.lHand, j.rSh, j.rEl, j.rHand, j.lHip, j.lKnee, j.rHip, j.rKnee]) mergeChildren(g);
+    if (o.realFace) {
+      // mood mouths over the painted lips: a smile and a tired frown
+      const mp = headPoint(0, -0.425).add(new THREE.Vector3(0, 0.094, 0.009));
+      const mouthM = new THREE.MeshStandardMaterial({ color: new THREE.Color(o.skin).multiplyScalar(0.55).lerp(new THREE.Color(0x7a2a28), 0.4), roughness: 0.5 });
+      const arc = () => new THREE.TorusGeometry(0.017, 0.0028, 6, 18, Math.PI);
+      const smile = new THREE.Mesh(arc(), mouthM); smile.rotation.z = Math.PI; smile.position.set(mp.x, mp.y + 0.008, mp.z); smile.visible = false; head.add(smile);
+      const frown = new THREE.Mesh(arc(), mouthM); frown.scale.set(0.85, 0.55, 1); frown.position.set(mp.x, mp.y - 0.004, mp.z); frown.visible = false; head.add(frown);
+      this.mouths = { smile, frown };
+    }
+    // clipboard, shown while writing
+    const clip = new THREE.Group(); clip.visible = false; j.lHand.add(clip);
+    const board = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.008, 0.23), new THREE.MeshStandardMaterial({ color: 0x8a6a45, roughness: 0.7 })); clip.add(board);
+    const paper = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.002, 0.2), new THREE.MeshStandardMaterial({ color: 0xf4f6f8, roughness: 0.9 })); paper.position.y = 0.005; clip.add(paper);
+    clip.position.set(-0.06, -0.08, 0.1); clip.rotation.set(0, 0, Math.PI / 2);
+    this.props = { clip };
     this.root.traverse(m => { if (m.isMesh) { m.userData.character = this; m.castShadow = true; m.receiveShadow = false; } });
   }
+  // mood: 'happy' (smile), 'tired' (frown), null (neutral)
+  setMood(m) { this.mood = m; if (this.mouths) { this.mouths.smile.visible = m === 'happy'; this.mouths.frown.visible = m === 'tired'; } }
+  holdClipboard(on) { if (this.props) this.props.clip.visible = !!on; }
 
   // ----- realistic model (GLB, Mixamo-style skeleton) driven by this rig -----
   // The procedural rig keeps doing all the animation; its joints are copied onto the model's bones
@@ -670,10 +693,12 @@ export function makeCast(data) {
     { realFace: true, id: 'ph', height: 1.03, skin: 0xF0C8A6, hair: 0x111111, hairStyle: 'full', jacket: 0x2b2e33, bottom: 0x2b2e33, shoes: 0x1a1412, tie: true, tieColor: 0x8b1c2b, glasses: false, lanyard: false, sleeves: 'long' },
     { realFace: true, id: 'bps', height: 1.0, skin: 0xF3CDAE, hair: 0x111111, hairStyle: 'full', jacket: 0x1c2536, bottom: 0x1c2536, shoes: 0x1a1412, tie: true, tieColor: 0x7c1a28, lanyard: false, sleeves: 'long' },
     { realFace: true, id: 'prod', height: 1.01, skin: 0xEDC3A0, hair: 0x111111, hairStyle: 'full', jacket: 0x33373d, bottom: 0x33373d, shoes: 0x1a1412, tie: true, tieColor: 0x2c3a52, lanyard: false, sleeves: 'long' },
+    // Team Leader in shop floor workwear (Digital SM story)
+    { realFace: true, id: 'tl', height: 1.0, skin: 0xEDC3A0, hair: 0x111111, hairStyle: 'full', top: 0x3D5F8C, bottom: 0x23272e, shoes: 0x1a1412, lanyard: true, sleeves: 'long' },
     { realFace: true, id: 'qual', height: 0.99, skin: 0xF2CBA9, hair: 0x111111, hairStyle: 'full', jacket: 0x24304a, bottom: 0x24304a, shoes: 0x1a1412, tie: true, tieColor: 0x6b6f78, glasses: true, lanyard: false, sleeves: 'long' },
   ];
   const cast = {};
-  defs.forEach((d, i) => { cast[d.id] = new Character({ ...d, role: roles[d.id] || d.id, seed: i * 1.7 + 0.3 }); });
+  defs.forEach((d, i) => { cast[d.id] = new Character({ ...d, role: roles[d.id] || (d.id === 'tl' ? 'Team Leader' : d.id), seed: i * 1.7 + 0.3 }); });
   return cast;
 }
 export function makeOperator(i) {

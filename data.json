@@ -28,6 +28,10 @@
     {
       "id": "qual",
       "role": "Quality Manager"
+    },
+    {
+      "id": "tl",
+      "role": "Team Leader"
     }
   ],
   "roadmap": {
@@ -966,6 +970,109 @@
             ]
           }
         ]
+      },
+      {
+        "month": "Digital SM Application",
+        "event": "System CIP | Value Stream VE · BPS GO!+ Roadmap status YTD'09",
+        "slideEvent": "Digital SM Application",
+        "images": [
+          {
+            "src": "digital-sm.jpg",
+            "caption": "Digital SM application: occupied, partial, empty, live at the supermarket",
+            "slot": [
+              2,
+              36,
+              96,
+              45.4
+            ]
+          }
+        ],
+        "box": {
+          "title": "Digital SM implemented",
+          "slot": [
+            24,
+            18.5,
+            52,
+            15.5
+          ],
+          "items": [
+            "Plunger Hard Stage",
+            "NHB",
+            "Stop Housing Pre-part SM"
+          ]
+        }
+      }
+    ]
+  },
+  "digitalSM": {
+    "_note": "Sample part numbers and quantities for the Digital SM before/after scene. Replace with real values.",
+    "title": "Supermarket · Gangway NHA",
+    "before": {
+      "time": "45 min",
+      "face": "😓",
+      "text": "Before: the team leader walks the supermarket and counts every bin by hand."
+    },
+    "after": {
+      "time": "2 min",
+      "face": "😊",
+      "text": "After: one Digital SM screen shows every bin. Stock at a glance."
+    },
+    "parts": [
+      {
+        "pn": "2 430 136 112",
+        "name": "Plunger HS",
+        "qty": 240,
+        "max": 320,
+        "status": "occupied"
+      },
+      {
+        "pn": "2 430 136 118",
+        "name": "Plunger HS",
+        "qty": 96,
+        "max": 320,
+        "status": "partial"
+      },
+      {
+        "pn": "1 460 104 402",
+        "name": "NHB",
+        "qty": 180,
+        "max": 200,
+        "status": "occupied"
+      },
+      {
+        "pn": "1 460 104 405",
+        "name": "NHB",
+        "qty": 0,
+        "max": 200,
+        "status": "empty"
+      },
+      {
+        "pn": "1 463 456 310",
+        "name": "Stop housing",
+        "qty": 150,
+        "max": 160,
+        "status": "occupied"
+      },
+      {
+        "pn": "1 463 456 314",
+        "name": "Stop housing",
+        "qty": 60,
+        "max": 160,
+        "status": "partial"
+      },
+      {
+        "pn": "2 433 271 080",
+        "name": "NHB pre-part",
+        "qty": 120,
+        "max": 120,
+        "status": "occupied"
+      },
+      {
+        "pn": "2 433 271 084",
+        "name": "NHB pre-part",
+        "qty": 40,
+        "max": 120,
+        "status": "partial"
       }
     ]
   }

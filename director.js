@@ -22,6 +22,7 @@ export const SHOT = {
   s_close: { pos: [-1.4, 3.7, 27.0], target: [-8.7, 3.7, 23.6], fov: 50 },
   c_low: { pos: [0.5, 1.7, 17.0], target: [0, 1.9, 26], fov: 48 },
   c_crane: { pos: [0, 9.5, 11.5], target: [0, 1.8, 25], fov: 50 },
+  sm_wide: { pos: [0.3, 3.0, -9.4], target: [0.3, 1.2, -3.2], fov: 62 },
 };
 // Fly-to shots for the tour stops
 export const ZONE_SHOT = {
@@ -44,6 +45,7 @@ export const CHAPTERS = [
   { id: 'house', title: 'House of BPS GO!+', sub: 'Where 2026 started: one operating system', loc: 'wall', dur: 30 },
   { id: 'kpis', title: 'KPI wall', sub: 'Every element of the house, target against YTD', loc: 'wall', dur: 30 },
   { id: 'glimpses', title: 'Glimpses 2026', sub: 'Moments from the year', loc: 'wall', dur: 30, stepped: true },
+  { id: 'digitalsm', title: 'Digital SM', sub: 'Before and after at the supermarket', loc: 'floor', dur: 45, stepped: true },
   { id: 'future', title: 'How 2027 looks like', sub: 'Back through the gate, into the plant of 2027', loc: 'gate', dur: 40, stepped: true },
   { id: 'plant', title: 'Picture of Future', sub: 'A walk through the modern plant', loc: 'floor', dur: 36 },
   { id: 'closing', title: 'Lead. Work. Win.', sub: 'Creating value. Together.', loc: 'close', dur: 18 },
@@ -113,8 +115,9 @@ export class Director {
   wallCenter() { return V(KPI_WALL.x, KPI_WALL.y, KPI_WALL.z); }
   yawTo(px, pz) { return (x, z) => Math.atan2(px - x, pz - z); }
 
-  setWorld({ digital = false, gate = false, build = 1, screen = 'kpi', future = false } = {}) {
+  setWorld({ digital = false, gate = false, build = 1, screen = 'kpi', future = false, smScreen = false } = {}) {
     const a = this.app;
+    a.factory.sm.setScreen(smScreen || future); a.ui.smNote('close');
     a.entrance.wall.setMode(screen);
     a.factory.setDigital(digital); a.factory.setFuture(future); a.ui.yearCard(null); a.ui.glimpses('close');
     a.factory.gate.snap(gate);
@@ -125,7 +128,9 @@ export class Director {
   // ---------- chapter states ----------
   stage(id) {
     const c = this.cast, a = this.app;
-    for (const ch of [...Object.values(c), ...a.ops]) { ch.gestures.length = 0; ch.aim = null; ch.look = null; }
+    for (const ch of [...Object.values(c), ...a.ops]) { ch.gestures.length = 0; ch.aim = null; ch.look = null; ch.setMood?.(null); ch.holdClipboard?.(false); }
+    // the Team Leader only appears in the Digital SM story
+    c.tl.place(-8.4, -4.35, PI / 2); c.tl.root.visible = id === 'digitalsm';
     this.placeOps();
     const W = this.wallCenter();
     switch (id) {
@@ -141,6 +146,8 @@ export class Director {
         this.placeGroup(WAIT, () => 0); c.ph.place(0, 40.5, PI); this.setWorld({ gate: false, future: true, screen: 'house27' }); a.entrance.wall.set27(false, 0, true); a.rig.cut(SHOT.g_door); break;
       case 'plant':
         this.placeGroup(WAIT, () => PI); c.qual.place(23.4, 5.7, -PI * 0.75); c.ph.place(0, 21.5, PI); c.bps.place(0.9, 22.2, PI); this.setWorld({ gate: true, digital: true, future: true }); a.rig.cut(SHOT.p_high); break;
+      case 'digitalsm':
+        this.placeGroup(WAIT, () => PI); c.ph.place(8.3, -4.9, -PI / 2); c.bps.place(8.9, -5.7, -PI / 2); this.setWorld({ gate: true }); a.rig.cut(SHOT.sm_wide); break;
       case 'closing':
         this.placeGroup(WAIT, () => PI); c.ph.place(-0.6, 26.8, PI); this.setWorld({ gate: true, future: true, screen: 'house27' }); a.entrance.wall.set27(true, 4, true); a.rig.cut(SHOT.c_low); break;
     }
@@ -156,6 +163,7 @@ export class Director {
       case 'future': a.factory.gate.snap(true); this.placeGroup(WALLTEAM, this.yawTo(KPI_WALL.x, KPI_WALL.z)); c.ph.place(-4.6, 24.4, Math.atan2(KPI_WALL.x + 4.6, KPI_WALL.z - 24.4)); lookAll(this.wallCenter()); a.entrance.wall.set27(true, 4, true); a.rig.cut(SHOT.k_wall); break;
       case 'plant': c.ph.place(22.2, 5.0, 0.6); c.bps.place(21.1, 4.6, 0.6); c.qual.place(23.4, 5.7, -2.4); a.rig.cut(SHOT.p_cell); break;
       case 'closing': this.rowTeam(true); a.rig.cut(SHOT.c_crane); break;
+      case 'digitalsm': { const S = a.factory.sm, sp = S.screenPos; a.factory.sm.setScreen(true); c.tl.place(sp.x, -4.75, PI); c.tl.setMood('happy'); a.ui.smNote('open', 'after'); a.ui.smNote('fill'); a.ui.smNote('done', a.data.digitalSM.after); a.rig.cut(SHOT.sm_wide); break; }
     }
   }
   rowTeam(snap) {
@@ -219,7 +227,7 @@ export class Director {
 
   pinsFor(id) {
     if (id === 'opening') return [];
-    const roles = Object.values(this.cast).map(m => ({ id: m.id, type: 'role', label: m.role, pos: () => m.headWorld(), role: true }));
+    const roles = Object.values(this.cast).map(m => ({ id: m.id, type: 'role', label: m.role, pos: () => (m.root.visible ? m.headWorld() : null), role: true }));
     return [...this.chapterPins(id), ...roles];
   }
   chapterPins(id) {
@@ -287,7 +295,7 @@ export class Director {
   resetView() {
     this.userCam = false; this.app.ui.showResetView(false);
     const id = CHAPTERS[this.index]?.id;
-    const shot = { flashback: SHOT.in_both, house: SHOT.k_wall, kpis: SHOT.k_wall, future: SHOT.k_wall, plant: SHOT.p_cell, closing: SHOT.c_crane }[id];
+    const shot = { flashback: SHOT.in_both, house: SHOT.k_wall, kpis: SHOT.k_wall, future: SHOT.k_wall, digitalsm: SHOT.sm_wide, plant: SHOT.p_cell, closing: SHOT.c_crane }[id];
     if (shot) this.app.rig.moveTo(shot, 2.2);
   }
 
@@ -452,7 +460,56 @@ export class Director {
         ui.glimpses('place', m, i);                // it settles into its place on the slide
         await this.waitStep(ctx);
       }
+      // content box: one item per Next
+      const box = G.months[m].box;
+      if (box) for (let k = 0; k < box.items.length; k++) { ui.glimpses('point', m, k); await this.waitStep(ctx); }
     }
+  }
+
+  async digitalsm(ctx) {
+    const { tl, ph, bps } = this.cast, a = this.app, ui = a.ui, F = a.factory, S = F.sm, D = a.data.digitalSM;
+    const zA = -4.35, last = S.racks[S.racks.length - 1];
+    // ---- before: manual count, rack by rack
+    ctx.cut(SHOT.sm_wide);
+    ctx.cap('Before · manual stock count', { kind: 'marker' });
+    ctx.cap(D.before.text);
+    ph.lookAt(tl); bps.lookAt(tl);
+    await ctx.walk(tl, [[S.racks[0].x, zA]], { speed: 1.4, faceYaw: 0 });
+    tl.holdClipboard(true); ui.smNote('open', 'before');
+    for (let i = 0; i < S.racks.length; i++) {
+      const r = S.racks[i];
+      if (i) await ctx.walk(tl, [[r.x, zA]], { speed: 1.0, faceYaw: 0 });
+      tl.faceYaw(0); tl.lookAt(r.center); tl.gesture('point', 1.1, { target: r.center });
+      await ctx.wait(1.1);
+      tl.gesture('write', 1.6); tl.lookAt(null);
+      ui.smNote('row', i);
+      await ctx.wait(1.2);
+    }
+    // tired after the round
+    tl.holdClipboard(false); tl.faceYaw(PI); tl.setMood('tired');
+    ctx.cam({ pos: [last.x - 0.3, 1.75, zA - 2.6], target: [last.x, 1.5, zA], fov: 40 }, 2.2);
+    tl.gesture('tired', 8); ctx.later(0.9, () => tl.gesture('wipeBrow', 2.2));
+    ui.smNote('done', D.before);
+    ctx.cap(`${D.before.time} of walking and counting, and the numbers are already old.`);
+    await this.waitStep(ctx);
+    // ---- after: Digital SM screen at the supermarket
+    ui.smNote('close');
+    await ctx.dip(() => { tl.place(-8.4, zA, PI / 2); tl.setMood(null); tl.holdClipboard(false); F.sm.setScreen(true); ctx.cut(SHOT.sm_wide); });
+    ctx.cap('After · Digital SM', { kind: 'marker' });
+    ctx.cap(D.after.text);
+    const sp = S.screenPos;
+    await ctx.walk(tl, [[sp.x, zA - 0.4]], { speed: 1.3, faceYaw: 0 });
+    tl.lookAt(sp); tl.gesture('point', 1.6, { target: sp });
+    ctx.cam({ pos: [sp.x + 1.6, 1.9, zA - 2.6], target: [sp.x, 1.6, sp.z], fov: 44 }, 2);
+    await ctx.wait(1.6);
+    tl.holdClipboard(true); tl.gesture('write', 2.2); ui.smNote('open', 'after'); ui.smNote('fill');
+    await ctx.wait(2.4);
+    tl.holdClipboard(false); tl.lookAt(null); tl.faceYaw(PI); tl.setMood('happy');
+    ctx.cam({ pos: [sp.x - 0.2, 1.75, zA - 0.4 - 2.4], target: [sp.x, 1.5, zA - 0.4], fov: 40 }, 1.8);
+    await ctx.wait(1.0);
+    tl.gesture('thumbsUp', 2.8); ui.smNote('done', D.after);
+    ctx.cap(`Stock at a glance in ${D.after.time}. The counting time goes back into improvement.`);
+    await this.waitStep(ctx);
   }
 
   async future(ctx) {

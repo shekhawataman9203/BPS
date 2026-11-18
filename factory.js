@@ -848,6 +848,64 @@ export function buildFactory(scene, renderer, data = {}) {
     ve: V(12, 3.4, 0), calibration: V(23, 2.6, 9), scrum: V(0, 3.4, -10), customer: V(HALL.x1 - 1.5, 3.2, -14),
   });
 
+  // ---------- Supermarket in one line along the gangway (Digital SM story) ----------
+  const smData = data.digitalSM || { parts: [] };
+  const SM = { x0: -4.6, dx: 1.65, z: -3.0, n: smData.parts.length || 8 };
+  const smCol = { occupied: 0x3FC1A8, partial: 0xF28A3A, empty: 0xd5d9de };
+  const smG = new THREE.Group(); smG.name = 'supermarket'; root.add(smG);
+  const smFrame = mat(0x5f7d8f, { rough: 0.45, metal: 0.55 });
+  const smBinGeo = new RoundedBoxGeometry(0.4, 0.22, 0.55, 2, 0.03);
+  const signTex = (p, i) => new CanvasTex(512, 300, (ctx, w, h) => {
+    ctx.fillStyle = '#f7f9fb'; ctx.fillRect(0, 0, w, h); ctx.strokeStyle = '#4C8DD8'; ctx.lineWidth = 12; ctx.strokeRect(6, 6, w - 12, h - 12);
+    ctx.fillStyle = '#1E6FD0'; ctx.font = `italic 800 92px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText('IN', w / 2, 112);
+    ctx.fillStyle = '#12161C'; ctx.font = `700 46px ${FONT}`; ctx.fillText(p ? p.name : 'Part', w / 2, 180);
+    ctx.fillStyle = '#5a6470'; ctx.font = `600 34px ${FONT}`; ctx.fillText(p ? p.pn : '', w / 2, 236);
+  });
+  const smRacks = [];
+  for (let i = 0; i < SM.n; i++) {
+    const p = smData.parts[i], x = SM.x0 + i * SM.dx;
+    const g = new THREE.Group(); g.position.set(x, 0, SM.z); smG.add(g);
+    for (const [px, pz] of [[-0.72, -0.5], [0.72, -0.5], [-0.72, 0.5], [0.72, 0.5]]) box(0.05, 2.2, 0.05, smFrame, px, 1.1, pz, g);
+    for (const y of [0.55, 1.25]) { const sh = box(1.48, 0.04, 1.05, smFrame, 0, y, 0, g); sh.rotation.x = -0.12; }
+    box(1.48, 0.05, 0.05, smFrame, 0, 2.2, -0.5, g); box(1.48, 0.05, 0.05, smFrame, 0, 2.2, 0.5, g);
+    // bins by fill level: occupied full, partial some, empty none
+    const fill = p ? (p.status === 'occupied' ? 6 : p.status === 'partial' ? 3 : 0) : 4;
+    let k = 0;
+    for (const y of [0.55, 1.25]) for (const bx of [-0.46, 0, 0.46]) {
+      if (k++ >= fill) continue;
+      const b = new THREE.Mesh(smBinGeo, mat(p && p.status === 'partial' ? smCol.partial : smCol.occupied, { rough: 0.55 })); b.position.set(bx, y + 0.15, 0.05 - (y > 1 ? 0.07 : 0)); b.rotation.x = -0.12; g.add(b);
+    }
+    // IN sign facing the gangway
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.59), new THREE.MeshBasicMaterial({ map: signTex(p, i).tex, toneMapped: false })); sign.position.set(0, 1.95, -0.56); sign.rotation.y = Math.PI; g.add(sign);
+    shadows(g, true, true);
+    smRacks.push({ x, center: V(x, 1.0, SM.z - 0.3), sign: V(x, 1.95, SM.z - 0.56) });
+  }
+  // Digital SM screen at the start of the row (shown after implementation)
+  const smScrCT = new CanvasTex(1280, 720, (ctx, w, h) => {
+    ctx.fillStyle = '#eef4fb'; ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#0A6EBD'; ctx.fillRect(0, 0, w, 96);
+    ctx.fillStyle = '#ffffff'; ctx.font = `800 48px ${FONT}`; ctx.fillText('Digital SM · stock at a glance', 32, 64);
+    ctx.font = `700 26px ${FONT}`; const lg = [['Occupied', '#3FC1A8'], ['Partial', '#F28A3A'], ['Empty', '#c3c9d1']]; let lx = w - 32; ctx.textAlign = 'right';
+    for (const [t, c] of lg.reverse()) { ctx.fillStyle = '#ffffff'; ctx.fillText(t, lx, 60); lx -= ctx.measureText(t).width + 12; ctx.fillStyle = c; ctx.fillRect(lx - 26, 38, 26, 26); lx -= 50; }
+    ctx.textAlign = 'left';
+    const cols = 4, tw = (w - 64 - 16 * (cols - 1)) / cols, th = 270;
+    smData.parts.forEach((p, i) => {
+      const x = 32 + (i % cols) * (tw + 16), y = 120 + Math.floor(i / cols) * (th + 20);
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, tw, th); ctx.fillStyle = smCol[p.status] === 0xd5d9de ? '#c3c9d1' : '#' + smCol[p.status].toString(16).padStart(6, '0'); ctx.fillRect(x, y, tw, 14);
+      ctx.fillStyle = '#12161C'; ctx.font = `800 34px ${FONT}`; ctx.fillText(p.name, x + 18, y + 64);
+      ctx.fillStyle = '#5a6470'; ctx.font = `600 24px ${FONT}`; ctx.fillText(p.pn, x + 18, y + 98);
+      ctx.fillStyle = '#12161C'; ctx.font = `800 76px ${FONT}`; ctx.fillText(String(p.qty), x + 18, y + 190);
+      ctx.fillStyle = '#5a6470'; ctx.font = `600 24px ${FONT}`; ctx.fillText(`of ${p.max} pcs`, x + 18, y + 228);
+      ctx.fillStyle = '#e3e8ee'; ctx.fillRect(x + 18, y + 244, tw - 36, 12); ctx.fillStyle = '#' + (p.status === 'empty' ? 'E20015' : smCol[p.status].toString(16).padStart(6, '0')); ctx.fillRect(x + 18, y + 244, (tw - 36) * p.qty / p.max, 12);
+    });
+  });
+  const smScreen = new THREE.Group(); smScreen.position.set(SM.x0 - 1.75, 0, SM.z - 0.2); smScreen.rotation.y = Math.PI; smScreen.visible = false; smG.add(smScreen);
+  box(1.42, 0.84, 0.08, mat(0x14181d, { rough: 0.4, metal: 0.5 }), 0, 1.75, -0.05, smScreen);
+  const smScr = new THREE.Mesh(new THREE.PlaneGeometry(1.32, 0.74), new THREE.MeshBasicMaterial({ map: smScrCT.tex, toneMapped: false })); smScr.position.set(0, 1.75, 0.0); smScreen.add(smScr);
+  box(0.08, 1.35, 0.08, mat(0x14181d, { rough: 0.4, metal: 0.5 }), 0, 0.68, -0.1, smScreen); box(0.6, 0.04, 0.45, mat(0x14181d, { rough: 0.4, metal: 0.5 }), 0, 0.02, -0.1, smScreen);
+  hotspots.sm = V(SM.x0 + SM.dx * (SM.n - 1) / 2, 2.4, SM.z);
+  const smRow = { racks: smRacks, z: SM.z, screenPos: V(SM.x0 - 1.75, 1.75, SM.z - 0.2), setScreen(on) { smScreen.visible = !!on; } };
+
   // ---------- 2027: a more digital plant (cobots, holographic KPIs, LED guide lines, more AGVs) ----------
   const future = new THREE.Group(); future.name = 'future2027'; future.visible = false; root.add(future);
   const cyan = 0x29d3ff;
@@ -907,7 +965,7 @@ export function buildFactory(scene, renderer, data = {}) {
   });
 
   return {
-    root, hotspots, agvs, outside: out,
+    root, hotspots, agvs, outside: out, sm: smRow,
     setFuture(on) {
       futureOn = on; future.visible = on; digitalTarget = on ? 1 : digitalTarget;
       doorWords = on ? { left: ['2027', 'How 2027 looks like'], right: ['FUTURE', 'BPS GO!+'], accent: '#29d3ff' } : { left: ['2026', 'Reflection'], right: ['FLASHBACK', 'BPS GO!+'], accent: CSS.red };

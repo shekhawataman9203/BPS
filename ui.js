@@ -213,13 +213,26 @@ export class UI {
       $('.gl-m-title', sec).textContent = M.month; $('.gl-m-event', sec).textContent = M.event;
       // prepare the slide for this month, all photos hidden
       $('.gl-s-title', sec).textContent = G.title; $('.gl-s-event', sec).textContent = M.slideEvent ?? M.event; $('.gl-s-logo', sec).src = $('#bpsLogoImg').src;
-      items().forEach(e => e.remove());
+      items().forEach(e => e.remove()); slide.querySelectorAll('.gl-box').forEach(e => e.remove());
+      if (M.box) {
+        // content box whose items appear one per Next
+        const bx = h('div', { class: 'gl-box' }, h('p', { class: 'gl-box-title' }, M.box.title), h('ul', {}, M.box.items.map(t => h('li', {}, t))));
+        place(bx, M.box.slot); slide.append(bx);
+      }
       M.images.forEach((im, i) => {
         const el = h('img', { class: 'gl-img', 'data-i': i, alt: im.caption || '', src: imgs[im.src] || '' });
         place(el, [im.slot[0] + im.slot[2] * 0.3, im.slot[1] + im.slot[3] * 0.3, im.slot[2] * 0.4, im.slot[3] * 0.4]);
         el.dataset.st = 'hidden'; slide.append(el);
       });
       set('month'); return;
+    }
+    if (action === 'point') {
+      set('slide'); sec.classList.remove('focus'); $('.gl-caption', sec).classList.remove('on');
+      items().forEach((e, i) => { e.dataset.st = 'placed'; place(e, M.images[i].slot); });
+      const bx = $('.gl-box', slide); if (!bx) return;
+      bx.classList.add('on');
+      [...bx.querySelectorAll('li')].forEach((li, k) => li.classList.toggle('on', k <= b));
+      return;
     }
     if (action === 'pop') {
       // rises from behind the slide straight into its place, then crackers over the celebrated images
@@ -238,10 +251,28 @@ export class UI {
         if (action === 'compose' || (action === 'place' && i <= b) || (action === 'full' && i < b)) { el.dataset.st = action === 'full' ? 'placed-hidden' : 'placed'; place(el, im.slot); }
         if (action === 'full' && i === b) { el.dataset.st = 'full'; place(el, [1.5, 1.5, 97, 97]); }
       });
+      const bx = $('.gl-box', slide);
+      if (bx && action === 'compose') { bx.classList.add('on'); bx.querySelectorAll('li').forEach(li => li.classList.add('on')); }
       const cap = $('.gl-caption', sec);
       cap.textContent = action === 'full' ? (M.images[b].caption || '') : ''; cap.classList.toggle('on', action === 'full');
       sec.classList.toggle('focus', action === 'full');
     }
+  }
+  // corner notepad for the Digital SM story: 'open' (before|after), 'row' i, 'fill', 'done' {time, face}, 'close'
+  smNote(action, arg) {
+    const el = $('#smNote'), D = this.data.digitalSM; if (!el || !D) return;
+    const rows = $('.sn-rows', el);
+    const row = (p, delay = 0) => h('li', { style: `--d:${delay}s` }, h('span', {}, p.pn), h('span', {}, p.name), h('b', {}, String(p.qty)));
+    if (action === 'close') { el.classList.remove('on'); setTimeout(() => { if (!el.classList.contains('on')) el.hidden = true; }, 400); return; }
+    if (action === 'open') {
+      el.dataset.mode = arg; rows.innerHTML = ''; el.classList.remove('done');
+      $('.sn-title', el).textContent = D.title;
+      $('.sn-badge', el).textContent = arg === 'after' ? 'Read from Digital SM' : 'Manual count';
+      el.hidden = false; void el.offsetWidth; el.classList.add('on'); return;
+    }
+    if (action === 'row') { const p = D.parts[arg]; if (p) rows.append(row(p)); return; }
+    if (action === 'fill') { rows.innerHTML = ''; D.parts.forEach((p, i) => rows.append(row(p, i * 0.22))); return; }
+    if (action === 'done') { $('.sn-time', el).textContent = '⏱ ' + arg.time; $('.sn-face', el).textContent = arg.face; el.classList.add('done'); }
   }
   // fireworks and confetti bursting over slots (percent rects) on the given element
   crackers(host, slots, dur = 4200) {
@@ -449,7 +480,7 @@ export class UI {
     b.append(h('h4', {}, 'Agenda'), this.agenda(2, CHAPTERS.length));
     b.append(h('h4', {}, 'At the entrance'));
     const ul = h('ul', { class: 'cast' });
-    d.cast.forEach(c => ul.append(h('li', { class: c.id === 'ph' ? 'lead' : '' }, h('span', { class: 'dot' }), c.role)));
+    d.cast.filter(c => c.id !== 'tl').forEach(c => ul.append(h('li', { class: c.id === 'ph' ? 'lead' : '' }, h('span', { class: 'dot' }), c.role)));
     b.append(ul);
     b.append(h('p', { class: 'hint' }, 'Move on with the arrow keys or a presentation clicker. K pauses the animation. The BPS GO!+ icon at the top opens the roadmap at any time.'));
   }
