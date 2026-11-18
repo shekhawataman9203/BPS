@@ -763,3 +763,7 @@ body.paused #factcheck * { animation-play-state: paused !important; }
 body.factcheck #topbar, body.factcheck #rail, body.factcheck #scenebar, body.factcheck #captions, body.factcheck #marker { visibility: hidden; }
 .fc-steps { top: 8.6vh; }
 .fc-panel { top: 15vh; }
+.fc-imgs { grid-template-columns: 1fr .75fr 1fr; grid-template-rows: 1.1fr 1fr; }
+.fc-imgs img:first-child { grid-row: auto; grid-column: 1 / -1; }
+.fc-imgs img { min-height: 0; }
+.fc-stamp { top: auto; bottom: 2.4vh; right: 2vw; }
