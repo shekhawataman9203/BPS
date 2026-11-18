@@ -446,6 +446,7 @@ export class Director {
       ui.glimpses('month', m);                     // the month on black
       await this.waitStep(ctx);
       for (let i = 0; i < G.months[m].images.length; i++) {
+        if (G.months[m].images[i].entry === 'pop') { ui.glimpses('pop', m, i); await this.waitStep(ctx); continue; } // rises into place with crackers
         ui.glimpses('full', m, i);                 // the photo fills the screen; the others are hidden
         await this.waitStep(ctx);
         ui.glimpses('place', m, i);                // it settles into its place on the slide

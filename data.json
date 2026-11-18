@@ -861,7 +861,7 @@
     "months": [
       {
         "month": "February 2026",
-        "event": "Mobility BPS Award 2026 · TOP 5 in GB",
+        "event": "Mobility BPS Award 2026",
         "images": [
           {
             "src": "award-banner.jpg",
@@ -921,9 +921,15 @@
               55.1,
               16.0,
               10.4
+            ],
+            "entry": "pop",
+            "celebrate": [
+              "award-nha.jpg",
+              "award-ec.jpg"
             ]
           }
-        ]
+        ],
+        "slideEvent": ""
       },
       {
         "month": "April 2026",

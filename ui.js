@@ -212,7 +212,7 @@ export class UI {
     if (action === 'month') {
       $('.gl-m-title', sec).textContent = M.month; $('.gl-m-event', sec).textContent = M.event;
       // prepare the slide for this month, all photos hidden
-      $('.gl-s-title', sec).textContent = G.title; $('.gl-s-event', sec).textContent = M.event; $('.gl-s-logo', sec).src = $('#bpsLogoImg').src;
+      $('.gl-s-title', sec).textContent = G.title; $('.gl-s-event', sec).textContent = M.slideEvent ?? M.event; $('.gl-s-logo', sec).src = $('#bpsLogoImg').src;
       items().forEach(e => e.remove());
       M.images.forEach((im, i) => {
         const el = h('img', { class: 'gl-img', 'data-i': i, alt: im.caption || '', src: imgs[im.src] || '' });
@@ -220,6 +220,16 @@ export class UI {
         el.dataset.st = 'hidden'; slide.append(el);
       });
       set('month'); return;
+    }
+    if (action === 'pop') {
+      // rises from behind the slide straight into its place, then crackers over the celebrated images
+      set('slide'); sec.classList.remove('focus'); $('.gl-caption', sec).classList.remove('on');
+      const el = items()[b], im = M.images[b];
+      items().forEach((e, i) => { if (i < b) { e.dataset.st = 'placed'; place(e, M.images[i].slot); } });
+      place(el, im.slot); el.dataset.st = 'pop'; void el.offsetWidth; el.dataset.st = 'popped';
+      const targets = (im.celebrate || []).map(src => M.images.find(x => x.src === src)?.slot).filter(Boolean);
+      setTimeout(() => this.crackers(slide, targets.length ? targets : [im.slot]), 700);
+      return;
     }
     if (action === 'full' || action === 'place' || action === 'compose') {
       set('slide');
@@ -232,6 +242,30 @@ export class UI {
       cap.textContent = action === 'full' ? (M.images[b].caption || '') : ''; cap.classList.toggle('on', action === 'full');
       sec.classList.toggle('focus', action === 'full');
     }
+  }
+  // fireworks and confetti bursting over slots (percent rects) on the given element
+  crackers(host, slots, dur = 4200) {
+    const cv = document.createElement('canvas'); cv.className = 'gl-crackers'; host.append(cv);
+    const W = cv.width = host.clientWidth * (devicePixelRatio || 1), H = cv.height = host.clientHeight * (devicePixelRatio || 1), ctx = cv.getContext('2d');
+    const cols = ['#E20015', '#FFC20E', '#29d3ff', '#7FE08F', '#B90276', '#ffffff', '#1E88D9'];
+    const parts = [], start = performance.now();
+    const burst = (x, y) => { for (let i = 0; i < 70; i++) { const a = Math.random() * Math.PI * 2, s = (2 + Math.random() * 6) * W / 1400; parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 1.5 * W / 1400, life: 1, c: cols[i % cols.length], r: (2 + Math.random() * 3) * W / 1400, conf: Math.random() < 0.45, rot: Math.random() * 6 }); } };
+    const centres = slots.map(s => [(s[0] + s[2] * (0.2 + Math.random() * 0.6)) / 100 * W, (s[1] + s[3] * 0.35) / 100 * H, s]);
+    let next = 0;
+    const tick = t => {
+      const el = t - start;
+      if (el > next && el < dur - 1200) { for (const [, , s] of centres) burst((s[0] + s[2] * (0.15 + Math.random() * 0.7)) / 100 * W, (s[1] + s[3] * (0.1 + Math.random() * 0.5)) / 100 * H); next = el + 420; }
+      ctx.clearRect(0, 0, W, H);
+      for (const p of parts) {
+        if (p.life <= 0) continue;
+        p.x += p.vx; p.y += p.vy; p.vy += 0.09 * W / 1400; p.vx *= 0.985; p.life -= p.conf ? 0.006 : 0.014; p.rot += 0.2;
+        ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.c;
+        if (p.conf) { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillRect(-p.r, -p.r * 0.5, p.r * 2, p.r); ctx.restore(); }
+        else { ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); }
+      }
+      if (el < dur + 1500 && cv.isConnected) requestAnimationFrame(tick); else cv.remove();
+    };
+    requestAnimationFrame(tick);
   }
   covering() { const g = document.getElementById('glimpses'), y = document.getElementById('yearcard'); return (g && !g.hidden && g.dataset.state) || (y && y.classList.contains('on')); }
   // 'Press → for the next step' hint in stepped chapters
