@@ -22,11 +22,12 @@ const rich = text => text.split(/(\*\*[^*]+\*\*)/).filter(Boolean).map(t => t.st
 export class UI {
   constructor(app) {
     this.app = app; this.data = app.data;
-    this.cc = true; this.autoplay = false; this.autoplayHold = 10; this.presenting = false; this.explore = false; this.roles = false; this.paused = false;
+    this.cc = false; this.autoplay = false; this.autoplayHold = 10; this.presenting = false; this.explore = false; this.roles = false; this.paused = false;
     this.pins = []; this.panelOpen = false; this.startTime = 0; this.pausedAt = 0; this.pausedTotal = 0;
     this.timers = new Map(); // pausable UI timers
     this.sel = {};
     this.buildStatic();
+    this.toggleCC(false); // subtitles start off; the Subtitles button (or C) turns them on
     this.buildRoadmap();
     this.bindKeys();
   }
@@ -298,7 +299,8 @@ export class UI {
     };
     requestAnimationFrame(tick);
   }
-  covering() { const g = document.getElementById('glimpses'), y = document.getElementById('yearcard'); return (g && !g.hidden && g.dataset.state) || (y && y.classList.contains('on')); }
+  thanks(on) { const el = $('#thanks'); if (!el) return; if (on) { el.hidden = false; void el.offsetWidth; el.classList.add('on'); } else { el.classList.remove('on'); el.hidden = true; } }
+  covering() { const g = document.getElementById('glimpses'), y = document.getElementById('yearcard'), t = document.getElementById('thanks'); return (g && !g.hidden && g.dataset.state) || (y && y.classList.contains('on')) || (t && t.classList.contains('on')); }
   // 'Press → for the next step' hint in stepped chapters
   stepHint(on) { const el = $('#stepHint'); if (el) el.classList.toggle('on', !!on); const b = $('#btnSkip'); if (b) b.firstChild.textContent = on ? 'Next step ' : 'Skip scene '; }
   hideTitleCard() { $('#titlecard').classList.remove('on'); this.cancel('tc'); }

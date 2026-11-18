@@ -49,6 +49,7 @@ export const CHAPTERS = [
   { id: 'future', title: 'How 2027 looks like', sub: 'Back through the gate, into the plant of 2027', loc: 'gate', dur: 40, stepped: true },
   { id: 'plant', title: 'Picture of Future', sub: 'A walk through the modern plant', loc: 'floor', dur: 36 },
   { id: 'closing', title: 'Lead. Work. Win.', sub: 'Creating value. Together.', loc: 'close', dur: 18 },
+  { id: 'thanks', title: 'Thank You', sub: '', loc: 'close', dur: 10 },
 ];
 
 // Operators at work [x, z, yaw]: NHA assembly line (4), VE pump line (3), NHA component line, VE press,
@@ -119,7 +120,7 @@ export class Director {
     const a = this.app;
     a.factory.sm.setScreen(smScreen || future); a.ui.smNote('close');
     a.entrance.wall.setMode(screen);
-    a.factory.setDigital(digital); a.factory.setFuture(future); a.ui.yearCard(null); a.ui.glimpses('close');
+    a.factory.setDigital(digital); a.factory.setFuture(future); a.ui.yearCard(null); a.ui.glimpses('close'); a.ui.thanks(false);
     a.factory.gate.snap(gate);
     a.entrance.snapBuild(build); a.entrance.highlight(null); a.entrance.hideConfetti();
     a.entrance.wall.highlight(null, null);
@@ -148,6 +149,8 @@ export class Director {
         this.placeGroup(WAIT, () => PI); c.qual.place(23.4, 5.7, -PI * 0.75); c.ph.place(0, 21.5, PI); c.bps.place(0.9, 22.2, PI); this.setWorld({ gate: true, digital: true, future: true }); a.rig.cut(SHOT.p_high); break;
       case 'digitalsm':
         this.placeGroup(WAIT, () => PI); c.ph.place(8.3, -4.9, -PI / 2); c.bps.place(8.9, -5.7, -PI / 2); this.setWorld({ gate: true }); a.rig.cut(SHOT.sm_wide); break;
+      case 'thanks':
+        this.placeGroup(WAIT, () => PI); this.setWorld({ gate: true, future: true, screen: 'house27' }); a.ui.thanks(true); break;
       case 'closing':
         this.placeGroup(WAIT, () => PI); c.ph.place(-0.6, 26.8, PI); this.setWorld({ gate: true, future: true, screen: 'house27' }); a.entrance.wall.set27(true, 4, true); a.rig.cut(SHOT.c_low); break;
     }
@@ -187,7 +190,7 @@ export class Director {
     this.stage(ch.id);
     ui.fade(0, 0.8);
     // the gate chapter has no title card: '2026 Flashback' is written on the doors
-    if (!['opening', 'flashback', 'future', 'glimpses'].includes(ch.id) && !skipTitle) ui.titleCard(i, ch.title, ch.sub);
+    if (!['opening', 'flashback', 'future', 'glimpses', 'thanks'].includes(ch.id) && !skipTitle) ui.titleCard(i, ch.title, ch.sub);
     const ctx = this.makeCtx();
     ui.showSkip(ch.id !== 'opening'); ui.letterbox(ch.id !== 'opening');
     try { await this[ch.id](ctx); } catch (e) { console.error(e); }
@@ -198,9 +201,8 @@ export class Director {
   finish(id) {
     const ui = this.app.ui;
     this.scriptDone = true; this.doneAt = this.chapterTime; this.app.timeScale = 1; this.stepRes = null; ui.stepHint(false); ui.showSkip(false); ui.letterbox(false);
-    if (id !== 'opening') ui.openPanel();
+    if (id !== 'opening' && id !== 'thanks') ui.openPanel();
     ui.setPins(this.pinsFor(id));
-    if (id === 'flashback' && !ui.rolesByUser) { ui.toggleRoles(true); ui.rolesAuto = true; }
   }
   // stepped chapters: the script waits here until Next (→, Space, clicker) is pressed
   waitStep(ctx, autoAfter = null) {
@@ -511,6 +513,8 @@ export class Director {
     ctx.cap(`Stock at a glance in ${D.after.time}. The counting time goes back into improvement.`);
     await this.waitStep(ctx);
   }
+
+  async thanks(ctx) { this.app.ui.thanks(true); await ctx.wait(0.5); }
 
   async future(ctx) {
     const { ph } = this.cast, a = this.app, gate = a.factory.gate, wall = a.entrance.wall, H = a.data.house2027;

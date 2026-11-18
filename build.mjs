@@ -16,7 +16,7 @@ let html = fs.readFileSync(src('index.html'), 'utf8');
 const css = fs.readFileSync(src('style.css'), 'utf8');
 const data = fs.readFileSync(src('data.json'), 'utf8');
 const dataUri = (f, type) => `data:${type};base64,${fs.readFileSync(src(f)).toString('base64')}`;
-const images = { __BPS_LOGO__: dataUri('assets/bps-go-logo.png', 'image/png'), __LWW__: dataUri('assets/lead-work-win.jpg', 'image/jpeg'), __REFL__: dataUri('assets/reflection.jpg', 'image/jpeg') };
+const images = { __THANKS__: dataUri('assets/thank-you-4k.jpg', 'image/jpeg'), __BPS_LOGO__: dataUri('assets/bps-go-logo.png', 'image/png'), __LWW__: dataUri('assets/lead-work-win.jpg', 'image/jpeg'), __REFL__: dataUri('assets/reflection.jpg', 'image/jpeg') };
 JSON.parse(data); // validate
 for (const [k, v] of Object.entries(images)) html = html.replaceAll(k, v);
 // people models: assets/people/<role id>.glb (ph, bps, prod, qual, dig, log) and operator*.glb; PEOPLE_DIR overrides the folder
