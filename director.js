@@ -22,6 +22,7 @@ export const SHOT = {
   s_close: { pos: [-1.4, 3.7, 27.0], target: [-8.7, 3.7, 23.6], fov: 50 },
   c_low: { pos: [0.5, 1.7, 17.0], target: [0, 1.9, 26], fov: 48 },
   c_crane: { pos: [0, 9.5, 11.5], target: [0, 1.8, 25], fov: 50 },
+  fc_anchor: { pos: [1.1, 1.66, 25.4], target: [1.1, 1.42, 22.0], fov: 40 },
   sm_wide: { pos: [0.3, 3.0, -9.4], target: [0.3, 1.2, -3.2], fov: 62 },
 };
 // Fly-to shots for the tour stops
@@ -49,6 +50,7 @@ export const CHAPTERS = [
   { id: 'future', title: 'How 2027 looks like', sub: 'Back through the gate, into the plant of 2027', loc: 'gate', dur: 40, stepped: true },
   { id: 'plant', title: 'Picture of Future', sub: 'A walk through the modern plant', loc: 'floor', dur: 36 },
   { id: 'closing', title: 'Lead. Work. Win.', sub: 'Creating value. Together.', loc: 'close', dur: 18 },
+  { id: 'factcheck', title: 'BPS Fact Check', sub: 'The JaP Newsroom', loc: 'studio', dur: 900, stepped: true },
   { id: 'thanks', title: 'Thank You', sub: '', loc: 'close', dur: 14, stepped: true },
 ];
 
@@ -120,7 +122,7 @@ export class Director {
     const a = this.app;
     a.factory.sm.setScreen(smScreen || future); a.ui.smNote('close');
     a.entrance.wall.setMode(screen);
-    a.factory.setDigital(digital); a.factory.setFuture(future); a.ui.yearCard(null); a.ui.glimpses('close'); a.ui.thanks('hide');
+    a.factory.setDigital(digital); a.factory.setFuture(future); a.ui.yearCard(null); a.ui.glimpses('close'); a.ui.thanks('hide'); a.ui.factCheck('close');
     a.factory.gate.snap(gate);
     a.entrance.snapBuild(build); a.entrance.highlight(null); a.entrance.hideConfetti();
     a.entrance.wall.highlight(null, null);
@@ -149,6 +151,10 @@ export class Director {
         this.placeGroup(WAIT, () => PI); c.qual.place(23.4, 5.7, -PI * 0.75); c.ph.place(0, 21.5, PI); c.bps.place(0.9, 22.2, PI); this.setWorld({ gate: true, digital: true, future: true }); a.rig.cut(SHOT.p_high); break;
       case 'digitalsm':
         this.placeGroup(WAIT, () => PI); c.ph.place(8.3, -4.9, -PI / 2); c.bps.place(8.9, -5.7, -PI / 2); this.setWorld({ gate: true }); a.rig.cut(SHOT.sm_wide); break;
+      case 'factcheck':
+        // studio: the BPS Lead stands in the 2027 plant, framed on the left; the others step out of shot
+        c.ph.place(-14, 19, PI); c.prod.place(-15, 20, PI); c.qual.place(-13, 20, PI); c.bps.place(0, 22.2, 0);
+        this.setWorld({ gate: true, future: true, screen: 'house27' }); a.rig.cut(SHOT.fc_anchor); c.bps.lookAt(V(1.1, 1.66, 25.4)); break;
       case 'thanks':
         this.placeGroup(WAIT, () => PI); this.setWorld({ gate: true, future: true, screen: 'house27' }); a.ui.thanks('show'); break;
       case 'closing':
@@ -167,6 +173,7 @@ export class Director {
       case 'plant': c.ph.place(22.2, 5.0, 0.6); c.bps.place(21.1, 4.6, 0.6); c.qual.place(23.4, 5.7, -2.4); a.rig.cut(SHOT.p_cell); break;
       case 'closing': this.rowTeam(true); a.rig.cut(SHOT.c_crane); break;
       case 'thanks': a.ui.thanks('final'); break;
+      case 'factcheck': c.bps.lookAt(V(1.1, 1.66, 25.4)); a.ui.factCheck('signoff'); break;
       case 'digitalsm': { const S = a.factory.sm, sp = S.screenPos; a.factory.sm.setScreen(true); c.tl.place(sp.x, -4.75, PI); c.tl.setMood('happy'); a.ui.smNote('open', 'after'); a.ui.smNote('fill'); a.ui.smNote('done', a.data.digitalSM.after); a.rig.cut(SHOT.sm_wide); break; }
     }
   }
@@ -191,7 +198,7 @@ export class Director {
     this.stage(ch.id);
     ui.fade(0, 0.8);
     // the gate chapter has no title card: '2026 Flashback' is written on the doors
-    if (!['opening', 'flashback', 'future', 'glimpses', 'thanks'].includes(ch.id) && !skipTitle) ui.titleCard(i, ch.title, ch.sub);
+    if (!['opening', 'flashback', 'future', 'glimpses', 'thanks', 'factcheck'].includes(ch.id) && !skipTitle) ui.titleCard(i, ch.title, ch.sub);
     const ctx = this.makeCtx();
     ui.showSkip(ch.id !== 'opening'); ui.letterbox(ch.id !== 'opening');
     try { await this[ch.id](ctx); } catch (e) { console.error(e); }
@@ -202,7 +209,7 @@ export class Director {
   finish(id) {
     const ui = this.app.ui;
     this.scriptDone = true; this.doneAt = this.chapterTime; this.app.timeScale = 1; this.stepRes = null; ui.stepHint(false); ui.showSkip(false); ui.letterbox(false);
-    if (id !== 'opening' && id !== 'thanks') ui.openPanel();
+    if (!['opening', 'thanks', 'factcheck'].includes(id)) ui.openPanel();
     ui.setPins(this.pinsFor(id));
   }
   // stepped chapters: the script waits here until Next (→, Space, clicker) is pressed
@@ -513,6 +520,26 @@ export class Director {
     tl.gesture('thumbsUp', 2.8); ui.smNote('done', D.after);
     ctx.cap(`Stock at a glance in ${D.after.time}. The counting time goes back into improvement.`);
     await this.waitStep(ctx);
+  }
+
+  async factcheck(ctx) {
+    const ui = this.app.ui, F = this.app.data.factCheck, a = this.cast.bps;
+    const cam = V(1.1, 1.66, 25.4), panel = V(2.6, 1.55, 22.6);
+    const toneGesture = { ok: 'thumbsUp', warn: 'think', bad: 'thumbsUp', fix: 'nod' };
+    a.lookAt(cam);
+    ui.factCheck('open'); a.gesture('wave', 2.4);
+    await this.waitStep(ctx);
+    for (let i = 0; i < F.claims.length; i++) {
+      const C = F.claims[i];
+      ui.factCheck('claim', i); a.lookAt(cam); a.gesture('present', 2.6);
+      await this.waitStep(ctx);
+      ui.factCheck('evidence', i); a.lookAt(panel); a.gesture('point', 2.6, { target: panel }); ctx.later(2.8, () => a.gesture('explain', 3));
+      await this.waitStep(ctx);
+      ui.factCheck('verdict', i); a.lookAt(cam); a.gesture(C.verdict.gesture || toneGesture[C.verdict.tone] || 'nod', 2.4);
+      await this.waitStep(ctx);
+    }
+    ui.factCheck('signoff'); a.lookAt(cam); a.gesture('armsOpen', 2.6); ctx.later(2.2, () => a.gesture('nod', 1.4));
+    await ctx.wait(1.0);
   }
 
   async thanks(ctx) {

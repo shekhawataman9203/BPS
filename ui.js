@@ -260,6 +260,96 @@ export class UI {
       sec.classList.toggle('focus', action === 'full');
     }
   }
+  // ------------------------------------------------------------ BPS Fact Check newsroom
+  // 'open' | 'claim' i | 'evidence' i | 'verdict' i | 'signoff' | 'close'
+  factCheck(action, i) {
+    const el = $('#factcheck'), F = this.data.factCheck; if (!el || !F) return;
+    if (action === 'close') { el.classList.remove('on'); el.hidden = true; document.body.classList.remove('factcheck'); return; }
+    if (!el.dataset.built) {
+      el.dataset.built = '1';
+      $('.fc-title', el).textContent = F.title + ' 🔍'; $('.fc-show', el).textContent = F.show;
+      $('.fc-name', el).textContent = F.anchor.name; $('.fc-role', el).textContent = F.anchor.role;
+      const st = $('.fc-steps', el); F.steps.forEach(s => st.append(h('li', { 'data-id': s.id }, h('b', {}, s.n), h('span', {}, s.name))));
+      const txt = F.ticker.join('     •     ') + '     •     ';
+      $('.fc-ticker-track', el).append(h('span', {}, txt), h('span', { 'aria-hidden': 'true' }, txt));
+    }
+    el.hidden = false; document.body.classList.add('factcheck'); void el.offsetWidth; el.classList.add('on');
+    const card = $('.fc-card', el), ev = $('.fc-evidence', el), stamp = $('.fc-stamp', el), say = $('.fc-say', el);
+    const idx = id => F.steps.findIndex(s => s.id === id);
+    const setStep = (id, all = false) => $('.fc-steps', el).querySelectorAll('li').forEach(li => { li.classList.toggle('on', li.dataset.id === id); li.classList.toggle('done', all || (id != null && idx(li.dataset.id) < idx(id))); });
+    const pop = e => { e.classList.remove('in'); void e.offsetWidth; e.classList.add('in'); };
+    const clearStamp = () => { stamp.className = 'fc-stamp'; stamp.textContent = ''; };
+    if (action === 'open' || action === 'signoff') {
+      const end = action === 'signoff';
+      el.dataset.state = end ? 'signoff' : 'open'; setStep(null, end); clearStamp(); ev.innerHTML = ''; ev.classList.remove('on');
+      card.innerHTML = '';
+      card.append(h('p', { class: 'fc-kicker' }, end ? 'That was' : 'Today on'), h('h2', { class: 'fc-big' }, F.title, ' 🔍'), h('p', { class: 'fc-lede' }, F.show),
+        h('ol', { class: 'fc-agenda' }, F.steps.map(s => h('li', {}, h('b', {}, s.n), h('span', {}, h('strong', {}, s.name), h('small', {}, s.q))))));
+      pop(card); say.textContent = end ? F.signoff : F.opening; pop(say); return;
+    }
+    const C = F.claims[i], S = F.steps[idx(C.step)];
+    if (action === 'claim') {
+      el.dataset.state = 'claim'; setStep(C.step); clearStamp(); ev.innerHTML = ''; ev.classList.remove('on');
+      card.innerHTML = '';
+      const isa = C.isa ? h('span', { class: 'fc-isa isa-' + C.isa }, C.isa) : null;
+      card.append(h('p', { class: 'fc-kicker' }, `${S.n} · ${S.name} — ${S.q}`),
+        h('div', { class: 'fc-claim' }, isa, h('div', {}, h('span', { class: 'fc-claim-tag' }, 'CLAIM'), h('q', {}, C.claim), h('small', {}, '📣 ' + (C.source || 'Heard on the shop floor')))));
+      pop(card); say.textContent = `Claim ${i + 1} of ${F.claims.length}. Let's check it.`; pop(say); return;
+    }
+    if (action === 'evidence') {
+      el.dataset.state = 'evidence'; ev.innerHTML = '';
+      ev.append(h('p', { class: 'fc-ev-tag' }, '🔍 THE CHECK'), this.fcEvidence(C.evidence));
+      void ev.offsetWidth; ev.classList.add('on'); return;
+    }
+    if (action === 'verdict') {
+      el.dataset.state = 'verdict'; clearStamp();
+      stamp.append(h('small', {}, 'VERDICT'), h('span', {}, `${C.verdict.icon || ''} ${C.verdict.label}`));
+      void stamp.offsetWidth; stamp.className = 'fc-stamp on t-' + C.verdict.tone;
+      say.textContent = C.anchor || ''; pop(say);
+    }
+  }
+  fcEvidence(E) {
+    const d = this.data, rows = allRows(d), STC = { ok: '#3FBF8F', watch: '#F2B233', behind: '#E20015' };
+    const imgs = this._glImgs ||= JSON.parse(document.getElementById('glimpse-images')?.textContent || '{}');
+    const box = h('div', { class: 'fc-ev fc-ev-' + E.type });
+    if (E.type === 'house27') {
+      const w = this.app.entrance.wall; w.setMode('house27'); w.set27(true, 4, true); w.p = 1; w.animating = false; w.highlight(null, null);
+      const cv = document.createElement('canvas'); cv.width = w.ct.canvas.width; cv.height = w.ct.canvas.height; cv.getContext('2d').drawImage(w.ct.canvas, 0, 0); cv.className = 'fc-canvas'; box.append(cv);
+    }
+    if (E.type === 'images') box.append(h('div', { class: 'fc-imgs' }, E.src.map(s => h('img', { src: imgs[s] || '', alt: '' }))));
+    if (E.type === 'kpis') {
+      const g = h('div', { class: 'fc-kpis n' + E.ids.length });
+      E.ids.forEach(id => { const r = rows.find(x => x.id === id); if (!r) return;
+        g.append(h('div', { class: 'fc-kpi', style: `--s:${STC[r.status]}` }, h('span', { class: 'k-n' }, r.kpi), h('small', {}, `${r.pillarName} › ${r.element}`),
+          h('div', { class: 'k-v' }, h('span', {}, h('small', {}, 'Target'), r.target), h('span', {}, h('small', {}, d.roadmap.ytdLabel), h('b', {}, r.ytd))), h('i', { class: 'k-s' }, STATUS_LABEL[r.status]))); });
+      box.append(g);
+    }
+    if (E.type === 'reflection') { const b = d.reflection.boxes.find(x => x.id === E.box); box.append(h('p', { class: 'fc-ev-title' }, `Reflection 2026 · ${b.title}`), h('ul', { class: 'fc-list' }, b.items.map(t => h('li', {}, rich(t))))); }
+    if (E.type === 'bullets') { if (E.title) box.append(h('p', { class: 'fc-ev-title' }, E.title)); box.append(h('ul', { class: 'fc-list' }, E.items.map(t => h('li', {}, rich(t))))); }
+    if (E.type === 'map') {
+      const H = d.house2027, all = [...H.pillars, ...H.boosters];
+      box.append(h('div', { class: 'fc-map' }, E.rows.map(([gap, pid], k) => { const p = all.find(x => x.id === pid) || { name: pid };
+        return h('div', { class: 'fc-map-row', style: `--d:${k * 0.18}s` }, h('span', { class: 'm-gap' }, gap), h('i', {}, '→'), h('span', { class: 'm-p', style: `--c:${p.color || '#1E88D9'}` }, p.name)); })));
+    }
+    if (E.type === 'compare') {
+      const D = d.digitalSM;
+      box.append(h('div', { class: 'fc-compare' },
+        h('div', { class: 'c-before' }, h('small', {}, 'BEFORE · manual count'), h('b', {}, D.before.time), h('span', { class: 'c-face' }, D.before.face)),
+        h('i', { class: 'c-arrow' }, '→'),
+        h('div', { class: 'c-after' }, h('small', {}, 'AFTER · Digital SM'), h('b', {}, D.after.time), h('span', { class: 'c-face' }, D.after.face))),
+        h('img', { class: 'fc-strip', src: imgs['digital-sm.jpg'] || '', alt: '' }));
+      if (E.note) box.append(h('p', { class: 'fc-note' }, E.note));
+    }
+    if (E.type === 'poll') {
+      box.append(h('div', { class: 'fc-poll' }, E.rows.map((r, k) => { const max = Math.max(r.from, r.to) * 1.12, u = r.unit || '';
+        return h('div', { class: 'p-row', style: `--d:${k * 0.25}s` }, h('span', { class: 'p-k' }, r.kpi),
+          h('div', { class: 'p-bars' }, h('i', { class: 'p-from', style: `--w:${r.from / max * 100}%` }, h('em', {}, `2026 · ${r.from}${u}`)), h('i', { class: 'p-to', style: `--w:${r.to / max * 100}%` }, h('em', {}, `2027 · ${r.lowerBetter ? '≤' : (r.to >= 100 ? '' : '>')} ${r.to}${u}`))),
+          h('b', { class: 'p-arrow' + (r.lowerBetter ? ' down' : '') }, r.lowerBetter ? '▼' : '▲')); })));
+    }
+    if (E.points) box.append(h('ul', { class: 'fc-list' }, E.points.map(t => h('li', {}, rich(t)))));
+    if (E.caption) box.append(h('p', { class: 'fc-cap' }, E.caption));
+    return box;
+  }
   // corner notepad for the Digital SM story: 'open' (before|after), 'row' i, 'fill', 'done' {time, face}, 'close'
   smNote(action, arg) {
     const el = $('#smNote'), D = this.data.digitalSM; if (!el || !D) return;
