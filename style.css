@@ -760,3 +760,6 @@ body.factcheck #stepHint { display: none; }
 .fc-ticker-track span { padding-right: 2em; }
 @keyframes fcTicker { to { transform: translateX(-50%); } }
 body.paused #factcheck * { animation-play-state: paused !important; }
+body.factcheck #topbar, body.factcheck #rail, body.factcheck #scenebar, body.factcheck #captions, body.factcheck #marker { visibility: hidden; }
+.fc-steps { top: 8.6vh; }
+.fc-panel { top: 15vh; }
