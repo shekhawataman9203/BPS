@@ -127,6 +127,7 @@ export class UI {
   togglePause(v = !this.paused) {
     if (v === this.paused) return;
     this.paused = v; this.pressed('#btnPause', v); document.body.classList.toggle('paused', v);
+    document.querySelectorAll('#thanks *').forEach(e => e.getAnimations().forEach(a => (v ? a.pause() : a.play())));
     $('#btnPause .lg').textContent = v ? 'Play' : 'Pause'; $('#btnPause .sm').textContent = v ? '▶' : '❚❚';
     $('#btnPause').setAttribute('title', v ? 'Play animation (K)' : 'Pause animation (K)');
     const now = performance.now();
@@ -299,7 +300,54 @@ export class UI {
     };
     requestAnimationFrame(tick);
   }
-  thanks(on) { const el = $('#thanks'); if (!el) return; if (on) { el.hidden = false; void el.offsetWidth; el.classList.add('on'); } else { el.classList.remove('on'); el.hidden = true; } }
+  // last screen: 'show' (background only), 'walk' (the three walk in), 'look' (they look at JaP), 'check' k (item k drops in with a blast), 'final', 'hide'
+  thanks(action, k) {
+    const el = $('#thanks'); if (!el) return;
+    const T = this._ty ||= JSON.parse(document.getElementById('thanks-data')?.textContent || '{}');
+    const stage = $('.ty-stage', el);
+    const place = (e, r) => { e.style.left = r[0] + '%'; e.style.top = r[1] + '%'; e.style.width = r[2] + '%'; e.style.height = r[3] + '%'; };
+    if (!stage.childElementCount && T.img) {
+      stage.append(h('img', { class: 'ty-bg', src: T.img.bg, alt: '' }));
+      stage.append(h('i', { class: 'ty-glow', 'aria-hidden': 'true' }));
+      (T.layout.people || []).forEach((r, i) => { const p = h('img', { class: 'ty-p', src: T.img['p' + (i + 1)], alt: '' }); place(p, r); stage.append(p); });
+      (T.layout.checks || []).forEach((r, i) => { const c = h('img', { class: 'ty-c', src: T.img['c' + (i + 1)], alt: '' }); place(c, r); stage.append(c); });
+    }
+    const people = [...stage.querySelectorAll('.ty-p')], checks = [...stage.querySelectorAll('.ty-c')];
+    const stop = e => e.getAnimations().forEach(a => a.cancel());
+    if (action === 'hide') { el.classList.remove('on'); el.hidden = true; return; }
+    el.hidden = false;
+    if (action === 'show' || action === 'final') {
+      [...people, ...checks].forEach(stop); el.classList.remove('look');
+      const fin = action === 'final';
+      people.forEach(p => p.style.opacity = fin ? 1 : 0); checks.forEach(c => c.style.opacity = fin ? 1 : 0);
+      if (fin) el.classList.add('look');
+      void el.offsetWidth; el.classList.add('on'); return;
+    }
+    if (action === 'walk') {
+      // each walks in from the left edge of the BPS plinth with a step bounce, one after another
+      const W = stage.clientWidth, startX = [31.5, 33, 35];
+      people.forEach((p, i) => {
+        const r = T.layout.people[i], dx = (startX[i] - r[0]) / 100 * W, kf = [];
+        const steps = 10;
+        for (let s = 0; s <= steps; s++) { const t = s / steps; kf.push({ offset: t, opacity: Math.min(1, t * 4), transform: `translate(${dx * (1 - t)}px, ${s === steps ? 0 : (s % 2 ? -1.6 : 0)}%) rotate(${s === steps ? 0 : (s % 2 ? 0.8 : -0.8)}deg)` }); }
+        p.style.opacity = 0;
+        const a = p.animate(kf, { duration: 2600, delay: i * 900, easing: 'linear', fill: 'forwards' });
+        if (i === 2) a.onfinish = () => p.animate([{ transform: 'translateY(-5%)' }, { transform: 'translateY(0)' }], { duration: 450, easing: 'ease-out' }); // kneels
+      });
+      return;
+    }
+    if (action === 'look') { el.classList.add('look'); return; }
+    if (action === 'check') {
+      const c = checks[k]; if (!c) return;
+      c.style.opacity = 1;
+      c.animate([{ transform: 'translateY(-260%) scale(.9)', opacity: 0 }, { transform: 'translateY(8%) scale(1.04)', opacity: 1, offset: 0.62 }, { transform: 'translateY(-3%)', offset: 0.82 }, { transform: 'translateY(0) scale(1)', opacity: 1 }], { duration: 950, easing: 'cubic-bezier(.3,.7,.4,1)', fill: 'forwards' });
+      const r = T.layout.checks[k];
+      setTimeout(() => {
+        const fl = h('i', { class: 'ty-flash', style: `left:${r[0] + r[2] * 0.2}%;top:${r[1] + r[3] / 2}%` }); stage.append(fl); setTimeout(() => fl.remove(), 900);
+        this.crackers(stage, [r], 2200);
+      }, 600);
+    }
+  }
   covering() { const g = document.getElementById('glimpses'), y = document.getElementById('yearcard'), t = document.getElementById('thanks'); return (g && !g.hidden && g.dataset.state) || (y && y.classList.contains('on')) || (t && t.classList.contains('on')); }
   // 'Press → for the next step' hint in stepped chapters
   stepHint(on) { const el = $('#stepHint'); if (el) el.classList.toggle('on', !!on); const b = $('#btnSkip'); if (b) b.firstChild.textContent = on ? 'Next step ' : 'Skip scene '; }

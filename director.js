@@ -49,7 +49,7 @@ export const CHAPTERS = [
   { id: 'future', title: 'How 2027 looks like', sub: 'Back through the gate, into the plant of 2027', loc: 'gate', dur: 40, stepped: true },
   { id: 'plant', title: 'Picture of Future', sub: 'A walk through the modern plant', loc: 'floor', dur: 36 },
   { id: 'closing', title: 'Lead. Work. Win.', sub: 'Creating value. Together.', loc: 'close', dur: 18 },
-  { id: 'thanks', title: 'Thank You', sub: '', loc: 'close', dur: 10 },
+  { id: 'thanks', title: 'Thank You', sub: '', loc: 'close', dur: 14, stepped: true },
 ];
 
 // Operators at work [x, z, yaw]: NHA assembly line (4), VE pump line (3), NHA component line, VE press,
@@ -120,7 +120,7 @@ export class Director {
     const a = this.app;
     a.factory.sm.setScreen(smScreen || future); a.ui.smNote('close');
     a.entrance.wall.setMode(screen);
-    a.factory.setDigital(digital); a.factory.setFuture(future); a.ui.yearCard(null); a.ui.glimpses('close'); a.ui.thanks(false);
+    a.factory.setDigital(digital); a.factory.setFuture(future); a.ui.yearCard(null); a.ui.glimpses('close'); a.ui.thanks('hide');
     a.factory.gate.snap(gate);
     a.entrance.snapBuild(build); a.entrance.highlight(null); a.entrance.hideConfetti();
     a.entrance.wall.highlight(null, null);
@@ -150,7 +150,7 @@ export class Director {
       case 'digitalsm':
         this.placeGroup(WAIT, () => PI); c.ph.place(8.3, -4.9, -PI / 2); c.bps.place(8.9, -5.7, -PI / 2); this.setWorld({ gate: true }); a.rig.cut(SHOT.sm_wide); break;
       case 'thanks':
-        this.placeGroup(WAIT, () => PI); this.setWorld({ gate: true, future: true, screen: 'house27' }); a.ui.thanks(true); break;
+        this.placeGroup(WAIT, () => PI); this.setWorld({ gate: true, future: true, screen: 'house27' }); a.ui.thanks('show'); break;
       case 'closing':
         this.placeGroup(WAIT, () => PI); c.ph.place(-0.6, 26.8, PI); this.setWorld({ gate: true, future: true, screen: 'house27' }); a.entrance.wall.set27(true, 4, true); a.rig.cut(SHOT.c_low); break;
     }
@@ -166,6 +166,7 @@ export class Director {
       case 'future': a.factory.gate.snap(true); this.placeGroup(WALLTEAM, this.yawTo(KPI_WALL.x, KPI_WALL.z)); c.ph.place(-4.6, 24.4, Math.atan2(KPI_WALL.x + 4.6, KPI_WALL.z - 24.4)); lookAll(this.wallCenter()); a.entrance.wall.set27(true, 4, true); a.rig.cut(SHOT.k_wall); break;
       case 'plant': c.ph.place(22.2, 5.0, 0.6); c.bps.place(21.1, 4.6, 0.6); c.qual.place(23.4, 5.7, -2.4); a.rig.cut(SHOT.p_cell); break;
       case 'closing': this.rowTeam(true); a.rig.cut(SHOT.c_crane); break;
+      case 'thanks': a.ui.thanks('final'); break;
       case 'digitalsm': { const S = a.factory.sm, sp = S.screenPos; a.factory.sm.setScreen(true); c.tl.place(sp.x, -4.75, PI); c.tl.setMood('happy'); a.ui.smNote('open', 'after'); a.ui.smNote('fill'); a.ui.smNote('done', a.data.digitalSM.after); a.rig.cut(SHOT.sm_wide); break; }
     }
   }
@@ -514,7 +515,16 @@ export class Director {
     await this.waitStep(ctx);
   }
 
-  async thanks(ctx) { this.app.ui.thanks(true); await ctx.wait(0.5); }
+  async thanks(ctx) {
+    const ui = this.app.ui;
+    ui.thanks('show');
+    await ctx.wait(1.0);
+    ui.thanks('walk');                 // the three walk to their places on the BPS plinth
+    await ctx.wait(4.6);
+    ui.thanks('look');                 // and look up at JaP
+    for (let k = 0; k < 3; k++) { await this.waitStep(ctx); ui.thanks('check', k); } // each Next: one item drops in with a blast
+    await ctx.wait(1.5);
+  }
 
   async future(ctx) {
     const { ph } = this.cast, a = this.app, gate = a.factory.gate, wall = a.entrance.wall, H = a.data.house2027;

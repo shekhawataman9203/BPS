@@ -16,7 +16,7 @@ let html = fs.readFileSync(src('index.html'), 'utf8');
 const css = fs.readFileSync(src('style.css'), 'utf8');
 const data = fs.readFileSync(src('data.json'), 'utf8');
 const dataUri = (f, type) => `data:${type};base64,${fs.readFileSync(src(f)).toString('base64')}`;
-const images = { __THANKS__: dataUri('assets/thank-you-4k.jpg', 'image/jpeg'), __BPS_LOGO__: dataUri('assets/bps-go-logo.png', 'image/png'), __LWW__: dataUri('assets/lead-work-win.jpg', 'image/jpeg'), __REFL__: dataUri('assets/reflection.jpg', 'image/jpeg') };
+const images = { __BPS_LOGO__: dataUri('assets/bps-go-logo.png', 'image/png'), __LWW__: dataUri('assets/lead-work-win.jpg', 'image/jpeg'), __REFL__: dataUri('assets/reflection.jpg', 'image/jpeg') };
 JSON.parse(data); // validate
 for (const [k, v] of Object.entries(images)) html = html.replaceAll(k, v);
 // people models: assets/people/<role id>.glb (ph, bps, prod, qual, dig, log) and operator*.glb; PEOPLE_DIR overrides the folder
@@ -30,6 +30,13 @@ for (const dir of peopleDirs) if (fs.existsSync(dir)) for (const f of fs.readdir
 }
 console.log('people models:', Object.keys(people).join(', ') || 'none (procedural people)');
 html = html.replace('__PEOPLE__', () => JSON.stringify(people));
+// thank-you scene layers: assets/thanks (background, three people, three checklist items, layout)
+const tyDir = src('assets/thanks'), ty = { layout: {}, img: {} };
+if (fs.existsSync(tyDir)) {
+  ty.layout = JSON.parse(fs.readFileSync(path.join(tyDir, 'layout.json'), 'utf8'));
+  for (const f of fs.readdirSync(tyDir)) if (/\.(jpe?g|webp|png)$/i.test(f)) ty.img[f.replace(/\..*$/, '')] = dataUri('assets/thanks/' + f, /webp$/i.test(f) ? 'image/webp' : /png$/i.test(f) ? 'image/png' : 'image/jpeg');
+}
+html = html.replace('__THANKS__', () => JSON.stringify(ty));
 // glimpses: assets/glimpses/*.jpg|png, embedded by file name
 const glimpses = {}, gDir = src('assets/glimpses');
 if (fs.existsSync(gDir)) for (const f of fs.readdirSync(gDir).sort()) if (/\.(jpe?g|png|webp)$/i.test(f)) glimpses[f] = dataUri('assets/glimpses/' + f, /png$/i.test(f) ? 'image/png' : /webp$/i.test(f) ? 'image/webp' : 'image/jpeg');
