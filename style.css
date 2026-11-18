@@ -645,3 +645,4 @@ body.screen-view #panel, body.screen-view #panelTab, body.screen-view #captions,
 #smNote.done .sn-foot { display: flex; animation: rise .5s var(--ease); }
 .sn-face { font-size: 30px; }
 body.paused #smNote .sn-rows li { animation-play-state: paused; }
+body.sm-note #stepHint { right: auto; left: 150px; }

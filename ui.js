@@ -263,12 +263,12 @@ export class UI {
     const el = $('#smNote'), D = this.data.digitalSM; if (!el || !D) return;
     const rows = $('.sn-rows', el);
     const row = (p, delay = 0) => h('li', { style: `--d:${delay}s` }, h('span', {}, p.pn), h('span', {}, p.name), h('b', {}, String(p.qty)));
-    if (action === 'close') { el.classList.remove('on'); setTimeout(() => { if (!el.classList.contains('on')) el.hidden = true; }, 400); return; }
+    if (action === 'close') { document.body.classList.remove('sm-note'); el.classList.remove('on'); setTimeout(() => { if (!el.classList.contains('on')) el.hidden = true; }, 400); return; }
     if (action === 'open') {
       el.dataset.mode = arg; rows.innerHTML = ''; el.classList.remove('done');
       $('.sn-title', el).textContent = D.title;
       $('.sn-badge', el).textContent = arg === 'after' ? 'Read from Digital SM' : 'Manual count';
-      el.hidden = false; void el.offsetWidth; el.classList.add('on'); return;
+      el.hidden = false; void el.offsetWidth; el.classList.add('on'); document.body.classList.add('sm-note'); return;
     }
     if (action === 'row') { const p = D.parts[arg]; if (p) rows.append(row(p)); return; }
     if (action === 'fill') { rows.innerHTML = ''; D.parts.forEach((p, i) => rows.append(row(p, i * 0.22))); return; }
