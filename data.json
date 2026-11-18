@@ -1006,7 +1006,7 @@
   },
   "digitalSM": {
     "_note": "Sample part numbers and quantities for the Digital SM before/after scene. Replace with real values.",
-    "title": "Supermarket · Gangway NHA",
+    "title": "Supermarket · Plunger",
     "before": {
       "time": "45 min",
       "face": "😓",
@@ -1033,45 +1033,45 @@
         "status": "partial"
       },
       {
-        "pn": "1 460 104 402",
-        "name": "NHB",
-        "qty": 180,
-        "max": 200,
+        "pn": "2 430 136 121",
+        "name": "Plunger HS",
+        "qty": 280,
+        "max": 320,
         "status": "occupied"
       },
       {
-        "pn": "1 460 104 405",
-        "name": "NHB",
+        "pn": "2 430 136 127",
+        "name": "Plunger HS",
         "qty": 0,
-        "max": 200,
+        "max": 320,
         "status": "empty"
       },
       {
-        "pn": "1 463 456 310",
-        "name": "Stop housing",
-        "qty": 150,
-        "max": 160,
+        "pn": "2 430 136 133",
+        "name": "Plunger HS",
+        "qty": 300,
+        "max": 320,
         "status": "occupied"
       },
       {
-        "pn": "1 463 456 314",
-        "name": "Stop housing",
-        "qty": 60,
-        "max": 160,
+        "pn": "2 430 136 139",
+        "name": "Plunger HS",
+        "qty": 120,
+        "max": 320,
         "status": "partial"
       },
       {
-        "pn": "2 433 271 080",
-        "name": "NHB pre-part",
-        "qty": 120,
-        "max": 120,
+        "pn": "2 430 136 145",
+        "name": "Plunger HS",
+        "qty": 260,
+        "max": 320,
         "status": "occupied"
       },
       {
-        "pn": "2 433 271 084",
-        "name": "NHB pre-part",
-        "qty": 40,
-        "max": 120,
+        "pn": "2 430 136 151",
+        "name": "Plunger HS",
+        "qty": 80,
+        "max": 320,
         "status": "partial"
       }
     ]
