@@ -646,3 +646,7 @@ body.screen-view #panel, body.screen-view #panelTab, body.screen-view #captions,
 .sn-face { font-size: 30px; }
 body.paused #smNote .sn-rows li { animation-play-state: paused; }
 body.sm-note #stepHint { right: auto; left: 150px; }
+.sn-cols, .sn-rows li { grid-template-columns: 1.05fr 1.35fr .45fr; }
+.sn-rows li span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#smNote[data-mode="after"] .sn-rows li { font-size: 14px; }
+#smNote { width: min(420px, 46vw); }
