@@ -1006,7 +1006,7 @@
   },
   "digitalSM": {
     "_note": "Sample part numbers and quantities for the Digital SM before/after scene. Replace with real values.",
-    "title": "Supermarket · Plunger",
+    "title": "Supermarket · Plunger Hard Stage",
     "before": {
       "time": "45 min",
       "face": "😓",
@@ -1020,56 +1020,56 @@
     "parts": [
       {
         "pn": "2 430 136 112",
-        "name": "Plunger HS",
+        "name": "Plunger Hard Stage",
         "qty": 240,
         "max": 320,
         "status": "occupied"
       },
       {
         "pn": "2 430 136 118",
-        "name": "Plunger HS",
+        "name": "Plunger Hard Stage",
         "qty": 96,
         "max": 320,
         "status": "partial"
       },
       {
         "pn": "2 430 136 121",
-        "name": "Plunger HS",
+        "name": "Plunger Hard Stage",
         "qty": 280,
         "max": 320,
         "status": "occupied"
       },
       {
         "pn": "2 430 136 127",
-        "name": "Plunger HS",
+        "name": "Plunger Hard Stage",
         "qty": 0,
         "max": 320,
         "status": "empty"
       },
       {
         "pn": "2 430 136 133",
-        "name": "Plunger HS",
+        "name": "Plunger Hard Stage",
         "qty": 300,
         "max": 320,
         "status": "occupied"
       },
       {
         "pn": "2 430 136 139",
-        "name": "Plunger HS",
+        "name": "Plunger Hard Stage",
         "qty": 120,
         "max": 320,
         "status": "partial"
       },
       {
         "pn": "2 430 136 145",
-        "name": "Plunger HS",
+        "name": "Plunger Hard Stage",
         "qty": 260,
         "max": 320,
         "status": "occupied"
       },
       {
         "pn": "2 430 136 151",
-        "name": "Plunger HS",
+        "name": "Plunger Hard Stage",
         "qty": 80,
         "max": 320,
         "status": "partial"
