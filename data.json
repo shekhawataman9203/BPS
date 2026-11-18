@@ -860,6 +860,72 @@
     "subtitle": "Moments that moved BPS GO!+ this year",
     "months": [
       {
+        "month": "February 2026",
+        "event": "Mobility BPS Award 2026 · TOP 5 in GB",
+        "images": [
+          {
+            "src": "award-banner.jpg",
+            "caption": "Mobility BPS Award 2026",
+            "slot": [
+              22.5,
+              18.0,
+              52.6,
+              21.6
+            ]
+          },
+          {
+            "src": "award-cat-vs.jpg",
+            "caption": "Award category · BPS GO!+ Value Stream",
+            "slot": [
+              9.6,
+              41.6,
+              23.5,
+              16.9
+            ]
+          },
+          {
+            "src": "award-nha.jpg",
+            "caption": "BPS GO!+ Value Stream | NHA · Transforming the present core into a future competitive advantage",
+            "slot": [
+              3.2,
+              60.8,
+              35.9,
+              37.2
+            ]
+          },
+          {
+            "src": "award-cat-ec.jpg",
+            "caption": "Award category · Everybody's CIP & Leadership Commitment",
+            "slot": [
+              65.7,
+              41.6,
+              21.9,
+              15.8
+            ]
+          },
+          {
+            "src": "award-ec.jpg",
+            "caption": "Everyone drives improvement through collective & committed leadership",
+            "slot": [
+              59.0,
+              60.4,
+              37.7,
+              37.6
+            ]
+          },
+          {
+            "src": "award-top5.jpg",
+            "caption": "TOP 5 in GB",
+            "slot": [
+              41.4,
+              55.1,
+              16.0,
+              10.4
+            ]
+          }
+        ]
+      },
+      {
         "month": "April 2026",
         "event": "Space Workshop 2026",
         "images": [
