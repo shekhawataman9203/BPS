@@ -1084,15 +1084,15 @@
       "name": "BPS Lead",
       "role": "JaP"
     },
-    "opening": "Good morning, JaP. Every year we hear many claims about our plant. Today BPS checks them against the data and the Gemba. No opinions, only facts.",
-    "signoff": "Facts checked. Gaps named. Plan in place. This was BPS Fact Check. Back to the studio.",
+    "opening": "Good morning, JaP. 2026 is done. Many things are being said about BPS GO!+. Today we check them, pillar by pillar, against the facts: what we achieved, and what we could not.",
+    "signoff": "Facts checked: most 2026 topics achieved, the gaps named, the 2030 vision ready. This was BPS Fact Check. Back to the studio.",
     "ticker": [
-      "JaP in TOP 5 of GB at the Mobility BPS Award 2026",
-      "Digital SM live at Plunger Hard Stage, NHB and Stop Housing",
-      "WaTS training penetration at 107%",
-      "BPS maturity Level 2 at NHA MTS",
-      "3 Toyota Kata coaches and pioneer projects in Logistics",
-      "House of BPS GO!+ 2027 released"
+      "JaP in TOP 5 plants of GB at the Mobility BPS Award 2026",
+      "BPS assessment 2026: Level 2.4 (2025: 1.96)",
+      "TPT VE value stream 17 → 14.01 days",
+      "Ideas per associate: 28",
+      "WaTS training coverage 100%",
+      "Vision 2030 ready for NHA and VE value streams"
     ],
     "steps": [
       {
@@ -1129,23 +1129,317 @@
     "claims": [
       {
         "step": "target",
-        "claim": "JaP has a clear BPS target for 2027.",
-        "source": "Heard in the canteen",
+        "claim": "BPS GO!+ in 2026 was only a slogan.",
+        "source": "Viral on the plant WhatsApp",
         "evidence": {
-          "type": "house27",
-          "caption": "House of BPS GO!+ 2027 · new targets shown in green"
+          "type": "scorecard",
+          "caption": "2026 key topics under the BPS GO!+ pillars · ✅ achieved · ⚠️ gap"
         },
         "verdict": {
-          "label": "CONFIRMED",
-          "icon": "✅",
-          "tone": "ok"
+          "label": "FALSE",
+          "icon": "❌",
+          "tone": "bad",
+          "gesture": "thumbsUp"
         },
-        "anchor": "One house, four pillars, two boosters. Every 2027 target is written down and owned."
+        "anchor": "Six pillars, real results. Most topics were achieved, and we also name what we could not.",
+        "stampTop": true
       },
       {
         "step": "target",
-        "claim": "Our BPS level is recognised outside JaP.",
-        "source": "Overheard at the gate",
+        "claim": "Leadership Commitment delivered everything in 2026.",
+        "source": "Heard in a review meeting",
+        "evidence": {
+          "type": "checks",
+          "title": "Leadership Commitment · 2026",
+          "items": [
+            {
+              "t": "**DLPC usage maturity** improved: Pull, 5S, DLR",
+              "ok": true
+            },
+            {
+              "t": "**BPS competency** improved: **98%** achieved",
+              "ok": true
+            },
+            {
+              "t": "**WaTS training coverage: 100%**",
+              "ok": true
+            },
+            {
+              "t": "**BLDP expert creation**: not yet",
+              "ok": false
+            },
+            {
+              "t": "**SCIP project completion** below **85%**",
+              "ok": false
+            }
+          ]
+        },
+        "verdict": {
+          "label": "PARTLY TRUE",
+          "icon": "⚠️",
+          "tone": "warn"
+        },
+        "anchor": "Routines, competency and training delivered. BLDP experts and SCIP completion are still open."
+      },
+      {
+        "step": "target",
+        "claim": "Not everybody takes part in improvement.",
+        "source": "Canteen talk",
+        "evidence": {
+          "type": "checks",
+          "title": "Everybody's CIP · 2026",
+          "items": [
+            {
+              "t": "**Ideas per associate: 28** achieved",
+              "ok": true
+            },
+            {
+              "t": "**100% individual employee involvement**",
+              "ok": true
+            }
+          ]
+        },
+        "verdict": {
+          "label": "FALSE",
+          "icon": "❌",
+          "tone": "bad",
+          "gesture": "thumbsUp"
+        },
+        "anchor": "Every associate involved, 28 ideas each. Improvement at JaP is everybody's job."
+      },
+      {
+        "step": "target",
+        "claim": "Our value streams did not get faster.",
+        "source": "Asked at the shop floor board",
+        "evidence": {
+          "type": "poll",
+          "labels": [
+            "Before",
+            "2026"
+          ],
+          "exact": true,
+          "delta": true,
+          "rows": [
+            {
+              "kpi": "TPT · VE value stream",
+              "from": 17,
+              "to": 14.01,
+              "unit": " days",
+              "lowerBetter": true
+            },
+            {
+              "kpi": "TPT · NHA value stream",
+              "from": 11.29,
+              "to": 10.19,
+              "unit": " days",
+              "lowerBetter": true
+            }
+          ],
+          "caption": "Waste-Free, Stable Flow · throughput time reduction achieved"
+        },
+        "verdict": {
+          "label": "FALSE",
+          "icon": "❌",
+          "tone": "bad",
+          "gesture": "thumbsUp"
+        },
+        "anchor": "VE from 17 to 14.01 days, NHA from 11.29 to 10.19 days. Flow is faster in both value streams."
+      },
+      {
+        "step": "target",
+        "claim": "CIP stops at the shop floor; indirect areas don't improve.",
+        "source": "Overheard at the office",
+        "evidence": {
+          "type": "checks",
+          "title": "CIP in Indirect Areas · 2026",
+          "items": [
+            {
+              "t": "**100% indirect area coverage** through the **VSDiA** approach",
+              "ok": true
+            }
+          ]
+        },
+        "verdict": {
+          "label": "FALSE",
+          "icon": "❌",
+          "tone": "bad",
+          "gesture": "thumbsUp"
+        },
+        "anchor": "Every indirect area is covered by value stream design in indirect areas."
+      },
+      {
+        "step": "gap",
+        "claim": "All 2026 topics were achieved.",
+        "source": "Too good to be true",
+        "evidence": {
+          "type": "checks",
+          "title": "What we could not achieve in 2026",
+          "items": [
+            {
+              "t": "**Pull maturity** below **80%** (Waste-Free, Stable Flow)",
+              "ok": false
+            },
+            {
+              "t": "**BLDP expert creation** (Leadership Commitment)",
+              "ok": false
+            },
+            {
+              "t": "**SCIP project completion** below **85%** (Leadership Commitment)",
+              "ok": false
+            },
+            {
+              "t": "**Obsolescence management**: **50%** achieved (Investment Efficiency)",
+              "ok": false
+            },
+            {
+              "t": "**MAEs with technical loss < 3%**: **60%** vs target **90%**",
+              "ok": false
+            }
+          ]
+        },
+        "verdict": {
+          "label": "FALSE",
+          "icon": "❌",
+          "tone": "bad",
+          "gesture": "think"
+        },
+        "anchor": "A real fact check names the gaps. These five go straight into the 2027 plan."
+      },
+      {
+        "step": "gap",
+        "claim": "Investment efficiency is on target.",
+        "source": "Budget meeting",
+        "evidence": {
+          "type": "poll",
+          "labels": [
+            "2026 achieved",
+            "Target"
+          ],
+          "exact": true,
+          "rows": [
+            {
+              "kpi": "MAEs with tech. loss < 3%",
+              "from": 60,
+              "to": 90,
+              "unit": "%"
+            },
+            {
+              "kpi": "Obsolescence management",
+              "from": 50,
+              "to": 100,
+              "unit": "%"
+            }
+          ],
+          "caption": "Investment Efficiency · 2026 result against target"
+        },
+        "verdict": {
+          "label": "NOT YET",
+          "icon": "⚠️",
+          "tone": "warn"
+        },
+        "anchor": "60% of machines below 3% technical loss against a 90% target, and obsolescence half done. Top priority for 2027."
+      },
+      {
+        "step": "strategy",
+        "claim": "We don't know where BPS goes after 2026.",
+        "source": "Question from the team",
+        "evidence": {
+          "type": "checks",
+          "title": "The direction is set",
+          "items": [
+            {
+              "t": "**Vision 2030** prepared for the **NHA value stream**",
+              "ok": true
+            },
+            {
+              "t": "**Vision 2030** prepared for the **VE value stream**",
+              "ok": true
+            },
+            {
+              "t": "**House of BPS GO!+ 2027** with new targets per pillar",
+              "ok": true
+            }
+          ]
+        },
+        "verdict": {
+          "label": "FALSE",
+          "icon": "❌",
+          "tone": "bad",
+          "gesture": "thumbsUp"
+        },
+        "anchor": "Vision 2030 for both value streams, and the 2027 house as the next step towards it."
+      },
+      {
+        "step": "isa",
+        "isa": "I",
+        "claim": "Digital is only talk at JaP.",
+        "source": "Shop floor rumour",
+        "evidence": {
+          "type": "checks",
+          "title": "Digi Lean · implemented in 2026",
+          "items": [
+            {
+              "t": "**Digital DLR (DDLR)**: manual effort reduced",
+              "ok": true
+            },
+            {
+              "t": "**Digital SM**: stock at a glance",
+              "ok": true
+            },
+            {
+              "t": "**Idea scheme automation**",
+              "ok": true
+            },
+            {
+              "t": "**Digital TPT**",
+              "ok": true
+            }
+          ]
+        },
+        "verdict": {
+          "label": "FALSE",
+          "icon": "❌",
+          "tone": "bad",
+          "gesture": "thumbsUp"
+        },
+        "anchor": "Four digital solutions live on the shop floor. Innovate, simplify, accelerate: in practice."
+      },
+      {
+        "step": "impact",
+        "claim": "Our BPS maturity did not move.",
+        "source": "Heard at the gate",
+        "evidence": {
+          "type": "poll",
+          "labels": [
+            "2025",
+            "2026"
+          ],
+          "exact": true,
+          "delta": true,
+          "rows": [
+            {
+              "kpi": "BPS assessment level",
+              "from": 1.96,
+              "to": 2.4
+            }
+          ],
+          "points": [
+            "2026 assessed with the **new version 4.26**, a stricter standard"
+          ],
+          "caption": "BPS assessment 2026"
+        },
+        "verdict": {
+          "label": "FALSE",
+          "icon": "❌",
+          "tone": "bad",
+          "gesture": "thumbsUp"
+        },
+        "anchor": "From 1.96 to Level 2.4, and on the new, stricter version 4.26."
+      },
+      {
+        "step": "impact",
+        "claim": "Nobody outside JaP notices our BPS work.",
+        "source": "Overheard in the canteen",
         "evidence": {
           "type": "images",
           "src": [
@@ -1154,238 +1448,121 @@
             "award-top5.jpg",
             "award-cat-ec.jpg"
           ],
-          "caption": "Mobility BPS Award 2026 · TOP 5 in GB, in two categories"
+          "caption": "Mobility BPS Award 2026 · applied in 2 categories · TOP 5 plants in GB"
         },
         "verdict": {
-          "label": "CONFIRMED",
-          "icon": "✅",
-          "tone": "ok"
-        },
-        "anchor": "TOP 5 in GB, in BPS GO!+ Value Stream NHA and in Everybody's CIP & Leadership Commitment."
-      },
-      {
-        "step": "target",
-        "claim": "Our people are trained in BPS.",
-        "source": "Shop floor discussion",
-        "evidence": {
-          "type": "kpis",
-          "ids": [
-            "wats",
-            "competency"
-          ],
-          "caption": "Roadmap 2026 · People pillar, status YTD'09"
-        },
-        "verdict": {
-          "label": "CONFIRMED",
-          "icon": "✅",
-          "tone": "ok"
-        },
-        "anchor": "WaTS training above target and 97% BPS qualification. The base is in place."
-      },
-      {
-        "step": "gap",
-        "claim": "All BPS KPIs are on track.",
-        "source": "Viral on the plant WhatsApp",
-        "evidence": {
-          "type": "kpis",
-          "ids": [
-            "dlpc",
-            "mae",
-            "indirect",
-            "health"
-          ],
-          "caption": "KPI wall · the tiles that are behind"
-        },
-        "verdict": {
-          "label": "PARTLY TRUE",
-          "icon": "⚠️",
-          "tone": "warn"
-        },
-        "anchor": "Strong in people and CIP, behind in leadership routines and machine reliability. A fact check shows this too."
-      },
-      {
-        "step": "gap",
-        "claim": "We are strong in the BPS basics.",
-        "source": "Said in a review meeting",
-        "evidence": {
-          "type": "reflection",
-          "box": "gap",
-          "caption": "Reflection 2026"
-        },
-        "verdict": {
-          "label": "MISLEADING",
-          "icon": "⚠️",
-          "tone": "warn"
-        },
-        "anchor": "Our results came from projects. The basics must catch up: VSM, VSD, KPI tree and 5S."
-      },
-      {
-        "step": "strategy",
-        "claim": "Every gap has a plan for 2027.",
-        "source": "Asked by the management team",
-        "evidence": {
-          "type": "map",
-          "rows": [
-            [
-              "DLR & DLPC maturity",
-              "h-lead-27"
-            ],
-            [
-              "MAE technical loss & de-risking",
-              "h-invest-27"
-            ],
-            [
-              "BPS basics, TPT & small lot",
-              "h-flow-27"
-            ],
-            [
-              "Participation & depth of ideas",
-              "h-cip-27"
-            ],
-            [
-              "Manual Kaizen process & data",
-              "h-digi-27"
-            ],
-            [
-              "CIP in indirect areas at 80%",
-              "h-indirect-27"
-            ]
-          ],
-          "caption": "Each gap → its element in the House of BPS GO!+ 2027"
-        },
-        "verdict": {
-          "label": "CONFIRMED",
-          "icon": "✅",
-          "tone": "ok"
-        },
-        "anchor": "No gap without an owner: every one maps to a pillar or booster of the 2027 house."
-      },
-      {
-        "step": "isa",
-        "isa": "I",
-        "claim": "Counting stock in the supermarket takes too long.",
-        "source": "Team leader, NHA",
-        "evidence": {
-          "type": "compare",
-          "note": "Digital SM live at Plunger Hard Stage, NHB and Stop Housing Pre-part SM"
-        },
-        "verdict": {
-          "label": "WAS TRUE · NOW FALSE",
+          "label": "FALSE",
           "icon": "❌",
           "tone": "bad",
           "gesture": "thumbsUp"
         },
-        "anchor": "Innovate: the Digital SM shows the stock at a glance. Counting time goes back into improvement."
-      },
+        "anchor": "Two categories, and JaP among the top 5 plants in GB."
+      }
+    ],
+    "scorecard": [
       {
-        "step": "isa",
-        "isa": "S",
-        "claim": "Giving an improvement idea is complicated.",
-        "source": "Operator, VE line",
-        "evidence": {
-          "type": "bullets",
-          "title": "Simplify · what we remove",
-          "items": [
-            "Reflection 2026: an **outdated Kaizen / suggestion process**, manual and not transparent",
-            "2027: a **digital, agentic-AI suggestion scheme**",
-            "The **DLPC tool** replaces paper control loops for leadership routines"
+        "name": "Leadership Commitment",
+        "color": "#50237F",
+        "items": [
+          [
+            "DLPC usage maturity (Pull, 5S, DLR)",
+            true
+          ],
+          [
+            "BPS competency 98%",
+            true
+          ],
+          [
+            "WaTS coverage 100%",
+            true
+          ],
+          [
+            "BLDP expert creation",
+            false
+          ],
+          [
+            "SCIP completion < 85%",
+            false
           ]
-        },
-        "verdict": {
-          "label": "BEING FIXED",
-          "icon": "🔧",
-          "tone": "fix"
-        },
-        "anchor": "Simplify: one digital route for every idea, visible from submission to closure."
+        ]
       },
       {
-        "step": "isa",
-        "isa": "A",
-        "claim": "Improvement projects take too long to finish.",
-        "source": "Project review",
-        "evidence": {
-          "type": "kpis",
-          "ids": [
-            "agile"
+        "name": "Everybody's CIP",
+        "color": "#B90276",
+        "items": [
+          [
+            "Ideas per associate: 28",
+            true
           ],
-          "points": [
-            "Agile **Scrum 16 and SW 32** projects by Q4",
-            "**Think together in Gemba** to find the real cause faster",
-            "**3 Toyota Kata coaches** coaching problem solving"
+          [
+            "100% individual involvement",
+            true
           ]
-        },
-        "verdict": {
-          "label": "BEING FIXED",
-          "icon": "🔧",
-          "tone": "fix"
-        },
-        "anchor": "Accelerate: short sprints, Gemba and coaching to take SCIP completion above 90%."
+        ]
       },
       {
-        "step": "impact",
-        "claim": "Everybody improves at JaP.",
-        "source": "Town hall question",
-        "evidence": {
-          "type": "kpis",
-          "ids": [
-            "involvement",
-            "ideas"
+        "name": "Waste-Free, Stable Flow",
+        "color": "#005691",
+        "items": [
+          [
+            "TPT VE 17 → 14.01 days",
+            true
           ],
-          "caption": "Everybody's CIP · status YTD'09"
-        },
-        "verdict": {
-          "label": "ALMOST TRUE",
-          "icon": "⚠️",
-          "tone": "warn"
-        },
-        "anchor": "Participation is high. The depth of ideas must grow to the benchmark."
+          [
+            "TPT NHA 11.29 → 10.19 days",
+            true
+          ],
+          [
+            "Pull maturity < 80%",
+            false
+          ]
+        ]
       },
       {
-        "step": "impact",
-        "claim": "Our KPIs will move in 2027.",
-        "source": "The big question",
-        "evidence": {
-          "type": "poll",
-          "rows": [
-            {
-              "kpi": "DLR maturity",
-              "from": 65,
-              "to": 80,
-              "unit": "%"
-            },
-            {
-              "kpi": "MAEs with tech. loss < 3%",
-              "from": 69,
-              "to": 90,
-              "unit": "%"
-            },
-            {
-              "kpi": "Ideas per associate",
-              "from": 20.3,
-              "to": 28
-            },
-            {
-              "kpi": "Individual contribution",
-              "from": 97,
-              "to": 100,
-              "unit": "%"
-            },
-            {
-              "kpi": "TPT VE",
-              "from": 14.1,
-              "to": 12.7,
-              "unit": " days",
-              "lowerBetter": true
-            }
+        "name": "CIP in Indirect Areas",
+        "color": "#0A6EBD",
+        "items": [
+          [
+            "100% coverage via VSDiA",
+            true
+          ]
+        ]
+      },
+      {
+        "name": "Digi Lean",
+        "color": "#1E88D9",
+        "items": [
+          [
+            "DDLR, manual effort reduced",
+            true
           ],
-          "caption": "Exit poll · 2026 YTD → 2027 target"
-        },
-        "verdict": {
-          "label": "ON TRACK · IF WE EXECUTE",
-          "icon": "🎯",
-          "tone": "ok"
-        },
-        "anchor": "The numbers will move, if every owner runs the plan every week."
+          [
+            "Digital SM",
+            true
+          ],
+          [
+            "Idea scheme automation",
+            true
+          ],
+          [
+            "Digital TPT",
+            true
+          ]
+        ]
+      },
+      {
+        "name": "Investment Efficiency",
+        "color": "#78BE20",
+        "items": [
+          [
+            "Obsolescence management 50%",
+            false
+          ],
+          [
+            "MAE tech. loss < 3%: 60% (target 90%)",
+            false
+          ]
+        ]
       }
     ]
   }

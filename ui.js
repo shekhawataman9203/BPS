@@ -304,7 +304,7 @@ export class UI {
     if (action === 'verdict') {
       el.dataset.state = 'verdict'; clearStamp();
       stamp.append(h('small', {}, 'VERDICT'), h('span', {}, `${C.verdict.icon || ''} ${C.verdict.label}`));
-      void stamp.offsetWidth; stamp.className = 'fc-stamp on t-' + C.verdict.tone;
+      void stamp.offsetWidth; stamp.className = 'fc-stamp on t-' + C.verdict.tone + (C.stampTop ? ' top' : '');
       say.textContent = C.anchor || ''; pop(say);
     }
   }
@@ -340,10 +340,22 @@ export class UI {
         h('img', { class: 'fc-strip', src: imgs['digital-sm.jpg'] || '', alt: '' }));
       if (E.note) box.append(h('p', { class: 'fc-note' }, E.note));
     }
+    if (E.type === 'checks') {
+      if (E.title) box.append(h('p', { class: 'fc-ev-title' }, E.title));
+      box.append(h('ul', { class: 'fc-checks' }, E.items.map((it, k) => h('li', { class: it.ok ? 'ok' : 'gap', style: `--d:${k * 0.22}s` }, h('i', {}, it.ok ? '✅' : '⚠️'), h('span', {}, rich(it.t)), h('b', {}, it.ok ? 'ACHIEVED' : 'GAP')))));
+    }
+    if (E.type === 'scorecard') {
+      const SC = d.factCheck.scorecard || [];
+      box.append(h('div', { class: 'fc-score' }, SC.map((p, k) => h('div', { class: 'sc-card', style: `--c:${p.color};--d:${k * 0.15}s` }, h('p', { class: 'sc-h' }, p.name),
+        h('ul', {}, p.items.map(([t, ok]) => h('li', { class: ok ? 'ok' : 'gap' }, h('i', {}, ok ? '✅' : '⚠️'), t)))))));
+    }
     if (E.type === 'poll') {
+      const [la, lb] = E.labels || ['2026', '2027'];
       box.append(h('div', { class: 'fc-poll' }, E.rows.map((r, k) => { const max = Math.max(r.from, r.to) * 1.12, u = r.unit || '';
-        return h('div', { class: 'p-row', style: `--d:${k * 0.25}s` }, h('span', { class: 'p-k' }, r.kpi),
-          h('div', { class: 'p-bars' }, h('i', { class: 'p-from', style: `--w:${r.from / max * 100}%` }, h('em', {}, `2026 · ${r.from}${u}`)), h('i', { class: 'p-to', style: `--w:${r.to / max * 100}%` }, h('em', {}, `2027 · ${r.lowerBetter ? '≤' : (r.to >= 100 ? '' : '>')} ${r.to}${u}`))),
+        const pre = E.exact ? '' : (r.lowerBetter ? '≤ ' : (r.to >= 100 ? '' : '> '));
+        const delta = E.delta ? h('small', { class: 'p-delta' }, `${r.to < r.from ? '−' : '+'}${Math.abs(Math.round((r.to - r.from) / r.from * 1000) / 10)}%`) : null;
+        return h('div', { class: 'p-row', style: `--d:${k * 0.25}s` }, h('span', { class: 'p-k' }, r.kpi, delta),
+          h('div', { class: 'p-bars' }, h('i', { class: 'p-from', style: `--w:${r.from / max * 100}%` }, h('em', {}, `${la} · ${r.from}${u}`)), h('i', { class: 'p-to', style: `--w:${r.to / max * 100}%` }, h('em', {}, `${lb} · ${pre}${r.to}${u}`))),
           h('b', { class: 'p-arrow' + (r.lowerBetter ? ' down' : '') }, r.lowerBetter ? '▼' : '▲')); })));
     }
     if (E.points) box.append(h('ul', { class: 'fc-list' }, E.points.map(t => h('li', {}, rich(t)))));
