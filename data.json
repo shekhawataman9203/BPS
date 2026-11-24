@@ -864,78 +864,6 @@
     "subtitle": "Moments that moved BPS GO!+ this year",
     "months": [
       {
-        "month": "February 2026",
-        "event": "Mobility BPS Award 2026",
-        "images": [
-          {
-            "src": "award-banner.jpg",
-            "caption": "Mobility BPS Award 2026",
-            "slot": [
-              22.5,
-              18.0,
-              52.6,
-              21.6
-            ]
-          },
-          {
-            "src": "award-cat-vs.jpg",
-            "caption": "Award category · BPS GO!+ Value Stream",
-            "slot": [
-              9.6,
-              41.6,
-              23.5,
-              16.9
-            ]
-          },
-          {
-            "src": "award-nha.jpg",
-            "caption": "BPS GO!+ Value Stream | NHA · Transforming the present core into a future competitive advantage",
-            "slot": [
-              3.2,
-              60.8,
-              35.9,
-              37.2
-            ]
-          },
-          {
-            "src": "award-cat-ec.jpg",
-            "caption": "Award category · Everybody's CIP & Leadership Commitment",
-            "slot": [
-              65.7,
-              41.6,
-              21.9,
-              15.8
-            ]
-          },
-          {
-            "src": "award-ec.jpg",
-            "caption": "Everyone drives improvement through collective & committed leadership",
-            "slot": [
-              59.0,
-              60.4,
-              37.7,
-              37.6
-            ]
-          },
-          {
-            "src": "award-top5.jpg",
-            "caption": "TOP 5 in GB",
-            "slot": [
-              41.4,
-              55.1,
-              16.0,
-              10.4
-            ],
-            "entry": "pop",
-            "celebrate": [
-              "award-nha.jpg",
-              "award-ec.jpg"
-            ]
-          }
-        ],
-        "slideEvent": ""
-      },
-      {
         "month": "April 2026",
         "event": "Space Workshop 2026",
         "images": [
@@ -969,6 +897,90 @@
               36.3
             ]
           }
+        ],
+        "part": 1
+      },
+      {
+        "month": "Vision Workshop",
+        "event": "VE Vision 2030 · co-created with the HigP team",
+        "part": 1,
+        "images": [
+          {
+            "src": "ve-cocreate-1.jpg",
+            "caption": "Co-creating the VE vision with the HigP team · Gemba",
+            "slot": [
+              8,
+              24,
+              41,
+              62
+            ]
+          },
+          {
+            "src": "ve-cocreate-2.jpg",
+            "caption": "Co-creating the VE vision with the HigP team · workshop",
+            "slot": [
+              51,
+              24,
+              41,
+              62
+            ]
+          },
+          {
+            "src": "ve-vision-2030.jpg",
+            "caption": "VE Vision 2030",
+            "slot": [
+              10,
+              17,
+              80,
+              80
+            ],
+            "pushes": {
+              "0": [
+                76.7,
+                19.3,
+                6.4,
+                10.8
+              ],
+              "1": [
+                83.2,
+                19.3,
+                6.4,
+                10.8
+              ]
+            }
+          }
+        ],
+        "slideEvent": "VE Vision 2030 · co-created with HigP"
+      },
+      {
+        "month": "Digital DLR tool",
+        "event": "From Active Cockpit to the Digital DLR tool",
+        "slideEvent": "Digital DLR · from Active Cockpit to Digital DLR",
+        "part": 1,
+        "images": [
+          {
+            "src": "dlr-cockpit.jpg",
+            "caption": "Before · Active Cockpit: DLR charts as static files",
+            "slot": [
+              3,
+              27,
+              35,
+              45
+            ],
+            "tag": "BEFORE · Active Cockpit",
+            "noPlace": true
+          },
+          {
+            "src": "dlr-digital.jpg",
+            "caption": "After · Digital DLR tool: live target and performance, daily, monthly, yearly",
+            "slot": [
+              41,
+              23,
+              56.5,
+              72
+            ],
+            "tag": "AFTER · Digital DLR"
+          }
         ]
       },
       {
@@ -1000,7 +1012,128 @@
             "NHB",
             "Stop Housing Pre-part SM"
           ]
-        }
+        },
+        "part": 1
+      },
+      {
+        "month": "Digital Twin",
+        "event": "Shipping area · FG store and warehouse utilisation",
+        "slideEvent": "Digital Twin · Shipping area",
+        "part": 2,
+        "images": [
+          {
+            "src": "twin-fgstore.jpg",
+            "caption": "Digital twin of the FG store: occupancy by rack, live",
+            "slot": [
+              2,
+              20,
+              50,
+              62
+            ]
+          },
+          {
+            "src": "twin-wh.jpg",
+            "caption": "Warehouse utilisation and GOP availability: every rack at a glance",
+            "slot": [
+              53.5,
+              22,
+              44.5,
+              58
+            ]
+          }
+        ]
+      },
+      {
+        "month": "February 2026",
+        "event": "Mobility BPS Award 2026",
+        "images": [
+          {
+            "src": "award-banner.jpg",
+            "caption": "Mobility BPS Award 2026",
+            "slot": [
+              22.5,
+              18.0,
+              52.6,
+              21.6
+            ],
+            "entry": "fade"
+          },
+          {
+            "src": "award-cat-vs.jpg",
+            "caption": "Award category · BPS GO!+ Value Stream",
+            "slot": [
+              9.6,
+              41.6,
+              23.5,
+              16.9
+            ],
+            "entry": "fade"
+          },
+          {
+            "src": "award-cat-ec.jpg",
+            "caption": "Award category · Everybody's CIP & Leadership Commitment",
+            "slot": [
+              65.7,
+              41.6,
+              21.9,
+              15.8
+            ],
+            "entry": "fade"
+          },
+          {
+            "src": "award-nha.jpg",
+            "caption": "BPS GO!+ Value Stream | NHA · Transforming the present core into a future competitive advantage",
+            "slot": [
+              3.2,
+              60.8,
+              35.9,
+              37.2
+            ]
+          },
+          {
+            "src": "award-ec.jpg",
+            "caption": "Everyone drives improvement through collective & committed leadership",
+            "slot": [
+              59.0,
+              60.4,
+              37.7,
+              37.6
+            ]
+          },
+          {
+            "src": "award-top5.jpg",
+            "caption": "TOP 5 in GB",
+            "slot": [
+              41.4,
+              55.1,
+              16.0,
+              10.4
+            ],
+            "entry": "pop",
+            "celebrate": [
+              "award-nha.jpg",
+              "award-ec.jpg"
+            ]
+          }
+        ],
+        "slideEvent": "",
+        "box": {
+          "title": "🏆 We also applied for an India-level award",
+          "slot": [
+            40.2,
+            67.5,
+            19,
+            27
+          ],
+          "style": "award",
+          "celebrate": true,
+          "items": [
+            "Top 3 in ROIN",
+            "Waste-Free & Stable Flow",
+            "VCC"
+          ]
+        },
+        "part": 2
       }
     ]
   },

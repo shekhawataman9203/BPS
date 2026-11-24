@@ -784,3 +784,12 @@ body.factcheck #topbar, body.factcheck #rail, body.factcheck #scenebar, body.fac
 .fc-stamp.top { top: 6vh; bottom: auto; }
 body.screen-view #stepHint { top: calc(var(--top-h) + 14px); bottom: auto; right: 150px; }
 body.roadmap-open #stepHint { top: calc(var(--top-h) + 14px); bottom: auto; right: 150px; }
+
+.gl-tag { position: absolute; z-index: 2; transform: translateY(-110%); background: #12161C; color: #fff; font-weight: 800; font-size: clamp(10px, 1.1vw, 18px); letter-spacing: .04em; padding: 4px 10px; border-radius: 3px; opacity: 0; transition: opacity .5s .5s; }
+.gl-tag.on { opacity: 1; }
+.gl-tag:nth-of-type(odd) { background: #8B96A3; }
+.gl-box-award { background: linear-gradient(160deg, #FFF6D6, #FFE9A8); border: 3px solid #D4A017; border-radius: 10px; box-shadow: 0 10px 30px rgba(160, 110, 0, .3); padding: 1vh .8vw; }
+.gl-box-award .gl-box-title { font-size: clamp(11px, 1.15vw, 19px); font-weight: 800; color: #6b4a00; }
+.gl-box-award ul { flex-direction: column; gap: .2em; font-size: clamp(13px, 1.5vw, 25px); }
+.gl-box-award li { color: #12161C; } .gl-box-award li:first-child { font-size: 1.35em; color: #B8860B; }
+.gl-box-award li + li::before { content: none; }

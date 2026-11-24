@@ -47,6 +47,7 @@ export const CHAPTERS = [
   { id: 'roadmap', title: 'BPS GO!+ Roadmap 2026', sub: 'Aligned with the House of BPS GO!+', loc: 'wall', dur: 30, stepped: true },
   { id: 'glimpses', title: 'Glimpses 2026', sub: 'Moments from the year', loc: 'wall', dur: 30, stepped: true },
   { id: 'digitalsm', title: 'Digital SM', sub: 'Before and after at the supermarket', loc: 'floor', dur: 45, stepped: true },
+  { id: 'glimpses2', title: 'Glimpses 2026', sub: 'Digital twin and awards', loc: 'wall', dur: 30, stepped: true },
   { id: 'future', title: 'How 2027 looks like', sub: 'Back through the gate, into the plant of 2027', loc: 'gate', dur: 40, stepped: true },
   { id: 'plant', title: 'Picture of Future', sub: 'A walk through the modern plant', loc: 'floor', dur: 36 },
   { id: 'closing', title: 'Lead. Work. Win.', sub: 'Creating value. Together.', loc: 'close', dur: 18 },
@@ -141,9 +142,9 @@ export class Director {
         a.rig.orbit([0, 0, 4], 62, 44, 0.03, 1.1); break;
       case 'flashback':
         this.placeGroup(WAIT, () => 0); c.ph.place(0, 48, PI); this.setWorld({ gate: false, build: 1, screen: 'flash' }); a.rig.cut(SHOT.g_far); break;
-      case 'house': case 'roadmap': case 'kpis': case 'glimpses':
+      case 'house': case 'roadmap': case 'kpis': case 'glimpses': case 'glimpses2':
         this.placeGroup(WALLTEAM, this.yawTo(W.x, W.z)); c.ph.place(-4.6, 24.4, Math.atan2(W.x + 4.6, W.z - 24.4));
-        this.setWorld({ gate: true, screen: { house: 'flash', roadmap: 'roadmap', kpis: 'kpi', glimpses: 'kpi' }[id] }); if (id === 'house') a.entrance.wall.set26(0, true); a.rig.cut(SHOT.k_wall); break;
+        this.setWorld({ gate: true, screen: { house: 'flash', roadmap: 'roadmap', kpis: 'kpi', glimpses: 'kpi', glimpses2: 'kpi' }[id] }); if (id === 'house') a.entrance.wall.set26(0, true); a.rig.cut(SHOT.k_wall); break;
       case 'future':
         this.placeGroup(WAIT, () => 0); c.ph.place(0, 40.5, PI); this.setWorld({ gate: false, future: true, screen: 'house27' }); a.entrance.wall.set27(false, 0, true); a.rig.cut(SHOT.g_door); break;
       case 'plant':
@@ -168,7 +169,7 @@ export class Director {
       case 'flashback': a.factory.gate.snap(true); this.placeGroup(WAIT, () => 0); c.ph.place(0, 27.4, PI); c.bps.place(-0.6, 26.3, PI * 0.75); lookAll(c.ph); a.rig.cut(SHOT.in_both); break;
       case 'house': a.entrance.wall.setMode('house'); a.entrance.wall.set26(9, true); a.rig.cut(SHOT.k_wall); lookAll(this.wallCenter()); a.ui.toggleScreenView(true); break;
       case 'roadmap': case 'kpis': a.rig.cut(SHOT.k_wall); lookAll(this.wallCenter()); break;
-      case 'glimpses': { const G = a.data.glimpses, last = G.months.length - 1; a.ui.glimpses('month', last); a.ui.glimpses('compose', last); break; }
+      case 'glimpses': case 'glimpses2': { const G = a.data.glimpses, part = id === 'glimpses' ? 1 : 2, ids = G.months.map((m, k) => ((m.part || 1) === part ? k : -1)).filter(k => k >= 0), last = ids[ids.length - 1]; a.ui.glimpses('month', last); a.ui.glimpses('compose', last); break; }
       case 'future': a.factory.gate.snap(true); this.placeGroup(WALLTEAM, this.yawTo(KPI_WALL.x, KPI_WALL.z)); c.ph.place(-4.6, 24.4, Math.atan2(KPI_WALL.x + 4.6, KPI_WALL.z - 24.4)); lookAll(this.wallCenter()); a.entrance.wall.set27(true, 4, true); a.rig.cut(SHOT.k_wall); break;
       case 'plant': c.ph.place(22.2, 5.0, 0.6); c.bps.place(21.1, 4.6, 0.6); c.qual.place(23.4, 5.7, -2.4); a.rig.cut(SHOT.p_cell); break;
       case 'closing': this.rowTeam(true); a.rig.cut(SHOT.c_crane); break;
@@ -198,7 +199,7 @@ export class Director {
     this.stage(ch.id);
     ui.fade(0, 0.8);
     // the gate chapter has no title card: '2026 Flashback' is written on the doors
-    if (!['opening', 'flashback', 'house', 'roadmap', 'future', 'glimpses', 'thanks', 'factcheck'].includes(ch.id) && !skipTitle) ui.titleCard(i, ch.title, ch.sub);
+    if (!['opening', 'flashback', 'house', 'roadmap', 'future', 'glimpses', 'glimpses2', 'thanks', 'factcheck'].includes(ch.id) && !skipTitle) ui.titleCard(i, ch.title, ch.sub);
     const ctx = this.makeCtx();
     ui.showSkip(ch.id !== 'opening'); ui.letterbox(ch.id !== 'opening');
     try { await this[ch.id](ctx); } catch (e) { console.error(e); }
@@ -438,24 +439,27 @@ export class Director {
     await ctx.wait(2.0);
   }
 
-  async glimpses(ctx) {
+  async glimpses(ctx) { return this.runGlimpses(ctx, 1); }
+  async glimpses2(ctx) { return this.runGlimpses(ctx, 2); }
+  // Glimpses, part 1 (before the Digital SM scene) or part 2 (after it)
+  async runGlimpses(ctx, part) {
     const ui = this.app.ui, G = this.app.data.glimpses;
-    // black cover: Glimpses 2026
-    ui.glimpses('cover');
-    await this.waitStep(ctx);
+    if (part === 1) { ui.glimpses('cover'); await this.waitStep(ctx); } // black cover: Glimpses 2026
     for (let m = 0; m < G.months.length; m++) {
-      ui.glimpses('month', m);                     // the month on black
+      const M = G.months[m]; if ((M.part || 1) !== part) continue;
+      ui.glimpses('month', m);                       // the title card on black
       await this.waitStep(ctx);
-      for (let i = 0; i < G.months[m].images.length; i++) {
-        if (G.months[m].images[i].entry === 'pop') { ui.glimpses('pop', m, i); await this.waitStep(ctx); continue; } // rises into place with crackers
-        ui.glimpses('full', m, i);                 // the photo fills the screen; the others are hidden
+      const have = JSON.parse(document.getElementById('glimpse-images')?.textContent || '{}');
+      for (let i = 0; i < M.images.length; i++) {
+        const im = M.images[i]; if (!have[im.src]) continue; // picture not added yet
+        if (im.entry === 'pop' || im.entry === 'fade') { ui.glimpses('pop', m, i); await this.waitStep(ctx); continue; } // straight into place (pop: with crackers)
+        ui.glimpses('full', m, i);                   // full screen; the others hidden
         await this.waitStep(ctx);
-        ui.glimpses('place', m, i);                // it settles into its place on the slide
+        if (im.noPlace) continue;                    // replaced by the next image before it settles
+        ui.glimpses('place', m, i);                  // settles into its place on the slide
         await this.waitStep(ctx);
       }
-      // content box: one item per Next
-      const box = G.months[m].box;
-      if (box) for (let k = 0; k < box.items.length; k++) { ui.glimpses('point', m, k); await this.waitStep(ctx); }
+      if (M.box) for (let k = 0; k < M.box.items.length; k++) { ui.glimpses('point', m, k); await this.waitStep(ctx); } // box: one item per Next
     }
   }
 

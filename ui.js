@@ -208,8 +208,9 @@ export class UI {
     const imgs = this._glImgs ||= JSON.parse(document.getElementById('glimpse-images')?.textContent || '{}');
     const set = st => { sec.dataset.state = st; };
     const slide = $('.gl-slide', sec);
-    const items = () => [...slide.querySelectorAll('.gl-img')];
+    const items = () => { const a = []; slide.querySelectorAll('.gl-img').forEach(e => { a[+e.dataset.i] = e; }); return a; };
     const place = (el, r) => { el.style.left = r[0] + '%'; el.style.top = r[1] + '%'; el.style.width = r[2] + '%'; el.style.height = r[3] + '%'; };
+    const syncTags = () => slide.querySelectorAll('.gl-tag').forEach(t => { const im = slide.querySelector(`.gl-img[data-i="${t.dataset.i}"]`); t.classList.toggle('on', !!im && ['placed', 'popped'].includes(im.dataset.st)); });
     if (action === 'close') { sec.hidden = true; set(''); return; }
     sec.hidden = false;
     if (action === 'cover') {
@@ -221,16 +222,18 @@ export class UI {
       $('.gl-m-title', sec).textContent = M.month; $('.gl-m-event', sec).textContent = M.event;
       // prepare the slide for this month, all photos hidden
       $('.gl-s-title', sec).textContent = G.title; $('.gl-s-event', sec).textContent = M.slideEvent ?? M.event; $('.gl-s-logo', sec).src = $('#bpsLogoImg').src;
-      items().forEach(e => e.remove()); slide.querySelectorAll('.gl-box').forEach(e => e.remove());
+      items().forEach(e => e.remove()); slide.querySelectorAll('.gl-box, .gl-tag').forEach(e => e.remove());
       if (M.box) {
         // content box whose items appear one per Next
-        const bx = h('div', { class: 'gl-box' }, h('p', { class: 'gl-box-title' }, M.box.title), h('ul', {}, M.box.items.map(t => h('li', {}, t))));
+        const bx = h('div', { class: 'gl-box' + (M.box.style ? ' gl-box-' + M.box.style : '') }, h('p', { class: 'gl-box-title' }, M.box.title), h('ul', {}, M.box.items.map(t => h('li', {}, t))));
         place(bx, M.box.slot); slide.append(bx);
       }
       M.images.forEach((im, i) => {
+        if (!imgs[im.src]) return; // picture not added yet: skipped
         const el = h('img', { class: 'gl-img', 'data-i': i, alt: im.caption || '', src: imgs[im.src] || '' });
         place(el, [im.slot[0] + im.slot[2] * 0.3, im.slot[1] + im.slot[3] * 0.3, im.slot[2] * 0.4, im.slot[3] * 0.4]);
         el.dataset.st = 'hidden'; slide.append(el);
+        if (im.tag) { const tg = h('span', { class: 'gl-tag', 'data-i': i }, im.tag); tg.style.left = im.slot[0] + '%'; tg.style.top = im.slot[1] + '%'; slide.append(tg); }
       });
       set('month'); return;
     }
@@ -240,7 +243,8 @@ export class UI {
       const bx = $('.gl-box', slide); if (!bx) return;
       bx.classList.add('on');
       [...bx.querySelectorAll('li')].forEach((li, k) => li.classList.toggle('on', k <= b));
-      return;
+      if (M.box.celebrate && b === M.box.items.length - 1) setTimeout(() => this.crackers(slide, [M.box.slot], 3200), 300);
+      syncTags(); return;
     }
     if (action === 'pop') {
       // rises from behind the slide straight into its place, then crackers over the celebrated images
@@ -249,7 +253,8 @@ export class UI {
       items().forEach((e, i) => { if (i < b) { e.dataset.st = 'placed'; place(e, M.images[i].slot); } });
       place(el, im.slot); el.dataset.st = 'pop'; void el.offsetWidth; el.dataset.st = 'popped';
       const targets = (im.celebrate || []).map(src => M.images.find(x => x.src === src)?.slot).filter(Boolean);
-      setTimeout(() => this.crackers(slide, targets.length ? targets : [im.slot]), 700);
+      if (im.entry !== 'fade') setTimeout(() => this.crackers(slide, targets.length ? targets : [im.slot]), 700);
+      syncTags();
       return;
     }
     if (action === 'full' || action === 'place' || action === 'compose') {
@@ -259,8 +264,12 @@ export class UI {
         if (action === 'compose' || (action === 'place' && i <= b) || (action === 'full' && i < b)) { el.dataset.st = action === 'full' ? 'placed-hidden' : 'placed'; place(el, im.slot); }
         if (action === 'full' && i === b) { el.dataset.st = 'full'; place(el, [1.5, 1.5, 97, 97]); }
       });
+      // a placed image can push earlier ones to new spots (e.g. co-creation photos onto the VE vision)
+      M.images.forEach((im, i) => { if (!im.pushes || !(action === 'compose' || (action === 'place' && i <= b))) return;
+        for (const [j, r] of Object.entries(im.pushes)) { const e = items()[+j]; if (e) { place(e, r); e.style.zIndex = 4; e.dataset.st = 'placed'; } } });
       const bx = $('.gl-box', slide);
       if (bx && action === 'compose') { bx.classList.add('on'); bx.querySelectorAll('li').forEach(li => li.classList.add('on')); }
+      syncTags();
       const cap = $('.gl-caption', sec);
       cap.textContent = action === 'full' ? (M.images[b].caption || '') : ''; cap.classList.toggle('on', action === 'full');
       sec.classList.toggle('focus', action === 'full');
