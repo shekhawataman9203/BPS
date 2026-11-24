@@ -787,11 +787,11 @@
         "icon": "lines",
         "driver": "Main Driver",
         "items": [
-          "**TPT reduction > 10%**",
-          "**E2E connected VS**",
-          "**Integration of Small Lot**",
-          "**DLPC Maturity >95%**",
-          "**TPM maturity ≥ Level 3**"
+          "TPT reduction > 10%",
+          "E2E connected VS",
+          "Integration of Small Lot",
+          "DLPC Maturity >95%",
+          "TPM maturity ≥ Level 3"
         ],
         "roadmap": "waste-free"
       },
@@ -800,11 +800,12 @@
         "name": "Investment Efficiency",
         "color": "#78BE20",
         "icon": "pie",
-        "driver": "MAE Utilization",
+        "driver": "Reliable MAEs",
         "items": [
-          "High Utilization of MAEs & smooth Ramp up",
-          "Obsolescence management: MAE de-risking",
-          "Technical loss <3%"
+          "Zero breakdown approach",
+          "MOC reduction",
+          "Low Capex Retrofit",
+          "Smart & scalable automation"
         ],
         "roadmap": "investment"
       },
@@ -815,10 +816,9 @@
         "icon": "people",
         "driver": "Empowerment",
         "items": [
-          "**100% Participation** – Every function and every hierarchy",
-          "**Engagement** – Benchmark ideas/associate",
-          "**Ownership** – Problem solver through DLR maturity",
-          "**Reward & Recognition**"
+          "Engagement – Ideas/associate with high business impact",
+          "Ownership – Fast problem solvers thru agile",
+          "Reward & Recognition"
         ],
         "roadmap": "everybody-cip"
       },
@@ -829,9 +829,10 @@
         "icon": "person",
         "driver": "Governance",
         "items": [
+          "Presence on Gemba – LPC cadence adherence",
           "Development of coaches & lean Multipliers",
-          "Competency development on lean tools",
-          "Living VSO & Continuous Improvement Culture"
+          "Lean Competency development",
+          "Living VSO Culture"
         ],
         "roadmap": "leadership"
       }
@@ -840,14 +841,14 @@
       {
         "id": "h-digi-27",
         "name": "Digi Lean (Industry 4.0)",
-        "text": "Connected Data Driven Value Chain",
+        "text": "Transparent flow & efficient value stream across S, M, D",
         "icon": "network",
         "roadmap": "digi-lean"
       },
       {
         "id": "h-indirect-27",
         "name": "CIP in Indirect Areas",
-        "text": "Efficiency in support functions",
+        "text": "Indirect process improvement through stability, speed & efficiency",
         "icon": "doc",
         "roadmap": "cip-indirect"
       }
@@ -1844,5 +1845,22 @@
         }
       ]
     }
+  },
+  "target2027": {
+    "title": "Target 2027",
+    "items": [
+      {
+        "icon": "🎓",
+        "head": "Self-learning organisation",
+        "big": "BPS Level 3",
+        "sub": "BPS assessment · 2025: 1.96 → 2026: 2.4 → 2027: 3"
+      },
+      {
+        "icon": "🏆",
+        "head": "Recognition",
+        "big": "Mobility BPS Award",
+        "sub": "Recognised at BBM level"
+      }
+    ]
   }
 }

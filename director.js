@@ -574,10 +574,14 @@ export class Director {
     const c = wall.spot(0.5, 0.4); team.forEach(m => m.lookAt(c)); ph.lookAt(c);
     ctx.cap('On the screen: BPS GO!+ 2027.', { hold: 600 });
     await this.waitStep(ctx);
-    // step 4: the house drops in, its pillars still empty
-    wall.set27(true, 0);
+    // step: the 2027 target
+    wall.setMode('target27'); ph.gesture('present', 2.6);
+    ctx.cap('Target 2027: a self-learning organisation at BPS Level 3, recognised in the Mobility BPS Award at BBM level.', { hold: 600 });
+    await this.waitStep(ctx);
+    // step 4: how we do it: the house drops in, its pillars still empty
+    wall.setMode('house27'); wall.set27(false, 0, true); wall.set27(true, 0);
     ph.gesture('present', 2.6);
-    ctx.cap('The House of BPS GO!+ for 2027.', { hold: 600 });
+    ctx.cap('How we do it: the House of BPS GO!+ 2027.', { hold: 600 });
     await this.waitStep(ctx);
     // steps 5-8: each Next fills one pillar from the right
     for (let i = 0; i < H.pillars.length; i++) {
