@@ -257,7 +257,7 @@ class KpiWall {
       const lh = 150, lw = this.logoImg.naturalWidth * lh / this.logoImg.naturalHeight;
       ctx.drawImage(this.logoImg, 60, (HH - lh) / 2, lw, lh); hits.push({ type: 'logo', id: 'logo', x: 40, y: 20, w: lw + 40, h: HH - 40 }); lx0 = 60 + lw + 60;
     }
-    const TITLES = { gl26: ['Glimpses 2026', 'Moments from the year · a Gemba walk'], target27: ['Target 2027', 'Where BPS GO!+ takes JaP in 2027'], align: ['House of BPS GO!+  →  Roadmap 2026', 'Every element of the house has its block in the roadmap'], house27: ['House of BPS GO!+ 2027', 'How we do it · Strategy 2027 · click any element'], house: ['House of BPS GO!+', 'Strategy 2026 · click any element to zoom in'], roadmap: ['BPS GO!+ Roadmap 2026', 'Aligned with the house · click a row for its plan'], kpi: ['KPI wall 2026', `Target against ${rm.ytdLabel} · click any tile for details`] };
+    const TITLES = { gl26: ['Glimpses 2026', 'Moments from the year · a Gemba walk'], target27: ['Goal 2027', 'Where BPS GO!+ takes JaP in 2027'], align: ['House of BPS GO!+  →  Roadmap 2026', 'Every element of the house has its block in the roadmap'], house27: ['House of BPS GO!+ 2027', 'How we do it · Strategy 2027 · click any element'], house: ['House of BPS GO!+', 'Strategy 2026 · click any element to zoom in'], roadmap: ['BPS GO!+ Roadmap 2026', 'Aligned with the house · click a row for its plan'], kpi: ['KPI wall 2026', `Target against ${rm.ytdLabel} · click any tile for details`] };
     const [tt, ts] = TITLES[this.mode];
     ctx.fillStyle = '#0A6EBD'; ctx.font = `800 96px ${FONT}`; ctx.fillText(tt, lx0, 118);
     ctx.fillStyle = '#4a525d'; ctx.font = `600 44px ${FONT}`; ctx.fillText(ts, lx0, 176);
@@ -759,7 +759,9 @@ function drawTarget27(w, ctx, W, H, HH) {
         const last = k === n - 1;
         ctx.fillStyle = last ? c1 : (gold ? '#EBD9A6' : '#BFD8EF'); rrect(ctx, bxk, sy - bh, bw, Math.max(bh, 1), 22); ctx.fill();
         ctx.textAlign = 'center';
-        ctx.fillStyle = last ? '#ffffff' : ink; ctx.font = `900 ${last ? 96 : 80}px ${FONT}`; if (bh > 120) ctx.fillText(st[1], bxk + bw / 2, sy - bh + (last ? 110 : 96));
+        const lines = String(st[1]).split('\n');
+        ctx.fillStyle = last ? '#ffffff' : ink; ctx.font = `900 ${last ? 96 : 80}px ${FONT}`; if (bh > 120) ctx.fillText(lines[0], bxk + bw / 2, sy - bh + (last ? 110 : 96));
+        if (lines[1] && bh > 220) { ctx.font = `700 ${last ? 58 : 50}px ${FONT}`; ctx.fillStyle = last ? 'rgba(255,255,255,0.9)' : ink; ctx.fillText(lines[1], bxk + bw / 2, sy - bh + (last ? 190 : 166)); }
         ctx.fillStyle = '#5a6470'; ctx.font = `800 52px ${FONT}`; ctx.fillText(st[0], bxk + bw / 2, sy + 70);
         ctx.textAlign = 'left';
         if (k < n - 1 && kk > 0.9) { ctx.fillStyle = c1; ctx.font = `900 60px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText('➜', bxk + bw + 25, sy - bh - 30); ctx.textAlign = 'left'; }

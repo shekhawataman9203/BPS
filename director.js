@@ -669,7 +669,7 @@ export class Director {
     await this.waitStep(ctx);
     // step: the 2027 target
     wall.setT27(0, true); wall.setMode('target27'); wall.setT27(1); ph.gesture('present', 2.6);
-    ctx.cap('Target 2027, goal 1: a self-learning organisation at BPS Level 3.', { hold: 600 });
+    ctx.cap('Goal 2027, goal 1: a self-learning organisation at BPS Level 3.', { hold: 600 });
     await this.waitStep(ctx);
     // next: goal 2, the Mobility BPS Award
     wall.setT27(2); ph.gesture('point', 2.4, { target: wall.spot(0.75, 0.55) });
