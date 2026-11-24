@@ -868,6 +868,33 @@
         "icon": "doc",
         "roadmap": "cip-indirect"
       }
+    ],
+    "isa": [
+      {
+        "id": "innovate",
+        "label": "Innovate",
+        "at": "h-invest-27",
+        "color": "#0A4F9E",
+        "cap": "Innovate: Investment Efficiency.",
+        "img": "innovate-h",
+        "place": "roof"
+      },
+      {
+        "id": "simplify",
+        "label": "Simplify",
+        "at": "h-flow-27",
+        "color": "#2E9E2E",
+        "cap": "Simplify: Waste-Free, Stable Flow.",
+        "place": "left-top"
+      },
+      {
+        "id": "accelerate",
+        "label": "Accelerate",
+        "at": "boosters",
+        "color": "#E8101E",
+        "cap": "Accelerate: the System Boosters.",
+        "place": "right-bottom"
+      }
     ]
   },
   "glimpses": {

@@ -163,6 +163,10 @@ class KpiWall {
     this.data = data; this.logoImg = logoImg; this.p = 1; this.animating = false;
     this.hl = { pillar: null, row: null }; this.layouts = { house: {}, roadmap: {}, kpi: {}, house27: {}, flash: {}, align: {}, target27: {} }; this.alignK = 1; this.mode = 'kpi';
     this.h27 = { drop: 1, dropT: 1, rev: [1, 1, 1, 1], shown: 4 }; this.t27 = { shown: 2, v: [1, 1] };
+    // Innovate · Simplify · Accelerate logos that drop onto the 2027 house (t = seconds since each one was dropped)
+    this.isa = { shown: 0, t: [0, 0, 0] }; this.isaImg = {};
+    try { const G = JSON.parse(document.getElementById('glimpse-images')?.textContent || '{}');
+      for (const it of data.house2027?.isa || []) { const src = G['isa-' + (it.img || it.id) + '.png']; if (!src) continue; const im = new Image(); im.onload = () => this.ct.redraw(); im.src = src; this.isaImg[it.id] = im; } } catch (e) { /* no logos */ }
     // 2026 house build-up, one stage per Next: 0 white, 1 roof, 2 band, 3 pillars, 4-7 pillar content, 8 boosters, 9 statement
     this.h26 = { stage: 9, v: { roof: 1, band: 1, pil: [1, 1, 1, 1], con: [1, 1, 1, 1], boost: 1, stmt: 1 } }; this.hits = []; this.hover = null;
     this.ct = new CanvasTex(TEX_W, TEX_H, (ctx, W, H) => this.draw(ctx, W, H));
@@ -185,6 +189,8 @@ class KpiWall {
   }
   // Target 2027: how many target cards are on the screen (each Next adds one)
   setT27(shown, snap = false) { const t = this.t27; t.shown = shown; if (snap) t.v = t.v.map((_, i) => (i < shown ? 1 : 0)); this.ct.redraw(); }
+  // how many of the Innovate / Simplify / Accelerate logos are on the 2027 house
+  setISA(shown, snap = false) { const S = this.isa; S.shown = shown; S.t = S.t.map((t, i) => (i < shown ? (snap ? 10 : t) : 0)); this.ct.redraw(); }
   set26(stage, snap = false) {
     const R = this.h26; R.stage = stage;
     if (snap) { const t = this.t26(); R.v = { roof: t.roof, band: t.band, pil: [...t.pil], con: [...t.con], boost: t.boost, stmt: t.stmt }; }
@@ -208,6 +214,8 @@ class KpiWall {
     }
     if (this.mode === 'house27') {
       const r = this.h27;
+      if (r.drop > 0.5) { this.gearT = (this.gearT || 0) + dt; this.gearAcc = (this.gearAcc || 0) + dt; if (this.gearAcc > 1 / 24) { this.gearAcc = 0; dirty = true; } }
+      const S = this.isa; S.t = S.t.map((t, i) => { if (i >= S.shown || t >= 3.2) return t; dirty = true; return Math.min(3.2, t + dt); });
       if (r.drop !== r.dropT) { r.drop = r.dropT > r.drop ? Math.min(r.dropT, r.drop + dt / 1.3) : Math.max(r.dropT, r.drop - dt / 0.6); dirty = true; }
       r.rev = r.rev.map((v, i) => { const t = i < r.shown ? 1 : 0; if (v === t) return v; dirty = true; return t > v ? Math.min(1, v + dt / 0.9) : 0; });
     }
@@ -342,8 +350,8 @@ function icon(ctx, kind, cx, cy, r, col) {
 }
 function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht = 'house') {
   const hl = w.hl, isH = (t, id) => isHover(ht, id);
-  const x0 = 520, x1 = W - 520, top = HH + 40;
   const is27 = ht === 'house27', R = w.h27;
+  const x0 = 520, x1 = W - 520, top = HH + (is27 ? 15 : 40);
   const dk = is27 ? ease.out(R.drop) : 1;
   const k = i => (is27 ? 1 : clamp(p * 1.6 - i * 0.12, 0, 1));
   const r26 = ht === 'house' ? w.h26.v : null, E = ease.out;
@@ -356,6 +364,7 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
     if (dk <= 0.001) return;
   }
   ctx.save(); ctx.translate(0, -(1 - dk) * H * 0.9);
+  if (is27) { const sh = isaShake(w); if (sh) ctx.translate(sh[0], sh[1]); }
   const dim = id => (hl.pillar && hl.pillar !== id ? 0.3 : 1);
   // roof
   // roof: in the 2026 build-up it rises from below
@@ -375,7 +384,7 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
   hits.push({ type: ht, id: 'h-house', x: x0, y: top, w: x1 - x0, h: 332 }); L['h-house'] = { u: 0.5, v: (top + 200) / H };
   ctx.textAlign = 'left';
   // four pillars
-  const py = top + 360, ph = 690, gap = 30, pw = (x1 - x0 - gap * 3) / 4, headH = 270;
+  const py = top + 360, ph = is27 ? 620 : 690, gap = 30, pw = (x1 - x0 - gap * 3) / 4, headH = 270;
   const drawPillar = (pl, i, pk) => {
     const x = x0 + i * (pw + gap), hov = isH(ht, pl.id), on = hl.pillar === pl.id;
     ctx.globalAlpha = (r26 ? pk : k(i + 1)) * dim(pl.id);
@@ -407,8 +416,11 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
   };
   // pillars: in the build-up they rise in one after another
   h.pillars.forEach((pl, i) => { const pk = r26 ? E(r26.pil[i]) : 1; if (r26 && pk <= 0.001) return; ctx.save(); if (r26) ctx.translate(0, (1 - pk) * 220); drawPillar(pl, i, pk); ctx.restore(); });
+  // 2027: gears on a belt link the four pillars to the System Boosters
+  const gz = is27 ? 125 : 0;
+  if (is27) drawGears(w, ctx, { x0, pw, gap, n: h.pillars.length, y0: py + ph, y1: py + ph + 36 + gz, cols: h.pillars.map(p => p.color) });
   // system boosters
-  const by = py + ph + 36, bh = 250;
+  const by = py + ph + 36 + gz, bh = is27 ? 220 : 250;
   ctx.globalAlpha = r26 ? E(r26.boost) : k(5);
   ctx.fillStyle = '#eceef1'; ctx.fillRect(x0 - 40, by, x1 - x0 + 80, bh);
   ctx.fillStyle = '#1E88D9'; ctx.fillRect(x0 - 40, by, x1 - x0 + 80, 8);
@@ -423,8 +435,8 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
     ctx.strokeStyle = on || hov ? '#1E88D9' : '#d6d9de'; ctx.lineWidth = on || hov ? 10 : 4; ctx.strokeRect(x, y, bw, ch);
     ctx.fillStyle = '#1E88D9'; ctx.beginPath(); ctx.arc(x + 150, y + ch / 2, 60, 0, Math.PI * 2); ctx.fill();
     icon(ctx, b.icon, x + 150, y + ch / 2, 33, '#ffffff');
-    ctx.fillStyle = '#12161C'; ctx.font = `800 54px ${FONT}`; ctx.fillText(b.name, x + 250, y + 80);
-    ctx.fillStyle = '#4a525d'; ctx.font = `500 40px ${FONT}`; ctx.fillText(b.text, x + 250, y + 140);
+    ctx.fillStyle = '#12161C'; ctx.font = `800 54px ${FONT}`; ctx.fillText(b.name, x + 250, y + (is27 ? 70 : 80));
+    ctx.fillStyle = '#4a525d'; ctx.font = `500 40px ${FONT}`; ctx.fillText(b.text, x + 250, y + (is27 ? 126 : 140));
     hits.push({ type: ht, id: b.id, x, y, w: bw, h: ch }); L[b.id] = { u: (x + bw / 2) / W, v: (y + ch / 2) / H };
   });
   // statement
@@ -432,7 +444,149 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
   ctx.fillStyle = '#18A8E0'; ctx.fillRect(0, H - 150, W, 150);
   ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; const fs = fitText(ctx, h.statement, W - 200, 66, 600); ctx.font = `600 ${fs}px ${FONT}`; ctx.fillText(h.statement, W / 2, H - 52); ctx.textAlign = 'left';
   ctx.globalAlpha = 1;
+  if (is27) drawISA(w, ctx, H, { W, x0, x1, py, ph, pw, gap, by, bh, pillars: h.pillars });
   ctx.restore();
+}
+// ---------- 2027 gears: one gear under each pillar, a timing belt joining them, shafts to the boosters ----------
+function gearPath(ctx, r, teeth, rootK = 0.8) {
+  ctx.beginPath();
+  for (let i = 0; i < teeth; i++) {
+    const a0 = (i / teeth) * Math.PI * 2, s = Math.PI * 2 / teeth;
+    const pts = [[a0, rootK], [a0 + s * 0.12, 1], [a0 + s * 0.48, 1], [a0 + s * 0.6, rootK]];
+    pts.forEach(([a, k], j) => { const x = Math.cos(a) * r * k, y = Math.sin(a) * r * k; (i === 0 && j === 0) ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
+  }
+  ctx.closePath();
+}
+function drawGear(ctx, cx, cy, r, teeth, ang, col) {
+  const depth = r * 0.14;
+  // side of the gear (extrusion) for a 3D look
+  ctx.save(); ctx.translate(cx + depth * 0.5, cy + depth); ctx.rotate(ang);
+  gearPath(ctx, r, teeth); ctx.fillStyle = '#3d454f'; ctx.fill(); ctx.restore();
+  ctx.save(); ctx.translate(cx + depth * 0.25, cy + depth * 0.5); ctx.rotate(ang);
+  gearPath(ctx, r, teeth); ctx.fillStyle = '#56606b'; ctx.fill(); ctx.restore();
+  // face: brushed metal
+  ctx.save(); ctx.translate(cx, cy);
+  const g = ctx.createLinearGradient(-r, -r, r, r); g.addColorStop(0, '#f4f7fa'); g.addColorStop(0.45, '#b9c3cd'); g.addColorStop(0.55, '#d9e0e6'); g.addColorStop(1, '#7d8893');
+  ctx.save(); ctx.rotate(ang); gearPath(ctx, r, teeth); ctx.fillStyle = g; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#4a535d'; ctx.stroke();
+  // lightening holes
+  for (let k = 0; k < 5; k++) {
+    const a = k / 5 * Math.PI * 2, hx = Math.cos(a) * r * 0.5, hy = Math.sin(a) * r * 0.5;
+    const hg = ctx.createRadialGradient(hx - r * 0.04, hy - r * 0.04, 0, hx, hy, r * 0.14); hg.addColorStop(0, '#2a3038'); hg.addColorStop(1, '#4d5660');
+    ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(hx, hy, r * 0.13, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+  // bevel shade, hub in the pillar colour, bolt
+  const rg = ctx.createRadialGradient(-r * 0.1, -r * 0.1, r * 0.2, 0, 0, r * 0.74); rg.addColorStop(0, 'rgba(0,0,0,0)'); rg.addColorStop(0.85, 'rgba(0,0,0,0)'); rg.addColorStop(1, 'rgba(0,0,0,0.25)');
+  ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(0, 0, r * 0.74, 0, Math.PI * 2); ctx.fill();
+  const hb = ctx.createRadialGradient(-r * 0.08, -r * 0.08, 0, 0, 0, r * 0.3); hb.addColorStop(0, '#ffffff'); hb.addColorStop(0.35, col); hb.addColorStop(1, '#12161C');
+  ctx.fillStyle = hb; ctx.beginPath(); ctx.arc(0, 0, r * 0.28, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#d7dde3'; ctx.beginPath(); ctx.arc(0, 0, r * 0.09, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+function drawGears(w, ctx, G) {
+  const T = w.gearT || 0, cy = (G.y0 + G.y1) / 2, r = Math.min(80, (G.y1 - G.y0) / 2 - 4);
+  const xs = Array.from({ length: G.n }, (_, i) => G.x0 + i * (G.pw + G.gap) + G.pw / 2);
+  // shafts: pillar → gear → booster band
+  xs.forEach(x => {
+    const sg = ctx.createLinearGradient(x - 16, 0, x + 16, 0); sg.addColorStop(0, '#5b6570'); sg.addColorStop(0.5, '#e6ebf0'); sg.addColorStop(1, '#5b6570');
+    ctx.fillStyle = sg; ctx.fillRect(x - 16, G.y0 - 4, 32, G.y1 - G.y0 + 8);
+  });
+  // timing belt around all gears, its teeth moving with them
+  const bt = r + 10, xL = xs[0], xR = xs[xs.length - 1];
+  ctx.save(); ctx.beginPath(); ctx.moveTo(xL, cy - bt); ctx.lineTo(xR, cy - bt); ctx.arc(xR, cy, bt, -Math.PI / 2, Math.PI / 2); ctx.lineTo(xL, cy + bt); ctx.arc(xL, cy, bt, Math.PI / 2, Math.PI * 1.5); ctx.closePath();
+  ctx.lineWidth = 22; ctx.strokeStyle = '#1f252c'; ctx.stroke();
+  ctx.setLineDash([14, 14]); ctx.lineDashOffset = -T * 120; ctx.lineWidth = 10; ctx.strokeStyle = '#6b7580'; ctx.stroke(); ctx.restore();
+  // gears (on a belt they all turn the same way)
+  xs.forEach((x, i) => drawGear(ctx, x, cy, r, 16, T * 120 / bt + i * 0.2, G.cols[i] || '#0A6EBD'));
+}
+
+// ---------- Innovate / Simplify / Accelerate drop-in ----------
+const rnd = (i, j) => { const v = Math.sin(i * 12.9898 + j * 78.233) * 43758.5453; return v - Math.floor(v); };
+const FALL = 0.55;
+function isaShake(w) {
+  const S = w.isa; let m = 0;
+  S.t.forEach((t, i) => { if (i < S.shown && t > FALL && t < FALL + 0.5) m = Math.max(m, 1 - (t - FALL) / 0.5); });
+  if (!m) return null; const T = performance.now() / 1000;
+  return [Math.sin(T * 90) * 14 * m, Math.cos(T * 77) * 10 * m];
+}
+function drawISA(w, ctx, H, G) {
+  const S = w.isa, list = w.data.house2027?.isa || [];
+  list.forEach((it, i) => {
+    const t = S.t[i]; if (i >= S.shown || !t) return;
+    const im = w.isaImg[it.id], ar = im && im.naturalWidth ? im.naturalWidth / im.naturalHeight : 1;
+    // landing spots beside the house (the pillar text stays visible): left margin top / bottom, right margin bottom
+    const pi = G.pillars.findIndex(p => p.id === it.at), mw = G.x0 - 120; let cww = Math.min(mw, 440), chh = (cww - 60) / ar + 60;
+    const slot = it.place || (i === 0 ? 'left-bottom' : i === 1 ? 'left-top' : 'right-bottom');
+    let cx = slot.startsWith('left') ? 30 + mw / 2 + 20 : G.W - 30 - mw / 2 - 20;
+    let ground = slot === 'left-top' ? G.py + chh : G.by + G.bh;
+    if (slot === 'roof') { chh = 240; cww = (chh - 60) * ar + 60; ground = G.py - 145; cx = G.x0 + G.pw + G.gap + 290 - cww / 2; }
+    const col = it.color || '#0A6EBD';
+    // after landing: outline the pillar / booster band it belongs to and draw an arrow to it
+    const lt0 = t - FALL;
+    if (lt0 > 0.15) {
+      const k = ease.out(Math.min(1, (lt0 - 0.15) / 0.6));
+      const box = pi >= 0 ? [G.x0 + pi * (G.pw + G.gap), G.py, G.pw, G.ph] : [G.x0 - 40, G.by, G.x1 - G.x0 + 80, G.bh];
+      ctx.save(); ctx.globalAlpha = k; ctx.strokeStyle = col; ctx.lineWidth = 16; ctx.shadowColor = col; ctx.shadowBlur = 40;
+      ctx.strokeRect(box[0] - 10, box[1] - 10, box[2] + 20, box[3] + 20); ctx.restore();
+      // arrow path from the card's edge to the target
+      const ex = slot.startsWith('left') ? cx + cww / 2 : cx - cww / 2;
+      let pts;
+      if (slot === 'roof') { const x = box[0] + 160; pts = [[x, ground + 4], [x, box[1] - 14]]; }
+      else if (pi < 0) { const y = G.by + G.bh / 2 + 60; pts = [[ex, y], [box[0] + box[2] + 12, y]]; }
+      else if (slot === 'left-top' && pi === 0) { const y = G.py + 135; pts = [[ex, y], [box[0] - 12, y]]; }
+      else { const y = G.py + G.ph + 22, px = box[0] + box[2] / 2; pts = [[ex, Math.min(y, ground - 40)], [ex + 30, y], [px, y], [px, G.py + G.ph + 12]]; }
+      let len = 0; for (let j = 1; j < pts.length; j++) len += Math.hypot(pts[j][0] - pts[j - 1][0], pts[j][1] - pts[j - 1][1]);
+      let left = len * k; ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(...pts[0]);
+      let end = pts[0], dir = [1, 0];
+      for (let j = 1; j < pts.length && left > 0; j++) { const [ax, ay] = pts[j - 1], [bx, by] = pts[j], d = Math.hypot(bx - ax, by - ay) || 1, u = Math.min(1, left / d); end = [ax + (bx - ax) * u, ay + (by - ay) * u]; dir = [(bx - ax) / d, (by - ay) / d]; ctx.lineTo(...end); left -= d; }
+      ctx.stroke();
+      if (k > 0.98) { ctx.fillStyle = col; ctx.beginPath(); const [x, y] = end, [dx, dy] = dir; ctx.moveTo(x + dx * 10, y + dy * 10); ctx.lineTo(x - dx * 34 - dy * 24, y - dy * 34 + dx * 24); ctx.lineTo(x - dx * 34 + dy * 24, y - dy * 34 - dx * 24); ctx.closePath(); ctx.fill(); }
+      ctx.restore();
+    }
+    // fall with gravity, then a squash-and-bounce on impact
+    const f = Math.min(1, t / FALL), lt = t - FALL;
+    const dy = -(1 - f * f) * (ground + 200);
+    let sx = 1, sy = 1, rot = (1 - f) * (i % 2 ? 0.12 : -0.12);
+    if (lt > 0) { const b = Math.exp(-lt * 7) * Math.cos(lt * 26); sx = 1 + 0.1 * b; sy = 1 - 0.14 * b; }
+    // shockwave ring and dust on the ground
+    if (lt > 0) {
+      const k = Math.min(1, lt / 0.7);
+      ctx.save(); ctx.globalAlpha = (1 - k) * 0.7; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 18 * (1 - k) + 2;
+      ctx.beginPath(); ctx.ellipse(cx, ground, cww * (0.5 + 0.9 * k), 60 * (0.4 + 1.2 * k), 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    }
+    // the card
+    ctx.save(); ctx.translate(cx, ground + dy); ctx.rotate(rot); ctx.scale(sx, sy);
+    ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 18;
+    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-cww / 2, -chh, cww, chh, 36) : ctx.rect(-cww / 2, -chh, cww, chh); ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.lineWidth = 8; ctx.strokeStyle = it.color || '#0A6EBD'; ctx.stroke();
+    if (im && im.naturalWidth) ctx.drawImage(im, -cww / 2 + 30, -chh + 30, cww - 60, chh - 60);
+    else { ctx.fillStyle = it.color || '#0A6EBD'; ctx.font = `900 120px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText(it.label, 0, -chh / 2); ctx.textAlign = 'left'; }
+    ctx.restore();
+    // dust clouds rolling out sideways, debris and sparks flung into the air
+    if (lt > 0 && lt < 2.6) {
+      ctx.save();
+      for (let j = 0; j < 34; j++) {
+        const side = j % 2 ? 1 : -1, sp = 0.35 + rnd(i, j) * 0.9, life = 1.4 + rnd(j, i) * 1.0, u = lt / life; if (u >= 1) continue;
+        const e = 1 - Math.pow(1 - u, 3);
+        const px = cx + side * (cww * 0.42 + e * 520 * sp), py = ground - 10 - e * (40 + rnd(j, 7) * 170) * sp;
+        const r = 30 + e * (90 + rnd(j, 3) * 90);
+        const g = ctx.createRadialGradient(px, py, 0, px, py, r);
+        const c = j % 3 ? '205,198,186' : '232,228,220';
+        g.addColorStop(0, `rgba(${c},${0.55 * (1 - u)})`); g.addColorStop(1, `rgba(${c},0)`);
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill();
+      }
+      for (let j = 0; j < 22; j++) {
+        const life = 1.2 + rnd(i + 5, j) * 0.9, u = lt / life; if (u >= 1) continue;
+        const vx = (rnd(j, i + 9) - 0.5) * 1400, vy = -(500 + rnd(i + 2, j) * 900), g = 1900;
+        const px = cx + (rnd(j, 11) - 0.5) * cww * 0.9 + vx * lt, py = ground - 20 + vy * lt + 0.5 * g * lt * lt;
+        ctx.globalAlpha = 1 - u;
+        ctx.fillStyle = j % 3 === 0 ? '#FFD34D' : j % 3 === 1 ? (it.color || '#0A6EBD') : '#9a9288';
+        const sz = 8 + rnd(j, 4) * 16; ctx.fillRect(px - sz / 2, py - sz / 2, sz, sz);
+      }
+      ctx.restore();
+    }
+  });
 }
 // ---------- House → Roadmap alignment (transition) ----------
 function drawAlign(w, ctx, W, H, HH) {

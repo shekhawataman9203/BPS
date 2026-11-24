@@ -185,8 +185,19 @@ export class Director {
 
   // ---------- navigation ----------
   next() { if (this.index < CHAPTERS.length - 1) this.go(this.index + 1); }
-  prev() { if (this.index > 1) this.go(this.index - 1); else if (this.index === 1) this.go(0); }
-  async go(i, { skipTitle = false } = {}) {
+  // Back = one step back: replay the current chapter quickly (behind the fade) to the step before;
+  // from a chapter's first step, go to the last step of the chapter before
+  prev() {
+    if (this.catchUp) return;
+    const at = this.scriptDone ? (this.stepNo || 0) + 1 : (this.stepNo || 0); // waiting at step 'at'; after the end = last + 1
+    if (this.index > 0 && at > 1) { this.go(this.index, { toStep: at - 1 }); return; }
+    if (this.index > 1) this.go(this.index - 1, { toStep: Infinity }); else if (this.index === 1) this.go(0);
+  }
+  endCatchUp() {
+    if (!this.catchUp) return;
+    this.catchUp = false; this.targetStep = 0; this.app.timeScale = 1; this.app.ui.fade(0, 0.6);
+  }
+  async go(i, { skipTitle = false, toStep = 0 } = {}) {
     i = clamp(i, 0, CHAPTERS.length - 1);
     const app = this.app, ui = app.ui, ch = CHAPTERS[i];
     const gt = ++this.goToken;
@@ -194,16 +205,18 @@ export class Director {
     this.stepRes = null; app.timeScale = 1; ui.stepHint(false);
     app.rig.stop(); this.userCam = false; ui.showResetView(false); ui.clearCaptions(); ui.setPins([]); ui.closePanel(true); ui.showSkip(false); ui.closeRoadmap();
     if (this.index >= 0) { ui.fade(1, 0.45); await new Promise(r => setTimeout(r, 470)); if (gt !== this.goToken) return; }
-    this.index = i; this.chapterTime = 0; this.scriptDone = false;
+    this.index = i; this.chapterTime = 0; this.scriptDone = false; this.stepNo = 0;
+    this.targetStep = toStep; this.catchUp = toStep > 0; if (this.catchUp) skipTitle = true;
     ui.setChapter(i);
     this.stage(ch.id);
-    ui.fade(0, 0.8);
+    if (this.catchUp) app.timeScale = 20; else ui.fade(0, 0.8);
     // the gate chapter has no title card: '2026 Flashback' is written on the doors
     if (!['opening', 'flashback', 'house', 'roadmap', 'future', 'glimpses', 'glimpses2', 'thanks', 'factcheck'].includes(ch.id) && !skipTitle) ui.titleCard(i, ch.title, ch.sub);
     const ctx = this.makeCtx();
     ui.showSkip(ch.id !== 'opening'); ui.letterbox(ch.id !== 'opening');
     try { await this[ch.id](ctx); } catch (e) { console.error(e); }
     if (!ctx.alive()) return;
+    this.endCatchUp();
     this.finish(ch.id);
     this.ambient(ctx, ch.id);
   }
@@ -215,6 +228,10 @@ export class Director {
   }
   // stepped chapters: the script waits here until Next (→, Space, clicker) is pressed
   waitStep(ctx, autoAfter = null) {
+    this.stepNo = (this.stepNo || 0) + 1;
+    // replaying after Back: run through the earlier steps without stopping
+    if (this.catchUp && this.stepNo < this.targetStep) return new Promise(r => setTimeout(r, 90));
+    this.endCatchUp();
     this.app.timeScale = 1;
     const auto = null; void autoAfter; // nothing moves on by itself: every step waits for Next
     return new Promise(res => {
@@ -225,7 +242,7 @@ export class Director {
     }).then(() => this.app.ui.stepHint(false));
   }
   skip() {
-    const ch = CHAPTERS[this.index]; if (!ch || this.scriptDone) return;
+    const ch = CHAPTERS[this.index]; if (!ch || this.scriptDone || this.catchUp) return;
     if (ch.stepped) {
       if (this.stepRes) { this.stepRes(); return; }
       this.app.timeScale = 5; // fast-forward the current animation to the next step
@@ -582,7 +599,7 @@ export class Director {
     ctx.cap('Goal 2: recognised in the Mobility BPS Award at BBM level.', { hold: 600 });
     await this.waitStep(ctx);
     // step 4: how we do it: the house drops in, its pillars still empty
-    wall.setMode('house27'); wall.set27(false, 0, true); wall.set27(true, 0);
+    wall.setISA(0, true); wall.setMode('house27'); wall.set27(false, 0, true); wall.set27(true, 0);
     ph.gesture('present', 2.6);
     ctx.cap('How we do it: the House of BPS GO!+ 2027.', { hold: 600 });
     await this.waitStep(ctx);
@@ -595,6 +612,15 @@ export class Director {
       if (i < H.pillars.length - 1) await this.waitStep(ctx);
     }
     await this.waitStep(ctx);
+    // then each Next drops one logo onto the house: Innovate, Simplify, Accelerate
+    wall.highlight(null, null);
+    for (let i = 0; i < (H.isa || []).length; i++) {
+      const it = H.isa[i], s = it.at === 'boosters' ? wall.spot(0.5, 0.82) : wall.rowSpot(it.at);
+      wall.setISA(i + 1); ph.lookAt(s); team.forEach(m => m.lookAt(s));
+      ctx.later(0.6, () => ph.gesture('point', 2.2, { target: s }));
+      ctx.cap(it.cap, { hold: 600 });
+      await this.waitStep(ctx);
+    }
     wall.highlight(null, null); ph.lookAt(null); ph.faceYaw(PI * 0.6); team.forEach(m => m.lookAt(ph));
     ph.gesture('armsOpen', 2.6);
     team.forEach((m, i) => ctx.later(0.6 + i * 0.15, () => m.gesture('clap', 2.4)));

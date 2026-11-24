@@ -69,7 +69,7 @@ export class UI {
     $('#panelToggle').onclick = () => this.panelOpen ? this.closePanel() : this.openPanel();
     $('#panelTab').onclick = () => this.openPanel();
     $('#btnPrev').onclick = () => this.app.director.prev();
-    $('#btnNext').onclick = () => this.app.director.next();
+    $('#btnNext').onclick = () => { const d = this.app.director; if (this.roadmapOpen) { if (this.rmFocus) this.zoomTo(null); else { this.closeRoadmap(); if (d.stepRes && CHAPTERS[d.index]?.id === 'roadmap') d.skip(); } return; } if (this.paused) this.togglePause(false); d.scriptDone ? d.next() : d.skip(); };
     $('#helpClose').onclick = () => this.toggleHelp(false);
     $('#enter').onclick = () => this.enter(false);
     $('#enterPresent').onclick = () => this.enter(true);
