@@ -43,7 +43,7 @@ export const ZONE_SHOT = {
 export const CHAPTERS = [
   { id: 'opening', title: 'Opening', loc: 'overview', dur: 20 },
   { id: 'flashback', title: '2026 Flashback', sub: 'Through the main gate, between NHA and VE Pump', loc: 'gate', dur: 24 },
-  { id: 'house', title: 'House of BPS GO!+', sub: 'Where 2026 started: one operating system', loc: 'wall', dur: 30 },
+  { id: 'house', title: 'House of BPS GO!+', sub: 'Where 2026 started: one operating system', loc: 'wall', dur: 30, stepped: true },
   { id: 'kpis', title: 'KPI wall', sub: 'Every element of the house, target against YTD', loc: 'wall', dur: 30 },
   { id: 'glimpses', title: 'Glimpses 2026', sub: 'Moments from the year', loc: 'wall', dur: 30, stepped: true },
   { id: 'digitalsm', title: 'Digital SM', sub: 'Before and after at the supermarket', loc: 'floor', dur: 45, stepped: true },
@@ -87,7 +87,6 @@ export class Director {
     const ch = CHAPTERS[this.index];
     if (ch) this.app.ui.setProgress(this.index, this.scriptDone ? 1 : clamp(this.chapterTime / ch.dur, 0, 0.98));
     // autoplay
-    if (this.app.ui.autoplay && this.scriptDone && this.index > 0 && this.index < CHAPTERS.length - 1 && this.chapterTime - this.doneAt > this.app.ui.autoplayHold) this.next();
   }
 
   makeCtx() {
@@ -121,7 +120,7 @@ export class Director {
   setWorld({ digital = false, gate = false, build = 1, screen = 'kpi', future = false, smScreen = false } = {}) {
     const a = this.app;
     a.factory.sm.setScreen(smScreen || future); a.ui.smNote('close');
-    a.entrance.wall.setMode(screen);
+    a.entrance.wall.setMode(screen); a.entrance.wall.set26(9, true);
     a.factory.setDigital(digital); a.factory.setFuture(future); a.ui.yearCard(null); a.ui.glimpses('close'); a.ui.thanks('hide'); a.ui.factCheck('close');
     a.factory.gate.snap(gate);
     a.entrance.snapBuild(build); a.entrance.highlight(null); a.entrance.hideConfetti();
@@ -138,13 +137,13 @@ export class Director {
     const W = this.wallCenter();
     switch (id) {
       case 'opening':
-        this.placeGroup(WAIT, () => 0); c.ph.place(0, 48, PI); this.setWorld({ gate: false, build: 1, screen: 'house' });
+        this.placeGroup(WAIT, () => 0); c.ph.place(0, 48, PI); this.setWorld({ gate: false, build: 1, screen: 'flash' });
         a.rig.orbit([0, 0, 4], 62, 44, 0.03, 1.1); break;
       case 'flashback':
-        this.placeGroup(WAIT, () => 0); c.ph.place(0, 48, PI); this.setWorld({ gate: false, build: 1, screen: 'house' }); a.rig.cut(SHOT.g_far); break;
+        this.placeGroup(WAIT, () => 0); c.ph.place(0, 48, PI); this.setWorld({ gate: false, build: 1, screen: 'flash' }); a.rig.cut(SHOT.g_far); break;
       case 'house': case 'roadmap': case 'kpis': case 'glimpses':
         this.placeGroup(WALLTEAM, this.yawTo(W.x, W.z)); c.ph.place(-4.6, 24.4, Math.atan2(W.x + 4.6, W.z - 24.4));
-        this.setWorld({ gate: true, screen: { house: 'house', roadmap: 'roadmap', kpis: 'kpi', glimpses: 'kpi' }[id] }); a.rig.cut(SHOT.k_wall); break;
+        this.setWorld({ gate: true, screen: { house: 'flash', roadmap: 'roadmap', kpis: 'kpi', glimpses: 'kpi' }[id] }); if (id === 'house') a.entrance.wall.set26(0, true); a.rig.cut(SHOT.k_wall); break;
       case 'future':
         this.placeGroup(WAIT, () => 0); c.ph.place(0, 40.5, PI); this.setWorld({ gate: false, future: true, screen: 'house27' }); a.entrance.wall.set27(false, 0, true); a.rig.cut(SHOT.g_door); break;
       case 'plant':
@@ -167,7 +166,8 @@ export class Director {
     this.stage(id);
     switch (id) {
       case 'flashback': a.factory.gate.snap(true); this.placeGroup(WAIT, () => 0); c.ph.place(0, 27.4, PI); c.bps.place(-0.6, 26.3, PI * 0.75); lookAll(c.ph); a.rig.cut(SHOT.in_both); break;
-      case 'house': case 'roadmap': case 'kpis': a.rig.cut(SHOT.k_wall); lookAll(this.wallCenter()); break;
+      case 'house': a.entrance.wall.setMode('house'); a.entrance.wall.set26(9, true); a.rig.cut(SHOT.k_wall); lookAll(this.wallCenter()); a.ui.toggleScreenView(true); break;
+      case 'roadmap': case 'kpis': a.rig.cut(SHOT.k_wall); lookAll(this.wallCenter()); break;
       case 'glimpses': { const G = a.data.glimpses, last = G.months.length - 1; a.ui.glimpses('month', last); a.ui.glimpses('compose', last); break; }
       case 'future': a.factory.gate.snap(true); this.placeGroup(WALLTEAM, this.yawTo(KPI_WALL.x, KPI_WALL.z)); c.ph.place(-4.6, 24.4, Math.atan2(KPI_WALL.x + 4.6, KPI_WALL.z - 24.4)); lookAll(this.wallCenter()); a.entrance.wall.set27(true, 4, true); a.rig.cut(SHOT.k_wall); break;
       case 'plant': c.ph.place(22.2, 5.0, 0.6); c.bps.place(21.1, 4.6, 0.6); c.qual.place(23.4, 5.7, -2.4); a.rig.cut(SHOT.p_cell); break;
@@ -198,7 +198,7 @@ export class Director {
     this.stage(ch.id);
     ui.fade(0, 0.8);
     // the gate chapter has no title card: '2026 Flashback' is written on the doors
-    if (!['opening', 'flashback', 'future', 'glimpses', 'thanks', 'factcheck'].includes(ch.id) && !skipTitle) ui.titleCard(i, ch.title, ch.sub);
+    if (!['opening', 'flashback', 'house', 'future', 'glimpses', 'thanks', 'factcheck'].includes(ch.id) && !skipTitle) ui.titleCard(i, ch.title, ch.sub);
     const ctx = this.makeCtx();
     ui.showSkip(ch.id !== 'opening'); ui.letterbox(ch.id !== 'opening');
     try { await this[ch.id](ctx); } catch (e) { console.error(e); }
@@ -215,7 +215,7 @@ export class Director {
   // stepped chapters: the script waits here until Next (→, Space, clicker) is pressed
   waitStep(ctx, autoAfter = null) {
     this.app.timeScale = 1;
-    const auto = autoAfter ?? (this.app.ui.autoplay ? 4 : null);
+    const auto = null; void autoAfter; // nothing moves on by itself: every step waits for Next
     return new Promise(res => {
       const done = () => { if (this.stepRes === done) this.stepRes = null; res(); };
       this.stepRes = done;
@@ -367,33 +367,20 @@ export class Director {
     const W = a.entrance.wall.spot(0.5, 0.4);
     ph.faceTo(W); ph.lookAt(W); bps.lookAt(W); team.forEach(m => m.lookAt(W));
     ph.gesture('point', 2.6, { target: W });
-    ctx.cap('On the left, the KPI wall: every BPS GO!+ KPI on one screen.');
+    ctx.cap('On the screen: 2026 Flashback.');
     ctx.cam(SHOT.in_both, 3);
     await ctx.wait(3.2);
   }
 
   async house(ctx) {
-    const { ph } = this.cast, a = this.app, h = a.data.house, team = this.all(), wall = a.entrance.wall;
-    ctx.cam(SHOT.k_wall, 2.2);
-    wall.replay();
-    const c = wall.spot(0.5, 0.4); team.forEach(m => m.lookAt(c)); ph.lookAt(c);
-    await ctx.wait(1.2);
-    ctx.cap('At the start of 2026, we built the House of BPS GO!+: one operating system for the value stream.');
-    ph.gesture('present', 2.8);
-    await ctx.wait(3.6);
-    for (const p of h.pillars) {
-      const s = wall.rowSpot(p.id);
-      wall.highlight(p.id, null); ph.lookAt(s); ph.gesture('point', 2.6, { target: s }); team.forEach(m => m.lookAt(s));
-      ctx.cap(`${p.name}. ${p.driver}: ${p.items.slice(0, 2).join(', ')}.`);
-      await ctx.wait(3.4);
-    }
-    wall.highlight('h-digi', null); const sb = wall.rowSpot('h-digi'); ph.lookAt(sb); ph.gesture('point', 2.4, { target: sb });
-    ctx.cap(`System boosters: ${h.boosters.map(b => b.name).join(' and ')}.`);
-    await ctx.wait(3.2);
-    wall.highlight(null, null); ph.lookAt(null); ph.faceYaw(PI * 0.6); team.forEach(m => m.lookAt(ph));
-    ph.gesture('armsOpen', 2.6);
-    ctx.cap(h.statement + '.');
-    await ctx.wait(3.6);
+    // the screen opens in full display with '2026 Flashback'; each Next builds the House of BPS GO!+
+    const ui = this.app.ui, wall = this.app.entrance.wall;
+    ctx.cut(SHOT.k_wall);
+    wall.setMode('flash'); wall.set26(0, true);
+    ui.toggleScreenView(true);
+    await this.waitStep(ctx);
+    wall.setMode('house'); wall.set26(0, true); wall.p = 1; wall.animating = false;
+    for (let s = 1; s <= 9; s++) { wall.set26(s); await this.waitStep(ctx); } // roof, band, pillars, content ×4, boosters, statement
   }
 
   async roadmap(ctx) {

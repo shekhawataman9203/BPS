@@ -161,8 +161,10 @@ function wrap(ctx, text, maxW) {
 class KpiWall {
   constructor(data, logoImg) {
     this.data = data; this.logoImg = logoImg; this.p = 1; this.animating = false;
-    this.hl = { pillar: null, row: null }; this.layouts = { house: {}, roadmap: {}, kpi: {}, house27: {} }; this.mode = 'kpi';
-    this.h27 = { drop: 1, dropT: 1, rev: [1, 1, 1, 1], shown: 4 }; this.hits = []; this.hover = null;
+    this.hl = { pillar: null, row: null }; this.layouts = { house: {}, roadmap: {}, kpi: {}, house27: {}, flash: {} }; this.mode = 'kpi';
+    this.h27 = { drop: 1, dropT: 1, rev: [1, 1, 1, 1], shown: 4 };
+    // 2026 house build-up, one stage per Next: 0 white, 1 roof, 2 band, 3 pillars, 4-7 pillar content, 8 boosters, 9 statement
+    this.h26 = { stage: 9, v: { roof: 1, band: 1, pil: [1, 1, 1, 1], con: [1, 1, 1, 1], boost: 1, stmt: 1 } }; this.hits = []; this.hover = null;
     this.ct = new CanvasTex(TEX_W, TEX_H, (ctx, W, H) => this.draw(ctx, W, H));
     this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(KPI_WALL.w, KPI_WALL.h), new THREE.MeshBasicMaterial({ map: this.ct.tex, toneMapped: false }));
     this.mesh.userData.kpiWall = true;
@@ -181,8 +183,22 @@ class KpiWall {
     if (snap) { r.drop = r.dropT; r.rev = r.rev.map((_, i) => (i < shown ? 1 : 0)); }
     this.ct.redraw();
   }
+  set26(stage, snap = false) {
+    const R = this.h26; R.stage = stage;
+    if (snap) { const t = this.t26(); R.v = { roof: t.roof, band: t.band, pil: [...t.pil], con: [...t.con], boost: t.boost, stmt: t.stmt }; }
+    this.ct.redraw();
+  }
+  t26() { const s = this.h26.stage, b = x => (s >= x ? 1 : 0); return { roof: b(1), band: b(2), pil: [0, 1, 2, 3].map(() => b(3)), con: [0, 1, 2, 3].map(i => b(4 + i)), boost: b(8), stmt: b(9) }; }
   update(dt) {
     let dirty = false;
+    if (this.mode === 'house') {
+      const v = this.h26.v, t = this.t26(), step = (a, b, r) => (a === b ? a : b > a ? Math.min(b, a + dt / r) : 0);
+      const before = JSON.stringify(v);
+      v.roof = step(v.roof, t.roof, 1.1); v.band = step(v.band, t.band, 0.8);
+      v.pil = v.pil.map((x, i) => (i === 0 || v.pil[i - 1] > 0.55 ? step(x, t.pil[i], 0.7) : (t.pil[i] ? x : 0)));
+      v.con = v.con.map((x, i) => step(x, t.con[i], 0.8)); v.boost = step(v.boost, t.boost, 0.8); v.stmt = step(v.stmt, t.stmt, 0.8);
+      if (JSON.stringify(v) !== before) dirty = true;
+    }
     if (this.animating) { this.p = Math.min(1, this.p + dt / 2.2); dirty = true; if (this.p >= 1) this.animating = false; }
     if (this.mode === 'house27') {
       const r = this.h27;
@@ -206,6 +222,18 @@ class KpiWall {
     const d = this.data, rm = d.roadmap, rf = d.reflection, p = ease.out(this.p), hl = this.hl, hv = this.hover;
     const hits = this.hits = [];
     const isHover = (type, id) => hv && hv.type === type && hv.id === id;
+    if (this.mode === 'flash') {
+      // title on the screen after the gate: 2026 FLASHBACK, like the doors
+      const g = ctx.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#2d343e'); g.addColorStop(1, '#141920');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = 'rgba(255,255,255,0.05)'; for (let y = 0; y < H; y += 40) ctx.fillRect(0, y, W, 3);
+      ctx.fillStyle = CSS.red; ctx.fillRect(W * 0.12, H * 0.62, W * 0.76, 16);
+      ctx.fillStyle = '#F4F6F8'; ctx.textAlign = 'center'; ctx.font = `800 520px ${FONT}`; ctx.fillText('2026', W / 2, H * 0.55);
+      ctx.font = `800 220px ${FONT}`; ctx.fillText('FLASHBACK', W / 2, H * 0.83);
+      ctx.fillStyle = '#C3C9D1'; ctx.font = `600 70px ${FONT}`; ctx.fillText('BPS GO!+ · Reflection', W / 2, H * 0.94);
+      if (this.logoImg && this.logoImg.complete && this.logoImg.naturalWidth) { const lh = 170, lw = this.logoImg.naturalWidth * lh / this.logoImg.naturalHeight; ctx.fillStyle = '#ffffff'; ctx.fillRect(W - lw - 140, 60, lw + 80, lh + 50); ctx.drawImage(this.logoImg, W - lw - 100, 85, lw, lh); }
+      ctx.textAlign = 'left'; return;
+    }
     ctx.fillStyle = '#F4F6F8'; ctx.fillRect(0, 0, W, H);
     // header: logo, title, legend
     const HH = 210;
@@ -310,6 +338,7 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
   const is27 = ht === 'house27', R = w.h27;
   const dk = is27 ? ease.out(R.drop) : 1;
   const k = i => (is27 ? 1 : clamp(p * 1.6 - i * 0.12, 0, 1));
+  const r26 = ht === 'house' ? w.h26.v : null, E = ease.out;
   if (is27 && dk < 1) {
     // blank screen first: BPS GO!+ 2027
     ctx.globalAlpha = 1 - dk;
@@ -321,19 +350,27 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
   ctx.save(); ctx.translate(0, -(1 - dk) * H * 0.9);
   const dim = id => (hl.pillar && hl.pillar !== id ? 0.3 : 1);
   // roof
-  ctx.globalAlpha = k(0) * (hl.pillar && hl.pillar !== 'h-house' ? 0.45 : 1);
+  // roof: in the 2026 build-up it rises from below
+  const hdim = hl.pillar && hl.pillar !== 'h-house' ? 0.45 : 1, rf = r26 ? E(r26.roof) : 1;
+  ctx.save(); if (r26) ctx.translate(0, (1 - rf) * 900);
+  ctx.globalAlpha = (r26 ? Math.min(1, r26.roof * 2) : k(0)) * hdim;
   ctx.fillStyle = '#E8101E'; ctx.beginPath(); ctx.moveTo(x0 - 40, top + 210); ctx.lineTo(W / 2, top); ctx.lineTo(x1 + 40, top + 210); ctx.closePath(); ctx.fill();
   ctx.fillStyle = '#ffffff'; ctx.font = `800 76px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText(h.title, W / 2, top + 160);
-  // operating system band
+  ctx.restore();
+  // operating system band: in the build-up it opens from the centre
+  const bk = r26 ? E(r26.band) : 1;
+  ctx.save(); ctx.beginPath(); ctx.rect(W / 2 - (x1 - x0) / 2 * bk, top + 220, (x1 - x0) * bk, 120); ctx.clip();
+  ctx.globalAlpha = (r26 ? Math.min(1, r26.band * 3) : k(0)) * hdim; ctx.textAlign = 'center';
   ctx.fillStyle = '#3a3a3c'; ctx.fillRect(x0, top + 228, x1 - x0, 104);
   ctx.fillStyle = '#ffffff'; ctx.font = `800 58px ${FONT}`; ctx.fillText(h.band.split('').join(String.fromCharCode(8202)), W / 2, top + 300);
+  ctx.restore();
   hits.push({ type: ht, id: 'h-house', x: x0, y: top, w: x1 - x0, h: 332 }); L['h-house'] = { u: 0.5, v: (top + 200) / H };
   ctx.textAlign = 'left';
   // four pillars
   const py = top + 360, ph = 690, gap = 30, pw = (x1 - x0 - gap * 3) / 4, headH = 270;
-  h.pillars.forEach((pl, i) => {
+  const drawPillar = (pl, i, pk) => {
     const x = x0 + i * (pw + gap), hov = isH(ht, pl.id), on = hl.pillar === pl.id;
-    ctx.globalAlpha = k(i + 1) * dim(pl.id);
+    ctx.globalAlpha = (r26 ? pk : k(i + 1)) * dim(pl.id);
     ctx.fillStyle = '#ffffff'; ctx.fillRect(x, py, pw, ph);
     ctx.strokeStyle = on || hov ? pl.color : '#d6d9de'; ctx.lineWidth = on || hov ? 10 : 4; ctx.strokeRect(x, py, pw, ph);
     ctx.fillStyle = pl.color; ctx.fillRect(x, py, pw, headH);
@@ -342,7 +379,7 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
     const words = pl.name.split(' '), mid = Math.ceil(words.length / 2), l1 = words.slice(0, mid).join(' '), l2 = words.slice(mid).join(' ');
     ctx.fillText(l1, x + pw / 2, py + 180); if (l2) ctx.fillText(l2, x + pw / 2, py + 240);
     // pillar content: in the 2027 house it slides in from the right when revealed
-    const rk = is27 ? ease.out(R.rev[i] ?? 1) : 1;
+    const rk = is27 ? ease.out(R.rev[i] ?? 1) : r26 ? E(r26.con[i]) : 1;
     hits.push({ type: ht, id: pl.id, x, y: py, w: pw, h: ph }); L[pl.id] = { u: (x + pw / 2) / W, v: (py + ph / 2) / H };
     ctx.textAlign = 'left';
     if (rk <= 0.001) return;
@@ -359,10 +396,12 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
     for (const bl of blocks) { ctx.fillStyle = bl.isNew ? '#1E9E3C' : '#1d2228'; ctx.font = `${bl.isNew ? 800 : 600} ${fs}px ${FONT}`; bl.lines.forEach((ln, li) => { if (li === 0) { ctx.beginPath(); ctx.arc(x + 42, ty - fs * 0.32, 8, 0, Math.PI * 2); ctx.fill(); } ctx.fillText(ln, x + 64, ty); ty += fs * 1.22; }); ty += 8; }
     if ((hov || on) && ty < py + ph - 60) { ctx.fillStyle = pl.color; ctx.font = `700 34px ${FONT}`; ctx.fillText('Click for details ›', x + 40, py + ph - 26); }
     ctx.restore();
-  });
+  };
+  // pillars: in the build-up they rise in one after another
+  h.pillars.forEach((pl, i) => { const pk = r26 ? E(r26.pil[i]) : 1; if (r26 && pk <= 0.001) return; ctx.save(); if (r26) ctx.translate(0, (1 - pk) * 220); drawPillar(pl, i, pk); ctx.restore(); });
   // system boosters
   const by = py + ph + 36, bh = 250;
-  ctx.globalAlpha = k(5);
+  ctx.globalAlpha = r26 ? E(r26.boost) : k(5);
   ctx.fillStyle = '#eceef1'; ctx.fillRect(x0 - 40, by, x1 - x0 + 80, bh);
   ctx.fillStyle = '#1E88D9'; ctx.fillRect(x0 - 40, by, x1 - x0 + 80, 8);
   ctx.font = `800 40px ${FONT}`; const lw = ctx.measureText('System Boosters').width + 80;
@@ -371,7 +410,7 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
   const bw = (x1 - x0 - 60) / 2;
   h.boosters.forEach((b, i) => {
     const x = x0 + i * (bw + 60), y = by + 48, hov = isH(ht, b.id), on = hl.pillar === b.id, ch = bh - 66;
-    ctx.globalAlpha = k(5 + i) * dim(b.id);
+    ctx.globalAlpha = (r26 ? E(r26.boost) : k(5 + i)) * dim(b.id);
     ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, bw, ch);
     ctx.strokeStyle = on || hov ? '#1E88D9' : '#d6d9de'; ctx.lineWidth = on || hov ? 10 : 4; ctx.strokeRect(x, y, bw, ch);
     ctx.fillStyle = '#1E88D9'; ctx.beginPath(); ctx.arc(x + 150, y + ch / 2, 60, 0, Math.PI * 2); ctx.fill();
@@ -381,7 +420,7 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
     hits.push({ type: ht, id: b.id, x, y, w: bw, h: ch }); L[b.id] = { u: (x + bw / 2) / W, v: (y + ch / 2) / H };
   });
   // statement
-  ctx.globalAlpha = k(7);
+  ctx.globalAlpha = r26 ? E(r26.stmt) : k(7);
   ctx.fillStyle = '#18A8E0'; ctx.fillRect(0, H - 150, W, 150);
   ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; const fs = fitText(ctx, h.statement, W - 200, 66, 600); ctx.font = `600 ${fs}px ${FONT}`; ctx.fillText(h.statement, W / 2, H - 52); ctx.textAlign = 'left';
   ctx.globalAlpha = 1;

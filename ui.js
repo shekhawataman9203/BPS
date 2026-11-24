@@ -56,7 +56,6 @@ export class UI {
     $('#btnCC').onclick = () => this.toggleCC();
     $('#btnRoles').onclick = () => { this.rolesByUser = true; this.rolesAuto = false; this.toggleRoles(); };
     $('#btnExplore').onclick = () => this.toggleExplore();
-    $('#btnAuto').onclick = () => this.toggleAutoplay();
     $('#btnPause').onclick = () => this.togglePause();
     $('#btnScreen').onclick = () => this.toggleScreenView();
     $('#svClose').onclick = () => this.toggleScreenView(false);
@@ -111,7 +110,6 @@ export class UI {
       else if (k === 'c' || k === 'C') this.toggleCC();
       else if (k === 'p' || k === 'P') this.togglePresent();
       else if (k === 'f' || k === 'F') this.toggleExplore();
-      else if (k === 'a' || k === 'A') this.toggleAutoplay();
       else if (k === 'r' || k === 'R') { this.rolesByUser = true; this.rolesAuto = false; this.toggleRoles(); }
       else if (k === 'h' || k === 'H') this.panelOpen ? this.closePanel() : this.openPanel();
       else if (k === '?') this.toggleHelp();
