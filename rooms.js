@@ -430,9 +430,23 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
   h.pillars.forEach((pl, i) => { const pk = r26 ? E(r26.pil[i]) : 1; if (r26 && pk <= 0.001) return; ctx.save(); if (r26) ctx.translate(0, (1 - pk) * 220); drawPillar(pl, i, pk); ctx.restore(); });
   // 2027: gears on a belt link the four pillars to the System Boosters
   const gz = is27 ? 125 : 0;
-  if (is27) drawGears(w, ctx, { x0, pw, gap, n: h.pillars.length, y0: py + ph, y1: py + ph + 36 + gz, cols: h.pillars.map(p => p.color) });
+  // the gears come in with Accelerate (the System Boosters)
+  if (is27) { const gk = isaZoom(w, 'boosters', 0.0, 1.4); if (gk > 0) drawGears(w, ctx, { x0, pw, gap, n: h.pillars.length, y0: py + ph, y1: py + ph + 36 + gz, cols: h.pillars.map(p => p.color), k: gk }); }
+  // 2027: the pillar a logo lands on comes forward (zooms a little) and stays there
+  if (is27) h.pillars.forEach((pl, i) => {
+    const z = isaZoom(w, pl.id); if (z <= 0) return;
+    const x = x0 + i * (pw + gap), cx = x + pw / 2, cy = py + ph / 2, sc = 1 + 0.07 * z;
+    ctx.save(); ctx.translate(cx, cy); ctx.scale(sc, sc); ctx.translate(-cx, -cy);
+    ctx.save(); ctx.shadowColor = 'rgba(6,30,60,0.45)'; ctx.shadowBlur = 60 * z; ctx.shadowOffsetY = 24 * z; ctx.fillStyle = '#ffffff'; ctx.fillRect(x, py, pw, ph); ctx.restore();
+    drawPillar(pl, i, 1); ctx.restore();
+  });
   // system boosters
   const by = py + ph + 36 + gz, bh = is27 ? 220 : 250;
+  // 2027: the System Boosters come forward when Accelerate lands
+  const bz = is27 ? isaZoom(w, 'boosters') : 0;
+  ctx.save();
+  if (bz > 0) { const cx = W / 2, cy = by + bh / 2, sc = 1 + 0.035 * bz; ctx.translate(cx, cy); ctx.scale(sc, sc); ctx.translate(-cx, -cy);
+    ctx.save(); ctx.shadowColor = 'rgba(6,30,60,0.45)'; ctx.shadowBlur = 60 * bz; ctx.shadowOffsetY = 24 * bz; ctx.fillStyle = '#eceef1'; ctx.fillRect(x0 - 40, by, x1 - x0 + 80, bh); ctx.restore(); }
   ctx.globalAlpha = r26 ? E(r26.boost) : k(5);
   ctx.fillStyle = '#eceef1'; ctx.fillRect(x0 - 40, by, x1 - x0 + 80, bh);
   ctx.fillStyle = '#1E88D9'; ctx.fillRect(x0 - 40, by, x1 - x0 + 80, 8);
@@ -451,6 +465,7 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
     ctx.fillStyle = '#4a525d'; ctx.font = `500 40px ${FONT}`; ctx.fillText(b.text, x + 250, y + (is27 ? 126 : 140));
     hits.push({ type: ht, id: b.id, x, y, w: bw, h: ch }); L[b.id] = { u: (x + bw / 2) / W, v: (y + ch / 2) / H };
   });
+  ctx.restore();
   // statement
   ctx.globalAlpha = r26 ? E(r26.stmt) : k(7);
   ctx.fillStyle = '#18A8E0'; ctx.fillRect(0, H - 150, W, 150);
@@ -495,7 +510,15 @@ function drawGear(ctx, cx, cy, r, teeth, ang, col) {
   ctx.fillStyle = '#d7dde3'; ctx.beginPath(); ctx.arc(0, 0, r * 0.09, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
 }
+// 0..1: how far the area a logo landed on has come forward (0 until that logo lands)
+function isaZoom(w, at, delay = 0.1, dur = 0.6) {
+  const S = w.isa, i = (w.data.house2027?.isa || []).findIndex(it => it.at === at);
+  if (i < 0 || i >= S.shown) return 0;
+  return ease.out(clamp((S.t[i] - FALL - delay) / dur, 0, 1));
+}
 function drawGears(w, ctx, G) {
+  const gk = G.k ?? 1, pop = j => { const u = clamp(gk * 1.6 - j * 0.18, 0, 1); return u <= 0 ? 0 : 1 + 2.2 * Math.pow(u - 1, 3) + 1.2 * Math.pow(u - 1, 2); };
+  ctx.save(); ctx.globalAlpha *= clamp(gk * 2, 0, 1);
   const T = w.gearT || 0, cy = (G.y0 + G.y1) / 2, r = Math.min(80, (G.y1 - G.y0) / 2 - 4);
   const xs = Array.from({ length: G.n }, (_, i) => G.x0 + i * (G.pw + G.gap) + G.pw / 2);
   // shafts: pillar → gear → booster band
@@ -509,7 +532,8 @@ function drawGears(w, ctx, G) {
   ctx.lineWidth = 22; ctx.strokeStyle = '#1f252c'; ctx.stroke();
   ctx.setLineDash([14, 14]); ctx.lineDashOffset = -T * 120; ctx.lineWidth = 10; ctx.strokeStyle = '#6b7580'; ctx.stroke(); ctx.restore();
   // gears (on a belt they all turn the same way)
-  xs.forEach((x, i) => drawGear(ctx, x, cy, r, 16, T * 120 / bt + i * 0.2, G.cols[i] || '#0A6EBD'));
+  xs.forEach((x, i) => { const p = pop(i); if (p <= 0) return; ctx.save(); ctx.translate(x, cy); ctx.scale(p, p); ctx.translate(-x, -cy); drawGear(ctx, x, cy, r, 16, T * 120 / bt + i * 0.2 + (1 - Math.min(1, p)) * 3, G.cols[i] || '#0A6EBD'); ctx.restore(); });
+  ctx.restore();
 }
 
 // ---------- Innovate / Simplify / Accelerate drop-in ----------
@@ -538,6 +562,7 @@ function drawISA(w, ctx, H, G) {
     if (lt0 > 0.15) {
       const k = ease.out(Math.min(1, (lt0 - 0.15) / 0.6));
       const box = pi >= 0 ? [G.x0 + pi * (G.pw + G.gap), G.py, G.pw, G.ph] : [G.x0 - 40, G.by, G.x1 - G.x0 + 80, G.bh];
+      { const zz = isaZoom(w, it.at), g = (pi >= 0 ? 0.035 : 0.0175) * zz; box[0] -= box[2] * g; box[1] -= box[3] * g; box[2] *= 1 + 2 * g; box[3] *= 1 + 2 * g; } // follow the zoom
       ctx.save(); ctx.globalAlpha = k; ctx.strokeStyle = col; ctx.lineWidth = 16; ctx.shadowColor = col; ctx.shadowBlur = 40;
       ctx.strokeRect(box[0] - 10, box[1] - 10, box[2] + 20, box[3] + 20); ctx.restore();
       // arrow path from the card's edge to the target
