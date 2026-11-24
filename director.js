@@ -447,8 +447,7 @@ export class Director {
     if (part === 1) { ui.glimpses('cover'); await this.waitStep(ctx); } // black cover: Glimpses 2026
     for (let m = 0; m < G.months.length; m++) {
       const M = G.months[m]; if ((M.part || 1) !== part) continue;
-      ui.glimpses('month', m);                       // the title card on black
-      await this.waitStep(ctx);
+      ui.glimpses('month', m, 'nocard');             // straight to the slide, no month card
       const have = JSON.parse(document.getElementById('glimpse-images')?.textContent || '{}');
       for (let i = 0; i < M.images.length; i++) {
         const im = M.images[i]; if (!have[im.src]) continue; // picture not added yet

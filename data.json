@@ -969,7 +969,8 @@
               45
             ],
             "tag": "BEFORE · Active Cockpit",
-            "noPlace": true
+            "noPlace": true,
+            "cross": true
           },
           {
             "src": "dlr-digital.jpg",
@@ -978,7 +979,7 @@
               41,
               23,
               56.5,
-              72
+              49.6
             ],
             "tag": "AFTER · Digital DLR"
           }

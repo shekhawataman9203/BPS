@@ -832,3 +832,8 @@ body.roadmap-open #stepHint { top: calc(var(--top-h) + 14px); bottom: auto; righ
 .au-h { font-size: clamp(10px, .92vw, 15px); padding: .38vh .6vw; }
 .au-col { gap: .7vh; }
 .fc-stamp.au { top: auto; right: auto; left: 3vw; bottom: 10.5vh; }
+
+.gl-cross { position: absolute; z-index: 3; pointer-events: none; opacity: 0; transform: scale(1.6); transition: opacity .35s .55s, transform .45s cubic-bezier(.2, 1.5, .4, 1) .55s; }
+.gl-cross::before, .gl-cross::after { content: ""; position: absolute; left: 50%; top: 50%; width: 112%; height: clamp(8px, 1.1vw, 18px); background: #E20015; border-radius: 6px; box-shadow: 0 2px 10px rgba(0, 0, 0, .3); }
+.gl-cross::before { transform: translate(-50%, -50%) rotate(28deg); } .gl-cross::after { transform: translate(-50%, -50%) rotate(-28deg); }
+.gl-cross.on { opacity: .9; transform: none; }

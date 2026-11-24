@@ -210,7 +210,12 @@ export class UI {
     const slide = $('.gl-slide', sec);
     const items = () => { const a = []; slide.querySelectorAll('.gl-img').forEach(e => { a[+e.dataset.i] = e; }); return a; };
     const place = (el, r) => { el.style.left = r[0] + '%'; el.style.top = r[1] + '%'; el.style.width = r[2] + '%'; el.style.height = r[3] + '%'; };
-    const syncTags = () => slide.querySelectorAll('.gl-tag').forEach(t => { const im = slide.querySelector(`.gl-img[data-i="${t.dataset.i}"]`); t.classList.toggle('on', !!im && ['placed', 'popped'].includes(im.dataset.st)); });
+    const syncCross = () => (M => { if (!M) return; M.images.forEach((im, i) => { if (!im.cross) return;
+      let x = slide.querySelector(`.gl-cross[data-i="${i}"]`);
+      if (!x) { x = h('i', { class: 'gl-cross', 'data-i': i, 'aria-hidden': 'true' }); place(x, im.slot); slide.append(x); }
+      const later = [...slide.querySelectorAll('.gl-img')].some(e => +e.dataset.i > i && ['placed', 'popped'].includes(e.dataset.st));
+      x.classList.toggle('on', later); }); })(G.months[a ?? 0]);
+    const syncTags = () => { syncCross(); slide.querySelectorAll('.gl-tag').forEach(t => { const im = slide.querySelector(`.gl-img[data-i="${t.dataset.i}"]`); t.classList.toggle('on', !!im && ['placed', 'popped'].includes(im.dataset.st)); }); };
     if (action === 'close') { sec.hidden = true; set(''); return; }
     sec.hidden = false;
     if (action === 'cover') {
@@ -222,7 +227,7 @@ export class UI {
       $('.gl-m-title', sec).textContent = M.month; $('.gl-m-event', sec).textContent = M.event;
       // prepare the slide for this month, all photos hidden
       $('.gl-s-title', sec).textContent = G.title; $('.gl-s-event', sec).textContent = M.slideEvent ?? M.event; $('.gl-s-logo', sec).src = $('#bpsLogoImg').src;
-      items().forEach(e => e.remove()); slide.querySelectorAll('.gl-box, .gl-tag').forEach(e => e.remove());
+      items().forEach(e => e.remove()); slide.querySelectorAll('.gl-box, .gl-tag, .gl-cross').forEach(e => e.remove());
       if (M.box) {
         // content box whose items appear one per Next
         const bx = h('div', { class: 'gl-box' + (M.box.style ? ' gl-box-' + M.box.style : '') }, h('p', { class: 'gl-box-title' }, M.box.title), h('ul', {}, M.box.items.map(t => h('li', {}, t))));
@@ -235,7 +240,7 @@ export class UI {
         el.dataset.st = 'hidden'; slide.append(el);
         if (im.tag) { const tg = h('span', { class: 'gl-tag', 'data-i': i }, im.tag); tg.style.left = im.slot[0] + '%'; tg.style.top = im.slot[1] + '%'; slide.append(tg); }
       });
-      set('month'); return;
+      set(b === 'nocard' ? 'slide' : 'month'); return;
     }
     if (action === 'point') {
       set('slide'); sec.classList.remove('focus'); $('.gl-caption', sec).classList.remove('on');
