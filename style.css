@@ -869,3 +869,9 @@ body.roadmap-open #stepHint { top: calc(var(--top-h) + 14px); bottom: auto; righ
 .au-row.on .au-r.full { color: #1E9E5C; } .au-row.on .au-r.part { color: #C77A00; } .au-row.on .au-r.low { color: #E20015; }
 .au-tally span { white-space: nowrap; }
 .fc-stamp.au { left: auto; right: 3.5vw; bottom: 16vh; }
+/* Fact Check: no five-step agenda or step bar */
+.fc-agenda, .fc-steps { display: none !important; }
+.fc-panel { top: 9.5vh; }
+.fc-ticker-track { animation-duration: 12s; }
+#factcheck[data-state="open"] .fc-card, #factcheck[data-state="signoff"] .fc-card { margin: auto 0; text-align: center; } #factcheck[data-state="open"] .fc-big, #factcheck[data-state="signoff"] .fc-big { font-size: clamp(40px, 5.6vw, 96px); }
+#factcheck[data-state="open"] .fc-evidence, #factcheck[data-state="signoff"] .fc-evidence { display: none; }
