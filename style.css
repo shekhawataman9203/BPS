@@ -837,3 +837,35 @@ body.roadmap-open #stepHint { top: calc(var(--top-h) + 14px); bottom: auto; righ
 .gl-cross::before, .gl-cross::after { content: ""; position: absolute; left: 50%; top: 50%; width: 112%; height: clamp(8px, 1.1vw, 18px); background: #E20015; border-radius: 6px; box-shadow: 0 2px 10px rgba(0, 0, 0, .3); }
 .gl-cross::before { transform: translate(-50%, -50%) rotate(28deg); } .gl-cross::after { transform: translate(-50%, -50%) rotate(-28deg); }
 .gl-cross.on { opacity: .9; transform: none; }
+
+/* Glimpses: arrow between before and after, live digital overlay on the new tool */
+.gl-arrow { position: absolute; z-index: 3; height: clamp(26px, 3.2vw, 56px); transform: translateY(-50%) scaleX(0); transform-origin: left center; opacity: 0; transition: transform .6s var(--ease) .35s, opacity .3s .35s; pointer-events: none; }
+.gl-arrow::before { content: ""; position: absolute; left: 0; right: 30%; top: 50%; height: 34%; transform: translateY(-50%); background: linear-gradient(90deg, #8B96A3, #0A6EBD); border-radius: 4px; }
+.gl-arrow::after { content: ""; position: absolute; right: 0; top: 0; width: 34%; height: 100%; background: #0A6EBD; clip-path: polygon(0 0, 100% 50%, 0 100%); }
+.gl-arrow.on { transform: translateY(-50%) scaleX(1); opacity: 1; animation: glArrow 1.4s ease-in-out 1.2s infinite; }
+@keyframes glArrow { 50% { translate: 6px 0; } }
+.gl-digi { position: absolute; z-index: 3; pointer-events: none; opacity: 0; transition: opacity .5s .8s; overflow: hidden; }
+.gl-digi.on { opacity: 1; }
+.dg-live { position: absolute; right: 1.2%; top: 2%; display: flex; align-items: center; gap: 6px; background: #E20015; color: #fff; font: 800 clamp(9px, .85vw, 14px) var(--font); letter-spacing: .1em; padding: 3px 9px; border-radius: 3px; box-shadow: 0 0 14px rgba(226, 0, 21, .6); }
+.dg-live b { width: 8px; height: 8px; border-radius: 50%; background: #fff; animation: fcBlink 1s steps(2) infinite; }
+.dg-scan { position: absolute; left: 0; right: 0; height: 18%; background: linear-gradient(180deg, transparent, rgba(41, 211, 255, .22), rgba(41, 211, 255, .55) 50%, transparent); animation: dgScan 2.8s linear infinite; mix-blend-mode: multiply; }
+@keyframes dgScan { from { top: -20%; } to { top: 100%; } }
+.dg-corner { position: absolute; width: 5%; height: 9%; border: 4px solid #29d3ff; filter: drop-shadow(0 0 6px #29d3ff); animation: dgPulse 1.6s ease-in-out infinite; }
+.dg-corner.tl { left: 0; top: 0; border-right: 0; border-bottom: 0; } .dg-corner.tr { right: 0; top: 0; border-left: 0; border-bottom: 0; }
+.dg-corner.bl { left: 0; bottom: 0; border-right: 0; border-top: 0; } .dg-corner.br { right: 0; bottom: 0; border-left: 0; border-top: 0; }
+@keyframes dgPulse { 50% { opacity: .45; } }
+.dg-chips { position: absolute; left: 50%; bottom: -14%; transform: translateX(-50%); display: flex; gap: 8px; }
+.gl-digi.on .dg-chips { bottom: 3%; transition: bottom .6s var(--ease) .9s; }
+.dg-chips span { white-space: nowrap; background: rgba(7, 22, 34, .88); color: #bff2ff; border: 1px solid #29d3ff; font: 700 clamp(9px, .8vw, 13px) var(--font); padding: 4px 10px; border-radius: 999px; opacity: 0; animation: fcIn .5s var(--ease) forwards; animation-delay: var(--d); box-shadow: 0 0 12px rgba(41, 211, 255, .35); }
+.fc-ticker-track { animation-duration: 22s; }
+.rm-table .sdot { display: none; }
+
+.au-row.tasks { grid-template-columns: 1fr auto 3.2vw 20px; }
+.au-q { display: flex; gap: 3px; }
+.au-q i { display: grid; place-items: center; width: clamp(15px, 1.35vw, 22px); height: clamp(15px, 1.35vw, 22px); border-radius: 3px; font-style: normal; font-weight: 800; font-size: .9em; }
+.au-q i.y { background: #1E9E5C; color: #fff; } .au-q i.n { background: #f3d2d5; color: #C4121F; } .au-q i.na { background: #eef0f3; color: #9aa3ae; }
+.au-row.tasks .au-r { text-align: right; }
+.au-r.full { color: #1E9E5C; } .au-r.part { color: #C77A00; } .au-r.low { color: #E20015; }
+.au-row.on .au-r.full { color: #1E9E5C; } .au-row.on .au-r.part { color: #C77A00; } .au-row.on .au-r.low { color: #E20015; }
+.au-tally span { white-space: nowrap; }
+.fc-stamp.au { left: auto; right: 3.5vw; bottom: 16vh; }

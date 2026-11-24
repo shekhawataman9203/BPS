@@ -42,7 +42,7 @@
       "3Q/2026",
       "4Q/2026"
     ],
-    "ytdLabel": "YTD'09",
+    "ytdLabel": "YTD'10",
     "pillars": [
       {
         "id": "people",
@@ -80,7 +80,8 @@
                 "kpi": "No. of BLDP experts / Ind. area coverage under VSDiA",
                 "target": "1 / 5",
                 "ytd": "0 / 4",
-                "status": "behind"
+                "status": "behind",
+                "statusPct": 66
               },
               {
                 "id": "dlpc",
@@ -100,13 +101,14 @@
                   ],
                   [
                     ">90% adherence through DLPC tool",
-                    false
+                    true
                   ]
                 ],
                 "kpi": "DLR maturity",
                 "target": ">80%",
                 "ytd": "65%",
-                "status": "behind"
+                "status": "behind",
+                "statusPct": 82
               },
               {
                 "id": "competency",
@@ -126,13 +128,14 @@
                   ],
                   [
                     "LLB 98%",
-                    false
+                    true
                   ]
                 ],
                 "kpi": "BPS qualification rate (%)",
                 "target": "98%",
                 "ytd": "97%",
-                "status": "watch"
+                "status": "watch",
+                "statusPct": 99
               },
               {
                 "id": "wats",
@@ -152,13 +155,14 @@
                   ],
                   [
                     "100% coverage (A/P)",
-                    false
+                    true
                   ]
                 ],
                 "kpi": "WaTS training penetration",
                 "target": "100% (A/P)",
                 "ytd": "107%",
-                "status": "ok"
+                "status": "ok",
+                "statusPct": 100
               }
             ]
           },
@@ -184,13 +188,14 @@
                   ],
                   [
                     "Scrum: 16, SW: 32",
-                    false
+                    true
                   ]
                 ],
                 "kpi": "SCIP project completion rate",
                 "target": ">90%",
-                "ytd": "80%",
-                "status": "watch"
+                "ytd": "79%",
+                "status": "behind",
+                "statusPct": 87
               },
               {
                 "id": "involvement",
@@ -210,13 +215,14 @@
                   ],
                   [
                     "Individual contribution: 100%",
-                    false
+                    true
                   ]
                 ],
                 "kpi": "Individual contribution",
                 "target": "100%",
-                "ytd": "97%",
-                "status": "watch"
+                "ytd": "98%",
+                "status": "watch",
+                "statusPct": 100
               },
               {
                 "id": "ideas",
@@ -236,13 +242,14 @@
                   ],
                   [
                     "Theme launch: 3",
-                    false
+                    true
                   ]
                 ],
                 "kpi": "Ideas / associate",
                 "target": ">28",
-                "ytd": "20.3",
-                "status": "watch"
+                "ytd": "26.6",
+                "status": "watch",
+                "statusPct": 100
               }
             ]
           }
@@ -278,13 +285,14 @@
                   ],
                   [
                     "No. of line walks: 3",
-                    false
+                    true
                   ]
                 ],
                 "kpi": "No. of line walks",
                 "target": "12",
-                "ytd": "9",
-                "status": "ok"
+                "ytd": "11",
+                "status": "ok",
+                "statusPct": 90
               },
               {
                 "id": "vsp",
@@ -304,13 +312,14 @@
                   ],
                   [
                     "Flow project implement: 01/VS",
-                    false
+                    true
                   ]
                 ],
                 "kpi": "TPT VE / TPT NHA",
                 "target": "14.02 / 10.19 days",
                 "ytd": "14.1 / 10.79 days",
-                "status": "watch"
+                "status": "watch",
+                "statusPct": 100
               },
               {
                 "id": "pull",
@@ -335,8 +344,9 @@
                 ],
                 "kpi": "TCT",
                 "target": "38.4 days",
-                "ytd": "39.9 days",
-                "status": "watch"
+                "ytd": "39.5 days",
+                "status": "watch",
+                "statusPct": 95
               }
             ]
           },
@@ -362,13 +372,14 @@
                   ],
                   [
                     "VSDiA: 4, WEP: 32",
-                    false
+                    true
                   ]
                 ],
                 "kpi": "CIPiiA participation (%)",
                 "target": "100%",
                 "ytd": "80%",
-                "status": "behind"
+                "status": "behind",
+                "statusPct": 80
               },
               {
                 "id": "health",
@@ -384,17 +395,18 @@
                   ],
                   [
                     "SCIP project & DLR (SMD)",
-                    false
+                    true
                   ],
                   [
                     "Levelling / customer interface & SCIP",
-                    false
+                    true
                   ]
                 ],
                 "kpi": "No. of internal health checks",
                 "target": "6",
-                "ytd": "2",
-                "status": "behind"
+                "ytd": "5",
+                "status": "watch",
+                "statusPct": 90
               }
             ]
           }
@@ -436,7 +448,8 @@
                 "kpi": "Digital maturity",
                 "target": "85%",
                 "ytd": "83%",
-                "status": "watch"
+                "status": "watch",
+                "statusPct": 100
               },
               {
                 "id": "platform",
@@ -452,7 +465,7 @@
                   ],
                   [
                     "Agentic AI suggestion scheme",
-                    false
+                    true
                   ],
                   [
                     "Digital JIS",
@@ -461,8 +474,9 @@
                 ],
                 "kpi": "No. of platform projects",
                 "target": "4",
-                "ytd": "2",
-                "status": "watch"
+                "ytd": "3",
+                "status": "watch",
+                "statusPct": 75
               }
             ]
           },
@@ -494,7 +508,8 @@
                 "kpi": "MAEs with tech. loss < 3%",
                 "target": ">90% MAE",
                 "ytd": "69.0%",
-                "status": "behind"
+                "status": "behind",
+                "statusPct": 75
               },
               {
                 "id": "obsolescence",
@@ -509,18 +524,19 @@
                     true
                   ],
                   [
-                    "De-risking MAEs: 03",
+                    "De-risking MAEs: 05",
                     false
                   ],
                   [
-                    "De-risking MAEs: 05",
+                    "De-risking MAEs: 10",
                     false
                   ]
                 ],
                 "kpi": "De-risking MAEs",
                 "target": "10",
-                "ytd": "2",
-                "status": "behind"
+                "ytd": "3",
+                "status": "behind",
+                "statusPct": 30
               }
             ]
           }
@@ -981,7 +997,14 @@
               56.5,
               49.6
             ],
-            "tag": "AFTER · Digital DLR"
+            "tag": "AFTER · Digital DLR",
+            "arrowFrom": 0,
+            "digital": [
+              "Real-time data",
+              "Target vs actual, auto",
+              "Daily · Monthly · Yearly",
+              "No manual charts"
+            ]
           }
         ]
       },
@@ -1704,7 +1727,7 @@
       "claimPct": 85,
       "claim": "BPS is claiming they have completed and achieved 85% of their tasks in 2026.",
       "source": "BPS department, PD Workshop 2026",
-      "check": "Let's check it against the BPS GO!+ Roadmap 2026, KPI by KPI.",
+      "check": "Let's check it against the BPS GO!+ Roadmap 2026, row by row.",
       "blocks": [
         {
           "name": "Waste-Free, Stable Flow",
@@ -1844,6 +1867,15 @@
             }
           ]
         }
+      ],
+      "mode": "status",
+      "order": [
+        "waste-free",
+        "cip-indirect",
+        "leadership",
+        "everybody-cip",
+        "digi-lean",
+        "investment"
       ]
     }
   },

@@ -518,7 +518,7 @@ export class Director {
     await this.waitStep(ctx);
     ui.fcAudit('start'); an.lookAt(panel); an.gesture('point', 2.4, { target: panel }); // the roadmap check opens
     await this.waitStep(ctx);
-    const n = A.blocks.reduce((s, b) => s + b.kpis.length, 0);
+    const n = A.mode === 'tasks' ? A.order.reduce((s, gid) => s + this.app.data.roadmap.pillars.flatMap(p => p.groups).find(g => g.id === gid).rows.length, 0) : A.blocks.reduce((s, b) => s + b.kpis.length, 0);
     for (let i = 0; i < n; i++) { ui.fcAudit('kpi', i); an.gesture(i % 3 ? 'nod' : 'explain', 1.6); await this.waitStep(ctx); } // one KPI per Next
     ui.fcAudit('result'); an.lookAt(cam); an.gesture('present', 2.4);       // the tally
     await this.waitStep(ctx);

@@ -547,7 +547,6 @@ function drawRoadmap(w, ctx, W, H, HH, p, L, hits, isHover) {
       ctx.fillStyle = pl.color; ctx.fillRect(cx[6], y, cols[6] - 4, rh - 4); ctx.fillStyle = '#ffffff'; ctx.font = `700 ${fs}px ${FONT}`; ctx.fillText(fitLine(ctx, r.kpi, cols[6] - 30), cx[6] + cols[6] / 2, y + rh * 0.62);
       ctx.fillStyle = pl.color; ctx.fillRect(cx[7], y, cols[7] - 4, rh - 4); ctx.fillStyle = '#ffffff'; ctx.fillText(fitLine(ctx, r.target, cols[7] - 20), cx[7] + cols[7] / 2, y + rh * 0.62);
       ctx.fillStyle = pl.color; ctx.fillRect(cx[8], y, cols[8] - 4, rh - 4); ctx.fillStyle = '#ffffff'; ctx.fillText(fitLine(ctx, r.ytd, cols[8] - 70), cx[8] + cols[8] / 2 - 18, y + rh * 0.62);
-      ctx.fillStyle = STATUS_COL[r.status]; ctx.beginPath(); ctx.arc(cx[8] + cols[8] - 34, y + rh / 2 - 2, Math.min(14, rh * 0.2), 0, Math.PI * 2); ctx.fill();
       if (on || hov) { ctx.strokeStyle = '#12161C'; ctx.lineWidth = 6; ctx.strokeRect(cx[1], y, acc - cx[1] - 4, rh - 4); }
       ctx.textAlign = 'left';
       hits.push({ type: 'kpi', id: r.id, x: cx[1], y, w: acc - cx[1], h: rh }); L[r.id] = { u: (cx[1] + (acc - cx[1]) / 2) / W, v: (y + rh / 2) / H };

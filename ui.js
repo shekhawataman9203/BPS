@@ -215,7 +215,21 @@ export class UI {
       if (!x) { x = h('i', { class: 'gl-cross', 'data-i': i, 'aria-hidden': 'true' }); place(x, im.slot); slide.append(x); }
       const later = [...slide.querySelectorAll('.gl-img')].some(e => +e.dataset.i > i && ['placed', 'popped'].includes(e.dataset.st));
       x.classList.toggle('on', later); }); })(G.months[a ?? 0]);
-    const syncTags = () => { syncCross(); slide.querySelectorAll('.gl-tag').forEach(t => { const im = slide.querySelector(`.gl-img[data-i="${t.dataset.i}"]`); t.classList.toggle('on', !!im && ['placed', 'popped'].includes(im.dataset.st)); }); };
+    const syncDigi = () => (M => { if (!M) return; M.images.forEach((im, i) => {
+      const e = slide.querySelector(`.gl-img[data-i="${i}"]`), placed = !!e && ['placed', 'popped'].includes(e.dataset.st);
+      if (im.arrowFrom != null) {
+        let ar = slide.querySelector(`.gl-arrow[data-i="${i}"]`);
+        if (!ar) { const s0 = M.images[im.arrowFrom].slot, s1 = im.slot, x0 = s0[0] + s0[2], x1 = s1[0], yc = Math.min(s0[1] + s0[3] / 2, s1[1] + s1[3] / 2);
+          ar = h('i', { class: 'gl-arrow', 'data-i': i, 'aria-hidden': 'true' }); ar.style.left = (x0 + 0.4) + '%'; ar.style.width = Math.max(2, x1 - x0 - 0.8) + '%'; ar.style.top = yc + '%'; slide.append(ar); }
+        ar.classList.toggle('on', placed);
+      }
+      if (im.digital) {
+        let dg = slide.querySelector(`.gl-digi[data-i="${i}"]`);
+        if (!dg) { dg = h('div', { class: 'gl-digi', 'data-i': i, 'aria-hidden': 'true' }, h('span', { class: 'dg-live' }, h('b', {}), 'LIVE'), h('i', { class: 'dg-scan' }), h('i', { class: 'dg-corner tl' }), h('i', { class: 'dg-corner tr' }), h('i', { class: 'dg-corner bl' }), h('i', { class: 'dg-corner br' }), h('div', { class: 'dg-chips' }, im.digital.map((t, k) => h('span', { style: `--d:${0.9 + k * 0.35}s` }, '⚡ ' + t))));
+          place(dg, im.slot); slide.append(dg); }
+        dg.classList.toggle('on', placed);
+      } }); })(G.months[a ?? 0]);
+    const syncTags = () => { syncCross(); syncDigi(); slide.querySelectorAll('.gl-tag').forEach(t => { const im = slide.querySelector(`.gl-img[data-i="${t.dataset.i}"]`); t.classList.toggle('on', !!im && ['placed', 'popped'].includes(im.dataset.st)); }); };
     if (action === 'close') { sec.hidden = true; set(''); return; }
     sec.hidden = false;
     if (action === 'cover') {
@@ -227,7 +241,7 @@ export class UI {
       $('.gl-m-title', sec).textContent = M.month; $('.gl-m-event', sec).textContent = M.event;
       // prepare the slide for this month, all photos hidden
       $('.gl-s-title', sec).textContent = G.title; $('.gl-s-event', sec).textContent = M.slideEvent ?? M.event; $('.gl-s-logo', sec).src = $('#bpsLogoImg').src;
-      items().forEach(e => e.remove()); slide.querySelectorAll('.gl-box, .gl-tag, .gl-cross').forEach(e => e.remove());
+      items().forEach(e => e.remove()); slide.querySelectorAll('.gl-box, .gl-tag, .gl-cross, .gl-arrow, .gl-digi').forEach(e => e.remove());
       if (M.box) {
         // content box whose items appear one per Next
         const bx = h('div', { class: 'gl-box' + (M.box.style ? ' gl-box-' + M.box.style : '') }, h('p', { class: 'gl-box-title' }, M.box.title), h('ul', {}, M.box.items.map(t => h('li', {}, t))));
@@ -331,7 +345,11 @@ export class UI {
   }
   // the 85% audit: 'claim' | 'start' (roadmap check opens) | 'kpi' n (reveal KPI n) | 'result' | 'verdict'
   fcAudit(action, n) {
-    const el = $('#factcheck'), F = this.data.factCheck, A = F.audit; if (!el || !A) return;
+    const el = $('#factcheck'), F = this.data.factCheck, A0 = F.audit; if (!el || !A0) return;
+    // tasks mode: the blocks come straight from the roadmap; each row is one roadmap element with its quarterly tasks
+    const A = !['tasks', 'status'].includes(A0.mode) ? A0 : { ...A0, blocks: A0.order.map(gid => { const pl = this.data.roadmap.pillars.find(p => p.groups.some(g => g.id === gid)), g = pl.groups.find(x => x.id === gid);
+      return { name: g.name, color: pl.color, kpis: g.rows.map(r => { const t = r.q.filter(c => c[0]); const n = t.filter(c => c[1]).length; return { kpi: r.element, tasks: r.q, done: n, total: t.length, pct: r.statusPct ?? Math.round(n / t.length * 100), ok: (r.statusPct ?? Math.round(n / t.length * 100)) >= 100, target: `${n} of ${t.length}`, result: r.ytd }; }) }; }) };
+    const tasksMode = ['tasks', 'status'].includes(A0.mode), statusMode = A0.mode === 'status';
     this.factCheck('show');
     const card = $('.fc-card', el), ev = $('.fc-evidence', el), stamp = $('.fc-stamp', el), say = $('.fc-say', el);
     const all = A.blocks.flatMap((b, bi) => b.kpis.map(k => ({ ...k, bi })));
@@ -352,8 +370,10 @@ export class UI {
       const total = A.blocks.reduce((s, b) => s + b.kpis.length + 1, 0); const side = []; { let l = 0, r = 0; const half = Math.ceil(A.blocks.length / 2); A.blocks.forEach((b, i) => { side[i] = i < half ? 0 : 1; }); void l; void r; void total; }
       let idx = 0;
       A.blocks.forEach((b, bi) => {
-        const blk = h('div', { class: 'au-block', 'data-b': bi, style: `--c:${b.color};order:${bi}` }, h('p', { class: 'au-h' }, h('span', {}, b.name), h('small', {}, 'Target · 2026')));
-        b.kpis.forEach(k => blk.append(h('div', { class: 'au-row', 'data-n': idx++ }, h('span', { class: 'au-k' }, k.kpi), h('span', { class: 'au-t' }, k.target), h('span', { class: 'au-r' }, k.result), h('i', { class: 'au-m' }, k.ok ? '✅' : '❌'))));
+        const blk = h('div', { class: 'au-block', 'data-b': bi, style: `--c:${b.color};order:${bi}` }, h('p', { class: 'au-h' }, h('span', {}, b.name), h('small', {}, statusMode ? 'Q1 · Q2 · Q3 · Q4 · status' : tasksMode ? 'Q1 · Q2 · Q3 · Q4 · done' : 'Target · 2026')));
+        b.kpis.forEach(k => blk.append(tasksMode
+          ? h('div', { class: 'au-row tasks', 'data-n': idx++ }, h('span', { class: 'au-k' }, k.kpi), h('span', { class: 'au-q' }, k.tasks.map(([t, dn]) => h('i', { class: !t ? 'na' : dn ? 'y' : 'n', title: t }, !t ? '–' : dn ? '✓' : '✗'))), h('span', { class: 'au-r' + (statusMode ? (k.pct >= 100 ? ' full' : k.pct >= 75 ? ' part' : ' low') : '') }, statusMode ? `${k.pct}%` : `${k.done}/${k.total}`), h('i', { class: 'au-m' }, k.ok ? '✅' : k.pct >= 75 ? '⚠️' : '❌'))
+          : h('div', { class: 'au-row', 'data-n': idx++ }, h('span', { class: 'au-k' }, k.kpi), h('span', { class: 'au-t' }, k.target), h('span', { class: 'au-r' }, k.result), h('i', { class: 'au-m' }, k.ok ? '✅' : '❌'))));
         cols[side[bi]].append(blk);
       });
       ev.append(h('p', { class: 'fc-ev-tag' }, '🔍 THE CHECK · BPS GO!+ Roadmap 2026'), h('div', { class: 'au-grid' }, cols),
@@ -367,22 +387,33 @@ export class UI {
       const row = ev.querySelector(`.au-row[data-n="${n}"]`); row?.classList.add('on', k.ok ? 'ok' : 'no');
       ev.querySelectorAll('.au-row.cur').forEach(r => r.classList.remove('cur')); row?.classList.add('cur');
       const seen = all.slice(0, n + 1), ok = seen.filter(x => x.ok).length;
+      if (statusMode) {
+        const avg = Math.floor(seen.reduce((s, x) => s + x.pct, 0) / seen.length);
+        $('.au-ok', ev).textContent = `✅ ${ok}`; $('.au-no', ev).textContent = `⚠️ ${seen.length - ok}`; $('.au-pct', ev).textContent = `${seen.length} of ${all.length} rows · average ${avg}%`;
+        say.textContent = `${k.kpi}: ${k.done} of ${k.total} quarterly tasks done, status ${k.pct}%.`; pop(say); return;
+      }
+      if (tasksMode) {
+        const dn = seen.reduce((s, x) => s + x.done, 0), tt = seen.reduce((s, x) => s + x.total, 0), allT = all.reduce((s, x) => s + x.total, 0);
+        $('.au-ok', ev).textContent = `✓ ${dn} done`; $('.au-no', ev).textContent = `✗ ${tt - dn} open`; $('.au-pct', ev).textContent = `${tt} of ${allT} tasks checked`;
+        say.textContent = `${k.kpi}: ${k.done} of ${k.total} tasks done. ${k.ok ? 'Complete ✅' : 'Open points ⚠️'}`; pop(say); return;
+      }
       $('.au-ok', ev).textContent = `✅ ${ok}`; $('.au-no', ev).textContent = `❌ ${seen.length - ok}`; $('.au-pct', ev).textContent = `${seen.length} of ${all.length} checked`;
       say.textContent = `${k.kpi}: target ${k.target}, 2026 ${k.result}. ${k.ok ? 'Achieved ✅' : 'Not achieved ❌'}`; pop(say); return;
     }
-    const ok = all.filter(x => x.ok).length, pct = Math.round(ok / all.length * 100), pass = pct >= A.claimPct;
+    const ok = tasksMode ? all.reduce((s, x) => s + x.done, 0) : all.filter(x => x.ok).length, tot = tasksMode ? all.reduce((s, x) => s + x.total, 0) : all.length;
+    const pct = statusMode ? Math.floor(all.reduce((s, x) => s + x.pct, 0) / all.length) : Math.round(ok / tot * 100), pass = pct >= A.claimPct - (A.tolerance || 0), unit = statusMode ? 'roadmap rows' : tasksMode ? 'tasks' : 'KPIs';
     if (action === 'result') {
       ev.querySelectorAll('.au-row.cur').forEach(r => r.classList.remove('cur'));
       ev.classList.add('done');
-      $('.au-pct', ev).textContent = `${ok} of ${all.length} achieved = ${pct}%  ·  claimed ${A.claimPct}%`;
-      say.textContent = `${ok} of ${all.length} tasks achieved: ${pct}%. The claim was ${A.claimPct}%.`; pop(say); return;
+      $('.au-pct', ev).textContent = statusMode ? `Average of ${all.length} rows = ${pct}%  ·  claimed ${A.claimPct}%` : `${ok} of ${tot} ${unit} done = ${pct}%  ·  claimed ${A.claimPct}%`;
+      say.textContent = statusMode ? `Average status across all ${all.length} roadmap rows: ${pct}%. The claim was ${A.claimPct}%.` : `${ok} of ${tot} ${unit} done: ${pct}%. The claim was ${A.claimPct}%.`; pop(say); return;
     }
     if (action === 'verdict') {
       el.dataset.state = 'verdict';
       stamp.textContent = ''; stamp.append(h('small', {}, 'VERDICT'), h('span', {}, pass ? '✅ VERIFIED · TRUE' : `⚠️ NOT VERIFIED · ${pct}%`));
       void stamp.offsetWidth; stamp.className = 'fc-stamp on au ' + (pass ? 't-ok' : 't-warn');
       steps.querySelectorAll('li').forEach(li => { li.classList.remove('on'); li.classList.add('done'); });
-      say.textContent = pass ? `Claim verified: ${pct}% of the 2026 tasks achieved.` : `Claim not verified: ${pct}% achieved against ${A.claimPct}% claimed. The open points move into 2027.`; pop(say);
+      say.textContent = pass ? (statusMode ? `Claim verified: the 2026 roadmap stands at ${pct}%, as claimed.` : `Claim verified: ${pct}% of the 2026 roadmap ${unit} done, in line with the ${A.claimPct}% claimed.`) : `Claim not verified: ${pct}% achieved against ${A.claimPct}% claimed. The open points move into 2027.`; pop(say);
     }
   }
   fcEvidence(E) {
