@@ -231,7 +231,7 @@ export class Director {
   finish(id) {
     const ui = this.app.ui;
     this.scriptDone = true; this.doneAt = this.chapterTime; this.app.timeScale = 1; this.stepRes = null; ui.stepHint(false); ui.showSkip(false); ui.letterbox(false);
-    if (!['opening', 'thanks', 'factcheck', 'glimpses', 'glimpses2'].includes(id)) ui.openPanel();
+    // the chapter panel stays hidden; it opens only on request (H, or the panel tab)
     ui.setPins(this.pinsFor(id));
   }
   // stepped chapters: the script waits here until Next (→, Space, clicker) is pressed
@@ -410,15 +410,10 @@ export class Director {
   }
 
   async roadmap(ctx) {
-    // house (full display) → alignment animation → roadmap in full screen (click to zoom) → back to the scene
+    // straight from the House of BPS GO!+ to the roadmap in full screen (click to zoom) → back to the scene
     const ui = this.app.ui, wall = this.app.entrance.wall;
     ctx.cut(SHOT.k_wall);
-    wall.setMode('house'); wall.set26(9, true); ui.toggleScreenView(true);
-    await this.waitStep(ctx);
-    wall.setMode('align');
-    ctx.cap('Aligned with the House of BPS GO!+, we built the BPS GO!+ Roadmap 2026: every element of the house has its block.');
-    await this.waitStep(ctx);
-    ui.toggleScreenView(false); ui.openRoadmap();
+    wall.setMode('roadmap'); wall.p = 1; ui.toggleScreenView(false); ui.openRoadmap();
     ctx.cap('Click any pillar, block or KPI to zoom in. Next zooms out, then returns to the plant.');
     await this.waitStep(ctx);
     ui.closeRoadmap(); wall.setMode('roadmap'); wall.p = 1; wall.ct.redraw();
