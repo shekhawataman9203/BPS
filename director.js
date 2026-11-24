@@ -574,8 +574,12 @@ export class Director {
     ctx.cap('On the screen: BPS GO!+ 2027.', { hold: 600 });
     await this.waitStep(ctx);
     // step: the 2027 target
-    wall.setMode('target27'); ph.gesture('present', 2.6);
-    ctx.cap('Target 2027: a self-learning organisation at BPS Level 3, recognised in the Mobility BPS Award at BBM level.', { hold: 600 });
+    wall.setT27(0, true); wall.setMode('target27'); wall.setT27(1); ph.gesture('present', 2.6);
+    ctx.cap('Target 2027, goal 1: a self-learning organisation at BPS Level 3.', { hold: 600 });
+    await this.waitStep(ctx);
+    // next: goal 2, the Mobility BPS Award
+    wall.setT27(2); ph.gesture('point', 2.4, { target: wall.spot(0.75, 0.55) });
+    ctx.cap('Goal 2: recognised in the Mobility BPS Award at BBM level.', { hold: 600 });
     await this.waitStep(ctx);
     // step 4: how we do it: the house drops in, its pillars still empty
     wall.setMode('house27'); wall.set27(false, 0, true); wall.set27(true, 0);

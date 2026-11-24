@@ -1886,13 +1886,37 @@
         "icon": "🎓",
         "head": "Self-learning organisation",
         "big": "BPS Level 3",
-        "sub": "BPS assessment · 2025: 1.96 → 2026: 2.4 → 2027: 3"
+        "sub": "BPS assessment score",
+        "steps": [
+          [
+            "2025",
+            "1.96"
+          ],
+          [
+            "2026",
+            "2.4"
+          ],
+          [
+            "2027",
+            "3.0"
+          ]
+        ]
       },
       {
         "icon": "🏆",
         "head": "Recognition",
         "big": "Mobility BPS Award",
-        "sub": "Recognised at BBM level"
+        "sub": "Recognised at BBM level",
+        "steps": [
+          [
+            "2026",
+            "TOP 5 · GB"
+          ],
+          [
+            "2027",
+            "BBM level"
+          ]
+        ]
       }
     ]
   }

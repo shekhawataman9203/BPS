@@ -162,7 +162,7 @@ class KpiWall {
   constructor(data, logoImg) {
     this.data = data; this.logoImg = logoImg; this.p = 1; this.animating = false;
     this.hl = { pillar: null, row: null }; this.layouts = { house: {}, roadmap: {}, kpi: {}, house27: {}, flash: {}, align: {}, target27: {} }; this.alignK = 1; this.mode = 'kpi';
-    this.h27 = { drop: 1, dropT: 1, rev: [1, 1, 1, 1], shown: 4 };
+    this.h27 = { drop: 1, dropT: 1, rev: [1, 1, 1, 1], shown: 4 }; this.t27 = { shown: 2, v: [1, 1] };
     // 2026 house build-up, one stage per Next: 0 white, 1 roof, 2 band, 3 pillars, 4-7 pillar content, 8 boosters, 9 statement
     this.h26 = { stage: 9, v: { roof: 1, band: 1, pil: [1, 1, 1, 1], con: [1, 1, 1, 1], boost: 1, stmt: 1 } }; this.hits = []; this.hover = null;
     this.ct = new CanvasTex(TEX_W, TEX_H, (ctx, W, H) => this.draw(ctx, W, H));
@@ -183,6 +183,8 @@ class KpiWall {
     if (snap) { r.drop = r.dropT; r.rev = r.rev.map((_, i) => (i < shown ? 1 : 0)); }
     this.ct.redraw();
   }
+  // Target 2027: how many target cards are on the screen (each Next adds one)
+  setT27(shown, snap = false) { const t = this.t27; t.shown = shown; if (snap) t.v = t.v.map((_, i) => (i < shown ? 1 : 0)); this.ct.redraw(); }
   set26(stage, snap = false) {
     const R = this.h26; R.stage = stage;
     if (snap) { const t = this.t26(); R.v = { roof: t.roof, band: t.band, pil: [...t.pil], con: [...t.con], boost: t.boost, stmt: t.stmt }; }
@@ -201,6 +203,9 @@ class KpiWall {
       if (JSON.stringify(v) !== before) dirty = true;
     }
     if (this.animating) { this.p = Math.min(1, this.p + dt / 2.2); dirty = true; if (this.p >= 1) this.animating = false; }
+    if (this.mode === 'target27') {
+      const t = this.t27; t.v = t.v.map((v, i) => { const g = i < t.shown ? 1 : 0; if (v === g) return v; dirty = true; return g > v ? Math.min(1, v + dt / 1.1) : 0; });
+    }
     if (this.mode === 'house27') {
       const r = this.h27;
       if (r.drop !== r.dropT) { r.drop = r.dropT > r.drop ? Math.min(r.dropT, r.drop + dt / 1.3) : Math.max(r.dropT, r.drop - dt / 0.6); dirty = true; }
@@ -264,23 +269,7 @@ class KpiWall {
     ctx.fillStyle = CSS.red; ctx.fillRect(0, HH - 8, W, 8);
     const L = this.layouts[this.mode];
     if (this.mode === 'align') { drawAlign(this, ctx, W, H, HH); return; }
-    if (this.mode === 'target27') {
-      const T = d.target2027, k = i => ease.out(clamp(p * 1.6 - i * 0.25, 0, 1));
-      const cw = (W - 360) / 2, ch = H - HH - 340, y0 = HH + 140;
-      T.items.forEach((it, i) => {
-        const x = 120 + i * (cw + 120), a = k(i); ctx.globalAlpha = a;
-        ctx.save(); ctx.translate(0, (1 - a) * 80);
-        ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y0, cw, ch);
-        ctx.fillStyle = i ? '#B8860B' : '#0A6EBD'; ctx.fillRect(x, y0, cw, 22);
-        ctx.textAlign = 'center';
-        ctx.font = `240px ${FONT}`; ctx.fillText(it.icon, x + cw / 2, y0 + 360);
-        ctx.fillStyle = '#4a525d'; ctx.font = `700 80px ${FONT}`; ctx.fillText(it.head, x + cw / 2, y0 + 520);
-        ctx.fillStyle = i ? '#9A6B00' : '#0A4F8A'; const fs = fitText(ctx, it.big, cw - 120, 190, 800); ctx.font = `800 ${fs}px ${FONT}`; ctx.fillText(it.big, x + cw / 2, y0 + 730);
-        ctx.fillStyle = '#5a6470'; ctx.font = `600 58px ${FONT}`; ctx.fillText(it.sub, x + cw / 2, y0 + 850);
-        ctx.textAlign = 'left'; ctx.restore();
-      });
-      ctx.globalAlpha = 1; return;
-    }
+    if (this.mode === 'target27') { drawTarget27(this, ctx, W, H, HH); return; }
     if (this.mode === 'house' || this.mode === 'house27') { drawHouse(this, ctx, W, H, HH, p, L, hits, isHover, this.mode === 'house27' ? d.house2027 : d.house, this.mode === 'house27' ? 'house27' : 'house'); return; }
     if (this.mode === 'roadmap') { drawRoadmap(this, ctx, W, H, HH, p, L, hits, isHover); return; }
     // six columns, one per element of the House of BPS GO!+, each with its roadmap KPIs
@@ -552,6 +541,65 @@ function drawRoadmap(w, ctx, W, H, HH, p, L, hits, isHover) {
       hits.push({ type: 'kpi', id: r.id, x: cx[1], y, w: acc - cx[1], h: rh }); L[r.id] = { u: (cx[1] + (acc - cx[1]) / 2) / W, v: (y + rh / 2) / H };
     }
     y += rh;
+  });
+  ctx.globalAlpha = 1;
+}
+
+function rrect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+// Target 2027: two goal cards, revealed one per Next (w.t27.v = reveal 0..1 per card)
+function drawTarget27(w, ctx, W, H, HH) {
+  const T = w.data.target2027, V27 = w.t27.v;
+  const g = ctx.createLinearGradient(0, HH, 0, H); g.addColorStop(0, '#eef3f9'); g.addColorStop(1, '#dde6f0');
+  ctx.fillStyle = g; ctx.fillRect(0, HH, W, H - HH);
+  const pad = 110, gap = 110, cw = (W - pad * 2 - gap) / 2, y0 = HH + 110, ch = H - y0 - 110;
+  T.items.forEach((it, i) => {
+    const a = ease.out(clamp(V27[i] || 0, 0, 1)); if (a <= 0) {
+      // placeholder outline so the empty slot reads as "coming next"
+      ctx.save(); ctx.setLineDash([30, 24]); ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(10,110,189,0.25)';
+      rrect(ctx, pad + i * (cw + gap), y0, cw, ch, 48); ctx.stroke(); ctx.restore();
+      ctx.fillStyle = 'rgba(10,110,189,0.35)'; ctx.font = `800 300px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText('?', pad + i * (cw + gap) + cw / 2, y0 + ch / 2 + 100); ctx.textAlign = 'left';
+      return;
+    }
+    const x = pad + i * (cw + gap), gold = i === 1;
+    const c1 = gold ? '#C8960C' : '#0A6EBD', c2 = gold ? '#8A5A00' : '#063E70', ink = gold ? '#7A4E00' : '#0A4F8A';
+    ctx.save(); ctx.globalAlpha = a; ctx.translate(x + cw / 2, y0 + ch / 2); const s = 0.85 + 0.15 * a; ctx.scale(s, s); ctx.translate(-(x + cw / 2), -(y0 + ch / 2) + (1 - a) * 120);
+    // card with shadow
+    ctx.shadowColor = 'rgba(6,30,60,0.28)'; ctx.shadowBlur = 80; ctx.shadowOffsetY = 30;
+    ctx.fillStyle = '#ffffff'; rrect(ctx, x, y0, cw, ch, 48); ctx.fill();
+    ctx.shadowColor = 'transparent';
+    // header band
+    ctx.save(); rrect(ctx, x, y0, cw, ch, 48); ctx.clip();
+    const hg = ctx.createLinearGradient(x, 0, x + cw, 0); hg.addColorStop(0, c1); hg.addColorStop(1, c2);
+    ctx.fillStyle = hg; ctx.fillRect(x, y0, cw, 170);
+    ctx.restore();
+    ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.font = `800 56px ${FONT}`; ctx.fillText(`GOAL ${i + 1}`, x + 80, y0 + 108);
+    ctx.fillStyle = '#ffffff'; ctx.font = `800 76px ${FONT}`; ctx.textAlign = 'right'; ctx.fillText(it.head, x + cw - 80, y0 + 112); ctx.textAlign = 'left';
+    // icon badge
+    const bx = x + cw / 2, by = y0 + 170 + 175, br = 135;
+    const bg = ctx.createRadialGradient(bx - 60, by - 60, 20, bx, by, br); bg.addColorStop(0, gold ? '#FFF4CC' : '#E3F0FC'); bg.addColorStop(1, gold ? '#F3D77A' : '#9CC7EE');
+    ctx.fillStyle = bg; ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 14; ctx.strokeStyle = c1; ctx.stroke();
+    ctx.textAlign = 'center'; ctx.font = `170px ${FONT}`; ctx.fillText(it.icon, bx, by + 60);
+    // big statement
+    ctx.fillStyle = ink; const fs = fitText(ctx, it.big, cw - 160, 230, 900); ctx.font = `900 ${fs}px ${FONT}`; ctx.fillText(it.big, bx, by + br + 210);
+    ctx.fillStyle = '#3f4853'; ctx.font = `700 64px ${FONT}`; ctx.fillText(it.sub, bx, by + br + 300);
+    ctx.textAlign = 'left';
+    // journey: rising steps
+    const steps = it.steps || [], sy = y0 + ch - 110, sx0 = x + 140, sw = cw - 280;
+    if (steps.length) {
+      const n = steps.length, bw = (sw - (n - 1) * 50) / n, maxH = Math.max(200, sy - (by + br + 360) - 40);
+      steps.forEach((st, k) => {
+        const kk = clamp(a * 1.6 - k * 0.25, 0, 1), bh = (maxH * (0.4 + 0.6 * k / Math.max(1, n - 1))) * kk, bxk = sx0 + k * (bw + 50);
+        const last = k === n - 1;
+        ctx.fillStyle = last ? c1 : (gold ? '#EBD9A6' : '#BFD8EF'); rrect(ctx, bxk, sy - bh, bw, Math.max(bh, 1), 22); ctx.fill();
+        ctx.textAlign = 'center';
+        ctx.fillStyle = last ? '#ffffff' : ink; ctx.font = `900 ${last ? 96 : 80}px ${FONT}`; if (bh > 120) ctx.fillText(st[1], bxk + bw / 2, sy - bh + (last ? 110 : 96));
+        ctx.fillStyle = '#5a6470'; ctx.font = `800 52px ${FONT}`; ctx.fillText(st[0], bxk + bw / 2, sy + 70);
+        ctx.textAlign = 'left';
+        if (k < n - 1 && kk > 0.9) { ctx.fillStyle = c1; ctx.font = `900 60px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText('➜', bxk + bw + 25, sy - bh - 30); ctx.textAlign = 'left'; }
+      });
+    }
+    ctx.restore();
   });
   ctx.globalAlpha = 1;
 }
