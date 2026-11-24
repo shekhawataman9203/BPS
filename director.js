@@ -48,10 +48,10 @@ export const CHAPTERS = [
   { id: 'glimpses', title: 'Glimpses 2026', sub: 'Moments from the year', loc: 'wall', dur: 30, stepped: true },
   { id: 'digitalsm', title: 'Digital SM', sub: 'Before and after at the supermarket', loc: 'floor', dur: 45, stepped: true },
   { id: 'glimpses2', title: 'Glimpses 2026', sub: 'Digital twin and awards', loc: 'wall', dur: 30, stepped: true },
+  { id: 'factcheck', title: 'BPS Fact Check', sub: 'The JaP Newsroom', loc: 'studio', dur: 900, stepped: true },
   { id: 'future', title: 'How 2027 looks like', sub: 'Back through the gate, into the plant of 2027', loc: 'gate', dur: 40, stepped: true },
   { id: 'plant', title: 'Picture of Future', sub: 'A walk through the modern plant', loc: 'floor', dur: 36 },
   { id: 'closing', title: 'Lead. Work. Win.', sub: 'Creating value. Together.', loc: 'close', dur: 18 },
-  { id: 'factcheck', title: 'BPS Fact Check', sub: 'The JaP Newsroom', loc: 'studio', dur: 900, stepped: true },
   { id: 'thanks', title: 'Thank You', sub: '', loc: 'close', dur: 14, stepped: true },
 ];
 
@@ -152,9 +152,9 @@ export class Director {
       case 'digitalsm':
         this.placeGroup(WAIT, () => PI); c.ph.place(8.3, -4.9, -PI / 2); c.bps.place(8.9, -5.7, -PI / 2); this.setWorld({ gate: true }); a.rig.cut(SHOT.sm_wide); break;
       case 'factcheck':
-        // studio: the BPS Lead stands in the 2027 plant, framed on the left; the others step out of shot
+        // studio: the BPS Lead stands in the 2026 plant, framed on the left; the others step out of shot
         c.ph.place(-14, 19, PI); c.prod.place(-15, 20, PI); c.qual.place(-13, 20, PI); c.bps.place(0, 22.2, 0);
-        this.setWorld({ gate: true, future: true, screen: 'house27' }); a.rig.cut(SHOT.fc_anchor); c.bps.lookAt(V(1.1, 1.66, 25.4)); break;
+        this.setWorld({ gate: true, screen: 'roadmap' }); a.rig.cut(SHOT.fc_anchor); c.bps.lookAt(V(1.1, 1.66, 25.4)); break;
       case 'thanks':
         this.placeGroup(WAIT, () => PI); this.setWorld({ gate: true, future: true, screen: 'house27' }); a.ui.thanks('show'); break;
       case 'closing':
