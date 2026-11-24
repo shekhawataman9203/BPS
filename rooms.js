@@ -161,7 +161,7 @@ function wrap(ctx, text, maxW) {
 class KpiWall {
   constructor(data, logoImg) {
     this.data = data; this.logoImg = logoImg; this.p = 1; this.animating = false;
-    this.hl = { pillar: null, row: null }; this.layouts = { house: {}, roadmap: {}, kpi: {}, house27: {}, flash: {}, align: {}, target27: {} }; this.alignK = 1; this.mode = 'kpi';
+    this.hl = { pillar: null, row: null }; this.layouts = { house: {}, roadmap: {}, kpi: {}, house27: {}, flash: {}, align: {}, target27: {}, gl26: {} }; this.alignK = 1; this.mode = 'kpi';
     this.h27 = { drop: 1, dropT: 1, rev: [1, 1, 1, 1], shown: 4 }; this.t27 = { shown: 2, v: [1, 1] };
     // Innovate · Simplify · Accelerate logos that drop onto the 2027 house (t = seconds since each one was dropped)
     this.isa = { shown: 0, t: [0, 0, 0] }; this.isaImg = {};
@@ -257,13 +257,13 @@ class KpiWall {
       const lh = 150, lw = this.logoImg.naturalWidth * lh / this.logoImg.naturalHeight;
       ctx.drawImage(this.logoImg, 60, (HH - lh) / 2, lw, lh); hits.push({ type: 'logo', id: 'logo', x: 40, y: 20, w: lw + 40, h: HH - 40 }); lx0 = 60 + lw + 60;
     }
-    const TITLES = { target27: ['Target 2027', 'Where BPS GO!+ takes JaP in 2027'], align: ['House of BPS GO!+  →  Roadmap 2026', 'Every element of the house has its block in the roadmap'], house27: ['House of BPS GO!+ 2027', 'How we do it · Strategy 2027 · click any element'], house: ['House of BPS GO!+', 'Strategy 2026 · click any element to zoom in'], roadmap: ['BPS GO!+ Roadmap 2026', 'Aligned with the house · click a row for its plan'], kpi: ['KPI wall 2026', `Target against ${rm.ytdLabel} · click any tile for details`] };
+    const TITLES = { gl26: ['Glimpses 2026', 'Moments from the year · a Gemba walk'], target27: ['Target 2027', 'Where BPS GO!+ takes JaP in 2027'], align: ['House of BPS GO!+  →  Roadmap 2026', 'Every element of the house has its block in the roadmap'], house27: ['House of BPS GO!+ 2027', 'How we do it · Strategy 2027 · click any element'], house: ['House of BPS GO!+', 'Strategy 2026 · click any element to zoom in'], roadmap: ['BPS GO!+ Roadmap 2026', 'Aligned with the house · click a row for its plan'], kpi: ['KPI wall 2026', `Target against ${rm.ytdLabel} · click any tile for details`] };
     const [tt, ts] = TITLES[this.mode];
     ctx.fillStyle = '#0A6EBD'; ctx.font = `800 96px ${FONT}`; ctx.fillText(tt, lx0, 118);
     ctx.fillStyle = '#4a525d'; ctx.font = `600 44px ${FONT}`; ctx.fillText(ts, lx0, 176);
     // view tabs: House · Roadmap · KPI wall
     let lx = W - 60;
-    for (const [m, label] of (this.mode === 'align' || this.mode === 'target27' ? [] : this.mode === 'house27' ? [['house27', '2027']] : [['kpi', 'KPI wall'], ['roadmap', 'Roadmap'], ['house', 'House']])) {
+    for (const [m, label] of (this.mode === 'align' || this.mode === 'target27' || this.mode === 'gl26' ? [] : this.mode === 'house27' ? [['house27', '2027']] : [['kpi', 'KPI wall'], ['roadmap', 'Roadmap'], ['house', 'House']])) {
       ctx.font = `700 44px ${FONT}`; const tw = ctx.measureText(label).width + 70, on = this.mode === m, hov = isHover('mode', m);
       ctx.fillStyle = on ? '#0A6EBD' : hov ? '#dfe9f4' : '#eef1f4'; ctx.fillRect(lx - tw, 50, tw, 100);
       ctx.fillStyle = on ? '#ffffff' : '#12161C'; ctx.textAlign = 'center'; ctx.fillText(label, lx - tw / 2, 116); ctx.textAlign = 'left';
@@ -278,6 +278,18 @@ class KpiWall {
     const L = this.layouts[this.mode];
     if (this.mode === 'align') { drawAlign(this, ctx, W, H, HH); return; }
     if (this.mode === 'target27') { drawTarget27(this, ctx, W, H, HH); return; }
+    if (this.mode === 'gl26') {
+      // Glimpses 2026 cover on the big screen
+      const G = d.glimpses || {}, a = ease.out(clamp(p * 1.4, 0, 1));
+      const g = ctx.createLinearGradient(0, HH, 0, H); g.addColorStop(0, '#0d1420'); g.addColorStop(1, '#1b2a40'); ctx.fillStyle = g; ctx.fillRect(0, HH, W, H - HH);
+      ctx.globalAlpha = a; ctx.textAlign = 'center';
+      ctx.font = `200px ${FONT}`; ctx.fillText((G.icons || []).join('   '), W / 2, HH + 420);
+      ctx.fillStyle = '#ffffff'; ctx.font = `900 330px ${FONT}`; ctx.fillText(G.title || 'Glimpses 2026', W / 2, HH + 860 - (1 - a) * 60);
+      ctx.fillStyle = CSS.red; ctx.fillRect(W / 2 - 260 * a, HH + 940, 520 * a, 20);
+      ctx.fillStyle = '#c8d2de'; ctx.font = `600 82px ${FONT}`; ctx.fillText(G.subtitle || '', W / 2, HH + 1100);
+      ctx.fillStyle = '#29d3ff'; ctx.font = `800 70px ${FONT}`; ctx.fillText('Gemba walk  ·  follow us onto the shop floor  →', W / 2, H - 170);
+      ctx.textAlign = 'left'; ctx.globalAlpha = 1; return;
+    }
     if (this.mode === 'house' || this.mode === 'house27') { drawHouse(this, ctx, W, H, HH, p, L, hits, isHover, this.mode === 'house27' ? d.house2027 : d.house, this.mode === 'house27' ? 'house27' : 'house'); return; }
     if (this.mode === 'roadmap') { drawRoadmap(this, ctx, W, H, HH, p, L, hits, isHover); return; }
     // six columns, one per element of the House of BPS GO!+, each with its roadmap KPIs

@@ -875,3 +875,75 @@ body.roadmap-open #stepHint { top: calc(var(--top-h) + 14px); bottom: auto; righ
 .fc-ticker-track { animation-duration: 12s; }
 #factcheck[data-state="open"] .fc-card, #factcheck[data-state="signoff"] .fc-card { margin: auto 0; text-align: center; } #factcheck[data-state="open"] .fc-big, #factcheck[data-state="signoff"] .fc-big { font-size: clamp(40px, 5.6vw, 96px); }
 #factcheck[data-state="open"] .fc-evidence, #factcheck[data-state="signoff"] .fc-evidence { display: none; }
+
+/* ---------- Glimpses as a Gemba walk: the slide sits on a board in the plant ---------- */
+#glimpses.gemba { background: transparent; pointer-events: none; }
+#glimpses.gemba .gl-stage { display: block; }
+#glimpses.gemba .gl-slide { position: absolute; aspect-ratio: auto; box-shadow: none; pointer-events: auto; transition: opacity .6s; }
+#glimpses.gemba .gl-s-title { font-size: calc(var(--gls, .9) * 3.4vw); }
+#glimpses.gemba .gl-s-event { font-size: calc(var(--gls, .9) * 2.2vw); }
+#glimpses.gemba.focus .gl-slide::after { background: rgba(10, 13, 18, .55); }
+.gl-img[data-st="zoomed"] { z-index: 1; box-shadow: none; transition: left 1.3s var(--ease), top 1.3s var(--ease), width 1.3s var(--ease), height 1.3s var(--ease); }
+.gl-headbg { position: absolute; left: 0; right: 0; top: 0; height: 17.5%; background: #fff; z-index: 2; box-shadow: 0 6px 14px rgba(0,0,0,.08); }
+.gl-headbg ~ .gl-s-title, .gl-s-title, .gl-s-event, .gl-s-logo, .gl-s-foot { z-index: 3; }
+/* highlight on a zoomed chart */
+.gl-hl { position: absolute; z-index: 4; width: 0; height: 0; pointer-events: none; opacity: 0; transition: opacity .4s; }
+.gl-hl.on { opacity: 1; }
+.gl-hl-ring { position: absolute; left: 0; top: 0; width: 9vw; height: 9vw; max-width: 160px; max-height: 160px; transform: translate(-50%, -50%) scale(.2); border: .45vw solid #E20015; border-radius: 50%; box-shadow: 0 0 0 .3vw rgba(255,255,255,.8), 0 0 30px rgba(226,0,21,.6); }
+.gl-hl.on .gl-hl-ring { animation: glRing 1.6s cubic-bezier(.2,1.4,.4,1) forwards, glRingPulse 1.4s ease-in-out 1.6s infinite; }
+.gl-hl-ring.r2 { border-width: .2vw; opacity: .6; }
+.gl-hl.on .gl-hl-ring.r2 { animation: glRingWave 1.8s ease-out .6s infinite; }
+@keyframes glRing { to { transform: translate(-50%, -50%) scale(1); } }
+@keyframes glRingPulse { 50% { transform: translate(-50%, -50%) scale(1.08); } }
+@keyframes glRingWave { from { transform: translate(-50%, -50%) scale(.9); opacity: .8; } to { transform: translate(-50%, -50%) scale(1.9); opacity: 0; } }
+.gl-hl-tag { position: absolute; right: 6vw; top: 3vw; white-space: nowrap; background: linear-gradient(135deg, #12161C, #2a3240); color: #fff; padding: .7vw 1.2vw; border-left: .4vw solid #E20015; border-radius: 6px; box-shadow: 0 10px 30px rgba(0,0,0,.35); transform: translateX(30px); opacity: 0; transition: transform .7s var(--ease) .5s, opacity .5s .5s; }
+.gl-hl.on .gl-hl-tag { transform: none; opacity: 1; }
+.gl-hl-tag b { display: block; font-size: clamp(14px, 1.9vw, 34px); color: #FFD34D; }
+.gl-hl-tag small { display: block; margin-top: .2em; font-size: clamp(11px, 1.05vw, 18px); color: #cfd6de; font-weight: 600; }
+/* incremental improvement staircase */
+.gl-improve { position: absolute; z-index: 3; display: flex; flex-direction: column; background: linear-gradient(170deg, #F2FBF4, #E3F4E8); border: 2px solid #1E9E3C; border-radius: 10px; padding: 1.2% 1.4%; box-shadow: 0 12px 30px rgba(30,158,60,.25); font-family: Arial, Helvetica, sans-serif; opacity: 0; transform: translateX(40px); transition: opacity .6s, transform .7s var(--ease); }
+.gl-improve.on { opacity: 1; transform: none; }
+.gi-title { margin: 0 0 .3em; font-weight: 800; color: #12161C; font-size: clamp(12px, 1.5vw, 26px); }
+.gi-stairs { position: relative; flex: 1; display: flex; align-items: flex-end; gap: 6%; padding: 0 2% 12%; }
+.gi-step { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 6%; border-radius: 6px 6px 0 0; background: linear-gradient(180deg, #4CC26A, #1E9E3C); color: #fff; transform: scaleY(0); transform-origin: bottom; }
+.gl-improve.on .gi-step { animation: giGrow .7s cubic-bezier(.2,1.3,.4,1) forwards; animation-delay: calc(.5s + var(--k) * .45s); }
+.gi-step:not(:last-of-type) { background: linear-gradient(180deg, #A9DDB7, #6FBF86); }
+.gi-step b { font-size: clamp(11px, 1.35vw, 24px); }
+.gi-step small { font-size: clamp(8px, .75vw, 13px); opacity: .9; }
+.gi-step em { position: absolute; bottom: -1.6em; font-style: normal; font-weight: 800; color: #12161C; font-size: clamp(10px, 1vw, 17px); }
+@keyframes giGrow { to { transform: none; } }
+.gi-arrow { position: absolute; inset: 0 2% 12% 2%; width: 96%; height: 88%; overflow: visible; pointer-events: none; }
+.gi-arrow polyline { fill: none; stroke: #0A6EBD; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 100; stroke-dashoffset: 100; vector-effect: non-scaling-stroke; }
+.gi-arrow polyline { stroke-width: 6px; }
+.gl-improve.on .gi-arrow polyline { animation: giDraw 1.6s ease-in-out 2.4s forwards, giPulse 1.6s ease-in-out 4.2s infinite; }
+@keyframes giDraw { to { stroke-dashoffset: 0; } }
+@keyframes giPulse { 50% { stroke: #29d3ff; } }
+.gi-note { margin: .4em 0 0; text-align: center; font-weight: 800; color: #1E9E3C; font-size: clamp(13px, 1.7vw, 30px); opacity: 0; transition: opacity .6s 3.6s; }
+.gl-improve.on .gi-note { opacity: 1; }
+/* sizes relative to the slide, so they scale with the board */
+.gl-slide { container-type: inline-size; }
+.gi-title { font-size: 1.55cqw; }
+.gi-stairs { gap: 4%; padding: 0 1% 14%; }
+.gi-step b { font-size: 1.45cqw; }
+.gi-step small { font-size: .75cqw; }
+.gi-step em { font-size: 1.1cqw; }
+.gi-note { font-size: 1.7cqw; }
+.gl-hl-ring { width: 8cqw; height: 8cqw; border-width: .45cqw; }
+.gl-hl-ring.r2 { border-width: .2cqw; }
+.gl-hl-tag { right: 5cqw; top: 3.5cqw; padding: .7cqw 1.2cqw; border-left-width: .45cqw; }
+.gl-hl-tag b { font-size: 2cqw; }
+.gl-hl-tag small { font-size: 1.1cqw; }
+#glimpses.gemba .gl-s-title { font-size: 3.6cqw; }
+#glimpses.gemba .gl-s-event { font-size: 2.1cqw; }
+#glimpses.gemba .gl-caption { display: none; }
+.gl-box-title { font-size: 1.9cqw; }
+.gl-box ul { font-size: 1.6cqw; }
+.gl-box-award .gl-box-title { font-size: 1.15cqw; }
+.gl-box-award ul { font-size: 1.5cqw; }
+.gl-tag { font-size: 1.1cqw; }
+/* VSP: falling lead time, the last (best) bar highlighted, arrow running down the bar tops */
+.gi-arrow { inset: 0 1% 14% 1%; width: 98%; height: 86%; }
+.gi-arrow polyline { stroke: #E20015; }
+@keyframes giPulse { 50% { stroke: #1E9E3C; } }
+.gi-step:not(:last-of-type) { background: linear-gradient(180deg, #F2A3A3, #D96B6B); }
+.gi-step:last-of-type { background: linear-gradient(180deg, #4CC26A, #1E9E3C); }

@@ -186,6 +186,7 @@ async function boot() {
     // a full-screen card (Glimpses, 'How 2027 looks like') hides the scene: skip drawing it so the card animates smoothly
     if (!ui.covering()) { if (Q[quality].bloom) composer.render(); else renderer.render(scene, camera); }
     ui.updatePins(camera, W, H);
+    ui.trackGlimpse(camera, W, H);
     app.hoverScreen();
     // adaptive quality after the visitor has entered
     if (document.body.classList.contains('entered') && !document.hidden) {

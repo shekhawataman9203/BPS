@@ -905,8 +905,89 @@
       "💡",
       "🏭"
     ],
-    "subtitle": "Moments that moved BPS GO!+ this year",
+    "subtitle": "A Gemba walk through the moments that moved BPS GO!+ this year",
     "months": [
+      {
+        "month": "Gradual VSP 2026",
+        "event": "VSP maturity · Q1 → Q4 VSD",
+        "slideEvent": "Gradual VSP 2026 · VSP maturity, quarter by quarter",
+        "part": 1,
+        "images": [
+          {
+            "src": "vsp-2026.jpg",
+            "entry": "fade",
+            "caption": "Gradual VSP 2026 · Q1 to Q4 VSD",
+            "slot": [
+              2,
+              22,
+              70,
+              58.3
+            ]
+          }
+        ],
+        "improve": {
+          "slot": [
+            74,
+            19,
+            24.5,
+            74
+          ],
+          "title": "Lead time (VSD)",
+          "unit": "days",
+          "steps": [
+            [
+              "Q1",
+              "11.16"
+            ],
+            [
+              "Q2",
+              "10.93"
+            ],
+            [
+              "Q3",
+              "10.79"
+            ],
+            [
+              "Q4",
+              "10.19"
+            ]
+          ],
+          "note": "11.16 → 10.19 days · −8.7%"
+        }
+      },
+      {
+        "month": "DLPC maturity",
+        "event": "LPC adherence · BPS elements",
+        "slideEvent": "DLPC maturity · LPC adherence by BPS element",
+        "part": 1,
+        "images": [
+          {
+            "src": "lpc-adherence.jpg",
+            "entry": "fade",
+            "caption": "LPC adherence report · BPS elements",
+            "slot": [
+              5,
+              19.5,
+              90,
+              74.1
+            ],
+            "zoom": {
+              "rect": [
+                0.3345,
+                0.015,
+                0.311,
+                0.51
+              ],
+              "point": [
+                0.608,
+                0.138
+              ],
+              "label": "90% · Highest in ROIN",
+              "sub": "JaP · LPC adherence – Pull"
+            }
+          }
+        ]
+      },
       {
         "month": "April 2026",
         "event": "Space Workshop 2026",
@@ -943,58 +1024,6 @@
           }
         ],
         "part": 1
-      },
-      {
-        "month": "Vision Workshop",
-        "event": "VE Vision 2030 · co-created with the HigP team",
-        "part": 1,
-        "images": [
-          {
-            "src": "ve-cocreate-1.jpg",
-            "caption": "Co-creating the VE vision with the HigP team · Gemba",
-            "slot": [
-              8,
-              24,
-              41,
-              62
-            ]
-          },
-          {
-            "src": "ve-cocreate-2.jpg",
-            "caption": "Co-creating the VE vision with the HigP team · workshop",
-            "slot": [
-              51,
-              24,
-              41,
-              62
-            ]
-          },
-          {
-            "src": "ve-vision-2030.jpg",
-            "caption": "VE Vision 2030",
-            "slot": [
-              10,
-              17,
-              80,
-              80
-            ],
-            "pushes": {
-              "0": [
-                76.7,
-                19.3,
-                6.4,
-                10.8
-              ],
-              "1": [
-                83.2,
-                19.3,
-                6.4,
-                10.8
-              ]
-            }
-          }
-        ],
-        "slideEvent": "VE Vision 2030 · co-created with HigP"
       },
       {
         "month": "Digital DLR tool",
@@ -1094,6 +1123,58 @@
             ]
           }
         ]
+      },
+      {
+        "month": "Vision Workshop",
+        "event": "VE Vision 2030 · co-created with the HigP team",
+        "part": 2,
+        "images": [
+          {
+            "src": "ve-cocreate-1.jpg",
+            "caption": "Co-creating the VE vision with the HigP team · Gemba",
+            "slot": [
+              8,
+              24,
+              41,
+              62
+            ]
+          },
+          {
+            "src": "ve-cocreate-2.jpg",
+            "caption": "Co-creating the VE vision with the HigP team · workshop",
+            "slot": [
+              51,
+              24,
+              41,
+              62
+            ]
+          },
+          {
+            "src": "ve-vision-2030.jpg",
+            "caption": "VE Vision 2030",
+            "slot": [
+              10,
+              17,
+              80,
+              80
+            ],
+            "pushes": {
+              "0": [
+                76.7,
+                19.3,
+                6.4,
+                10.8
+              ],
+              "1": [
+                83.2,
+                19.3,
+                6.4,
+                10.8
+              ]
+            }
+          }
+        ],
+        "slideEvent": "VE Vision 2030 · co-created with HigP"
       },
       {
         "month": "February 2026",

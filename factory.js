@@ -964,10 +964,49 @@ export function buildFactory(scene, renderer, data = {}) {
     for (const a of moreAgvs) { a.u = (a.u + dt * 1.15 / agvLen) % 1; agvPath.getPointAt(a.u, a.g.position); agvPath.getTangentAt(a.u, tmpT); a.g.rotation.y = Math.atan2(tmpT.x, tmpT.z) + Math.PI / 2; }
   });
 
+  // ---------- Glimpses 2026 boards along the gangway (Gemba walk): part 1 west, part 2 east ----------
+  const glG = new THREE.Group(); glG.name = 'glimpse-boards'; root.add(glG);
+  const glBoards = [];
+  {
+    const GL = data.glimpses || { months: [] }, PW = 4.0, PH = 2.25, PY = 1.95, BZ = 15.8;
+    let imgs = {}; try { imgs = JSON.parse(document.getElementById('glimpse-images')?.textContent || '{}'); } catch (e) { /* none */ }
+    const frameM = mat(0x8d96a0, { rough: 0.35, metal: 0.7 }), legM = mat(0x5b6570, { rough: 0.4, metal: 0.6 });
+    let n1 = 0, n2 = 0;
+    GL.months.forEach((M, mi) => {
+      const part = M.part || 1, k = part === 1 ? n1++ : n2++;
+      const x = part === 1 ? -10.4 - k * 4.6 : 7.6 + k * 4.6; // west boards start past the end of the big screen
+      const g = new THREE.Group(); g.position.set(x, 0, BZ); glG.add(g);
+      // preview of the slide, seen from a distance
+      const pics = [];
+      const ct = new CanvasTex(1600, 900, (ctx, w, h) => {
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = '#1673C4'; ctx.font = `400 62px Arial, Helvetica, sans-serif`; ctx.fillText(GL.title, 34, 88);
+        ctx.fillStyle = '#111'; ctx.font = `400 38px Arial, Helvetica, sans-serif`; ctx.textAlign = 'center'; ctx.fillText(M.slideEvent ?? M.event, w / 2, 150); ctx.textAlign = 'left';
+        M.images.forEach((im, i) => { const p = pics[i]; if (!p || !p.complete || !p.naturalWidth) return;
+          const [sx, sy, sw, sh] = im.slot; const bw = sw / 100 * w, bh = sh / 100 * h, r = Math.min(bw / p.naturalWidth, bh / p.naturalHeight);
+          const dw = p.naturalWidth * r, dh = p.naturalHeight * r; ctx.drawImage(p, sx / 100 * w + (bw - dw) / 2, sy / 100 * h + (bh - dh) / 2, dw, dh); });
+        const gr = ctx.createLinearGradient(0, 0, w, 0); ['#b51e3a', '#d4122e', '#4b2d82', '#1a5aa5', '#12a5d8', '#18a03e', '#7ac143'].forEach((c, i, a) => gr.addColorStop(i / (a.length - 1), c));
+        ctx.fillStyle = gr; ctx.fillRect(0, h - 12, w, 12);
+      });
+      M.images.forEach((im, i) => { if (!imgs[im.src]) return; const p = new Image(); p.onload = () => ct.redraw(); p.src = imgs[im.src]; pics[i] = p; });
+      const panel = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), new THREE.MeshBasicMaterial({ map: ct.tex, toneMapped: false }));
+      panel.position.set(0, PY, 0.05); g.add(panel);
+      box(PW + 0.16, PH + 0.16, 0.08, frameM, 0, PY, 0, g);
+      for (const sx of [-PW / 2 + 0.25, PW / 2 - 0.25]) { box(0.07, PY - PH / 2, 0.07, legM, sx, (PY - PH / 2) / 2, -0.02, g); box(0.09, 0.04, 0.7, legM, sx, 0.02, 0, g); }
+      // header plate: Glimpses 2026 · stop n
+      const hd = new CanvasTex(1024, 128, (ctx, w, h) => { ctx.fillStyle = '#12161C'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = CSS.red; ctx.fillRect(0, h - 10, w, 10);
+        ctx.fillStyle = '#fff'; ctx.font = `800 58px ${FONT}`; ctx.fillText('GLIMPSES 2026', 30, 82); ctx.fillStyle = '#29d3ff'; ctx.font = `700 44px ${FONT}`; ctx.textAlign = 'right'; ctx.fillText(M.month, w - 30, 80); });
+      const hm = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.325), new THREE.MeshBasicMaterial({ map: hd.tex, toneMapped: false })); hm.position.set(0, PY + PH / 2 + 0.3, 0.02); g.add(hm);
+      box(0.05, 0.22, 0.05, legM, -0.9, PY + PH / 2 + 0.1, 0, g); box(0.05, 0.22, 0.05, legM, 0.9, PY + PH / 2 + 0.1, 0, g);
+      shadows(g, true, false);
+      glBoards[mi] = { obj: panel, w: PW, h: PH, x, z: BZ, y: PY, part };
+    });
+  }
+
   return {
-    root, hotspots, agvs, outside: out, sm: smRow,
+    root, hotspots, agvs, outside: out, sm: smRow, glBoards,
     setFuture(on) {
-      futureOn = on; future.visible = on; digitalTarget = on ? 1 : digitalTarget;
+      futureOn = on; future.visible = on; glG.visible = !on; digitalTarget = on ? 1 : digitalTarget;
       doorWords = on ? { left: ['2027', 'How 2027 looks like'], right: ['FUTURE', 'BPS GO!+'], accent: '#29d3ff' } : { left: ['2026', 'Reflection'], right: ['FLASHBACK', 'BPS GO!+'], accent: CSS.red };
       leafTexes.forEach(t => t.redraw());
     },

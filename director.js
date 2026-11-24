@@ -122,7 +122,7 @@ export class Director {
     const a = this.app;
     a.factory.sm.setScreen(smScreen || future); a.ui.smNote('close');
     a.entrance.wall.setMode(screen); a.entrance.wall.set26(9, true);
-    a.factory.setDigital(digital); a.factory.setFuture(future); a.ui.yearCard(null); a.ui.glimpses('close'); a.ui.thanks('hide'); a.ui.factCheck('close');
+    a.factory.setDigital(digital); a.factory.setFuture(future); a.ui.yearCard(null); a.ui.glimpses('close'); a.ui.glimpses('gemba', null); a.ui.thanks('hide'); a.ui.factCheck('close');
     a.factory.gate.snap(gate);
     a.entrance.snapBuild(build); a.entrance.highlight(null); a.entrance.hideConfetti();
     a.entrance.wall.highlight(null, null);
@@ -142,9 +142,13 @@ export class Director {
         a.rig.orbit([0, 0, 4], 62, 44, 0.03, 1.1); break;
       case 'flashback':
         this.placeGroup(WAIT, () => 0); c.ph.place(0, 48, PI); this.setWorld({ gate: false, build: 1, screen: 'flash' }); a.rig.cut(SHOT.g_far); break;
-      case 'house': case 'roadmap': case 'kpis': case 'glimpses': case 'glimpses2':
+      case 'house': case 'roadmap': case 'kpis': case 'glimpses':
         this.placeGroup(WALLTEAM, this.yawTo(W.x, W.z)); c.ph.place(-4.6, 24.4, Math.atan2(W.x + 4.6, W.z - 24.4));
-        this.setWorld({ gate: true, screen: { house: 'flash', roadmap: 'roadmap', kpis: 'kpi', glimpses: 'kpi', glimpses2: 'kpi' }[id] }); if (id === 'house') a.entrance.wall.set26(0, true); a.rig.cut(SHOT.k_wall); break;
+        this.setWorld({ gate: true, screen: { house: 'flash', roadmap: 'roadmap', kpis: 'kpi', glimpses: 'gl26' }[id] }); if (id === 'house') a.entrance.wall.set26(0, true); a.rig.cut(SHOT.k_wall); break;
+      case 'glimpses2':
+        // back on the gangway, on the VE side, walking on to the next boards
+        c.ph.place(1.2, 18.0, PI / 2); c.bps.place(0.4, 18.7, PI / 2); c.prod.place(-0.4, 18.1, PI / 2); c.qual.place(0.3, 17.4, PI / 2);
+        this.setWorld({ gate: true, screen: 'kpi' }); a.rig.cut({ pos: [-3.5, 2.6, 22.5], target: [6, 1.4, 16], fov: 56 }); break;
       case 'future':
         this.placeGroup(WAIT, () => 0); c.ph.place(0, 40.5, PI); this.setWorld({ gate: false, future: true, screen: 'house27' }); a.entrance.wall.set27(false, 0, true); a.rig.cut(SHOT.g_door); break;
       case 'plant':
@@ -169,7 +173,11 @@ export class Director {
       case 'flashback': a.factory.gate.snap(true); this.placeGroup(WAIT, () => 0); c.ph.place(0, 27.4, PI); c.bps.place(-0.6, 26.3, PI * 0.75); lookAll(c.ph); a.rig.cut(SHOT.in_both); break;
       case 'house': a.entrance.wall.setMode('house'); a.entrance.wall.set26(9, true); a.rig.cut(SHOT.k_wall); lookAll(this.wallCenter()); a.ui.toggleScreenView(true); break;
       case 'roadmap': case 'kpis': a.rig.cut(SHOT.k_wall); lookAll(this.wallCenter()); break;
-      case 'glimpses': case 'glimpses2': { const G = a.data.glimpses, part = id === 'glimpses' ? 1 : 2, ids = G.months.map((m, k) => ((m.part || 1) === part ? k : -1)).filter(k => k >= 0), last = ids[ids.length - 1]; a.ui.glimpses('month', last); a.ui.glimpses('compose', last); break; }
+      case 'glimpses': case 'glimpses2': {
+        const G = a.data.glimpses, part = id === 'glimpses' ? 1 : 2, ids = G.months.map((m, k) => ((m.part || 1) === part ? k : -1)).filter(k => k >= 0), last = ids[ids.length - 1], b = a.factory.glBoards?.[last];
+        if (b) { const S = this.boardSpots(b), C = V(b.x, b.y, b.z); for (const [k, [x, z]] of Object.entries(S)) { c[k].place(x, z, Math.atan2(b.x - x, b.z - z)); c[k].lookAt(C); } a.rig.cut(this.boardShot(b, true)); a.ui.glimpses('gemba', b); }
+        a.ui.glimpses('month', last, 'nocard'); a.ui.glimpses('compose', last); break;
+      }
       case 'future': a.factory.gate.snap(true); this.placeGroup(WALLTEAM, this.yawTo(KPI_WALL.x, KPI_WALL.z)); c.ph.place(-4.6, 24.4, Math.atan2(KPI_WALL.x + 4.6, KPI_WALL.z - 24.4)); lookAll(this.wallCenter()); a.entrance.wall.set27(true, 4, true); a.rig.cut(SHOT.k_wall); break;
       case 'plant': c.ph.place(22.2, 5.0, 0.6); c.bps.place(21.1, 4.6, 0.6); c.qual.place(23.4, 5.7, -2.4); a.rig.cut(SHOT.p_cell); break;
       case 'closing': this.rowTeam(true); a.rig.cut(SHOT.c_crane); break;
@@ -223,7 +231,7 @@ export class Director {
   finish(id) {
     const ui = this.app.ui;
     this.scriptDone = true; this.doneAt = this.chapterTime; this.app.timeScale = 1; this.stepRes = null; ui.stepHint(false); ui.showSkip(false); ui.letterbox(false);
-    if (!['opening', 'thanks', 'factcheck'].includes(id)) ui.openPanel();
+    if (!['opening', 'thanks', 'factcheck', 'glimpses', 'glimpses2'].includes(id)) ui.openPanel();
     ui.setPins(this.pinsFor(id));
   }
   // stepped chapters: the script waits here until Next (→, Space, clicker) is pressed
@@ -458,23 +466,73 @@ export class Director {
 
   async glimpses(ctx) { return this.runGlimpses(ctx, 1); }
   async glimpses2(ctx) { return this.runGlimpses(ctx, 2); }
-  // Glimpses, part 1 (before the Digital SM scene) or part 2 (after it)
+  // camera shots for a Glimpses board: wide (team and board) and close (board fills most of the view, team at its sides)
+  boardShot(b, close) {
+    const s = b.part === 1 ? -1 : 1; // look from the outer side, away from the big screen
+    return close ? { pos: [b.x, b.y, b.z + 3.9], target: [b.x, b.y, b.z], fov: 50 }
+      : { pos: [b.x + s * 2.6, 2.7, b.z + 5.8], target: [b.x - s * 0.5, 1.5, b.z], fov: 54 };
+  }
+  // where the team stands at a board: Plant Head left, the others right / behind
+  boardSpots(b) { return { ph: [b.x - 2.45, b.z + 0.75], bps: [b.x + 2.45, b.z + 0.75], prod: [b.x + 3.0, b.z + 1.7], qual: [b.x - 3.0, b.z + 1.7] }; }
+  // Gemba walk to a board along the gangway
+  async walkToBoard(ctx, b, from = null) {
+    const c = this.cast, S = this.boardSpots(b), GZ = 18.3, sp = 2.1;
+    const ids = ['ph', 'bps', 'prod', 'qual'];
+    const walks = ids.map((id, k) => {
+      const m = c[id], p = m.root.position, [tx, tz] = S[id], lane = GZ + (k % 2 ? 0.55 : -0.25);
+      // from the big screen: round its south end (it reaches the gangway at x -6.3, z 17)
+      const pts = from === 'wall' ? [[-4.8 + k * 0.3, 19.6 + (k % 2) * 0.4], [-5.6 - k * 0.2, 16.25 + (k % 2) * 0.3], [tx, tz]] : [[p.x, lane], [tx, lane], [tx, tz]];
+      return new Promise(res => ctx.later(k * 0.25, () => m.walkTo(pts, { speed: sp, onArrive: () => res() })));
+    });
+    if (from === 'wall') {
+      // the camera stays east of the big screen, then slips round its end to the board
+      ctx.cam({ pos: [1.0, 2.6, 23.5], target: [-6, 1.4, 16.5], fov: 56 }, 2.4, { easing: ease.inOutSine, arc: 0 });
+      await ctx.wait(2.6);
+      await ctx.dip(() => ctx.cut(this.boardShot(b, false))); // quick cut to the gangway side of the board
+    } else ctx.cam(this.boardShot(b, false), 4.2, { easing: ease.inOutSine, arc: 0 });
+    await walks[0];
+    await Promise.race([Promise.all(walks), ctx.wait(2.5)]);
+    const C = V(b.x, b.y, b.z);
+    ids.forEach(id => { c[id].faceTo?.(C); c[id].lookAt(C); });
+  }
+  // Glimpses, part 1 (before the Digital SM scene) or part 2 (after it): a Gemba walk, one board per story
   async runGlimpses(ctx, part) {
-    const ui = this.app.ui, G = this.app.data.glimpses;
-    if (part === 1) { ui.glimpses('cover'); await this.waitStep(ctx); } // black cover: Glimpses 2026
+    const ui = this.app.ui, G = this.app.data.glimpses, boards = this.app.factory.glBoards || [], c = this.cast;
+    const have = JSON.parse(document.getElementById('glimpse-images')?.textContent || '{}');
+    if (part === 1) {
+      // the cover on the big screen
+      ctx.cap('Glimpses 2026: a Gemba walk through the year.', { hold: 600 });
+      await this.waitStep(ctx);
+    }
+    let first = true;
     for (let m = 0; m < G.months.length; m++) {
       const M = G.months[m]; if ((M.part || 1) !== part) continue;
-      ui.glimpses('month', m, 'nocard');             // straight to the slide, no month card
-      const have = JSON.parse(document.getElementById('glimpse-images')?.textContent || '{}');
+      const b = boards[m]; if (!b) continue;
+      if (!M.images.some(im => have[im.src])) continue; // no pictures for this story yet
+      // walk to the board
+      ui.glimpses('close'); ui.glimpses('gemba', null);
+      ctx.cap(`Gemba walk · ${M.month}`, { hold: 400 });
+      await this.walkToBoard(ctx, b, part === 1 && first ? 'wall' : null);
+      first = false;
+      c.ph.gesture('present', 2.4);
+      ctx.cam(this.boardShot(b, true), 1.6);
+      await ctx.wait(1.5);
+      ui.glimpses('gemba', b);
+      ui.glimpses('month', m, 'nocard');
+      ctx.cap(M.event, { hold: 600 });
       for (let i = 0; i < M.images.length; i++) {
         const im = M.images[i]; if (!have[im.src]) continue; // picture not added yet
-        if (im.entry === 'pop' || im.entry === 'fade') { ui.glimpses('pop', m, i); await this.waitStep(ctx); continue; } // straight into place (pop: with crackers)
-        ui.glimpses('full', m, i);                   // full screen; the others hidden
+        if (im.entry === 'pop' || im.entry === 'fade') ui.glimpses('pop', m, i); // straight into place (pop: with crackers)
+        else {
+          ui.glimpses('full', m, i);                 // fills the board; the others hidden
+          await this.waitStep(ctx);
+          if (im.noPlace) continue;                  // replaced by the next image before it settles
+          ui.glimpses('place', m, i);                // settles into its place on the slide
+        }
         await this.waitStep(ctx);
-        if (im.noPlace) continue;                    // replaced by the next image before it settles
-        ui.glimpses('place', m, i);                  // settles into its place on the slide
-        await this.waitStep(ctx);
+        if (im.zoom) { ui.glimpses('zoom', m, i); c.ph.gesture('point', 2.2, { target: V(b.x, b.y + 0.4, b.z) }); await this.waitStep(ctx); } // zoom into a chart, highlight
       }
+      if (M.improve) { ui.glimpses('improve', m); c.ph.gesture('point', 2.2, { target: V(b.x + 1.4, b.y, b.z) }); await this.waitStep(ctx); } // improvement staircase
       if (M.box) for (let k = 0; k < M.box.items.length; k++) { ui.glimpses('point', m, k); await this.waitStep(ctx); } // box: one item per Next
     }
   }

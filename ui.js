@@ -231,6 +231,12 @@ export class UI {
       } }); })(G.months[a ?? 0]);
     const syncTags = () => { syncCross(); syncDigi(); slide.querySelectorAll('.gl-tag').forEach(t => { const im = slide.querySelector(`.gl-img[data-i="${t.dataset.i}"]`); t.classList.toggle('on', !!im && ['placed', 'popped'].includes(im.dataset.st)); }); };
     if (action === 'close') { sec.hidden = true; set(''); return; }
+    // Gemba walk: the slide sits on a board in the plant (a = { obj, w, h } or null); trackGlimpse() keeps it on the board
+    if (action === 'gemba') {
+      this.glBoard = a || null; sec.classList.toggle('gemba', !!a);
+      if (!a) ['left', 'top', 'width', 'height'].forEach(k => { slide.style[k] = ''; });
+      return;
+    }
     sec.hidden = false;
     if (action === 'cover') {
       $('.gl-icons', sec).textContent = G.icons.join('  '); $('.gl-title', sec).textContent = G.title; $('.gl-sub', sec).textContent = G.subtitle || '';
@@ -241,7 +247,7 @@ export class UI {
       $('.gl-m-title', sec).textContent = M.month; $('.gl-m-event', sec).textContent = M.event;
       // prepare the slide for this month, all photos hidden
       $('.gl-s-title', sec).textContent = G.title; $('.gl-s-event', sec).textContent = M.slideEvent ?? M.event; $('.gl-s-logo', sec).src = $('#bpsLogoImg').src;
-      items().forEach(e => e.remove()); slide.querySelectorAll('.gl-box, .gl-tag, .gl-cross, .gl-arrow, .gl-digi').forEach(e => e.remove());
+      items().forEach(e => e.remove()); slide.querySelectorAll('.gl-box, .gl-tag, .gl-cross, .gl-arrow, .gl-digi, .gl-improve, .gl-hl, .gl-headbg').forEach(e => e.remove());
       if (M.box) {
         // content box whose items appear one per Next
         const bx = h('div', { class: 'gl-box' + (M.box.style ? ' gl-box-' + M.box.style : '') }, h('p', { class: 'gl-box-title' }, M.box.title), h('ul', {}, M.box.items.map(t => h('li', {}, t))));
@@ -255,6 +261,45 @@ export class UI {
         if (im.tag) { const tg = h('span', { class: 'gl-tag', 'data-i': i }, im.tag); tg.style.left = im.slot[0] + '%'; tg.style.top = im.slot[1] + '%'; slide.append(tg); }
       });
       set(b === 'nocard' ? 'slide' : 'month'); return;
+    }
+    if (action === 'improve') {
+      // incremental improvement: a staircase, quarter by quarter, with an arrow climbing it
+      const I = M.improve; if (!I) return;
+      set('slide'); sec.classList.remove('focus');
+      items().forEach((e, i) => { e.dataset.st = 'placed'; place(e, M.images[i].slot); });
+      let w = slide.querySelector('.gl-improve');
+      if (!w) {
+        // bars to scale (days fall quarter by quarter: the decline is the improvement), an arrow running down their tops
+        const n = I.steps.length, vals = I.steps.map(s => parseFloat(s[1])), hi = Math.max(...vals), lo = Math.min(...vals);
+        const hts = vals.map(v => 38 + 54 * (hi === lo ? 1 : (v - lo) / (hi - lo)));
+        const pts = hts.map((ht, k) => [((k + 0.5) / n) * 100, 100 - ht - 13]);
+        const svg = `<svg class="gi-arrow" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><defs><marker id="giHead" markerWidth="2.6" markerHeight="2.6" viewBox="0 0 6 6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#1E9E3C"/></marker></defs><polyline points="${pts.map(p => p.join(',')).join(' ')}" pathLength="100" marker-end="url(#giHead)"/></svg>`;
+        w = h('div', { class: 'gl-improve' },
+          h('p', { class: 'gi-title' }, '📉 ', I.title),
+          h('div', { class: 'gi-stairs' }, I.steps.map(([q, v], k) => h('div', { class: 'gi-step', style: `--k:${k};height:${hts[k]}%` }, h('b', {}, v), h('small', {}, I.unit), h('em', {}, q)))),
+          h('p', { class: 'gi-note' }, '▼ ', I.note));
+        w.querySelector('.gi-stairs').insertAdjacentHTML('beforeend', svg);
+        place(w, I.slot); slide.append(w);
+      }
+      void w.offsetWidth; w.classList.add('on'); syncTags(); return;
+    }
+    if (action === 'zoom') {
+      // zoom into one region of a picture (e.g. one chart) and highlight a point on it
+      const el = items()[b], im = M.images[b], Z = im && im.zoom; if (!el || !Z) return;
+      set('slide'); sec.classList.remove('focus'); $('.gl-caption', sec).classList.remove('on');
+      const S = im.slot, [zx, zy, zw, zh] = Z.rect, T = [4, 18, 92, 77];
+      const k = Math.min((T[2] * 16) / (zw * S[2] * 16), (T[3] * 9) / (zh * S[3] * 9));
+      const W2 = S[2] * k, H2 = S[3] * k, L = T[0] + T[2] / 2 - (zx + zw / 2) * W2, Tp = T[1] + T[3] / 2 - (zy + zh / 2) * H2;
+      el.dataset.st = 'zoomed'; place(el, [L, Tp, W2, H2]);
+      if (!slide.querySelector('.gl-headbg')) slide.append(h('i', { class: 'gl-headbg', 'aria-hidden': 'true' }));
+      slide.querySelector('.gl-hl')?.remove();
+      if (Z.point) {
+        const px = L + Z.point[0] * W2, py = Tp + Z.point[1] * H2;
+        const hl = h('div', { class: 'gl-hl' }, h('i', { class: 'gl-hl-ring' }), h('i', { class: 'gl-hl-ring r2' }), h('div', { class: 'gl-hl-tag' }, h('b', {}, '🏆 ', Z.label), Z.sub ? h('small', {}, Z.sub) : null));
+        hl.style.left = px + '%'; hl.style.top = py + '%'; slide.append(hl);
+        setTimeout(() => { hl.classList.add('on'); this.crackers(slide, [[px - 6, py - 8, 12, 16]], 2200); }, 1150);
+      }
+      syncTags(); return;
     }
     if (action === 'point') {
       set('slide'); sec.classList.remove('focus'); $('.gl-caption', sec).classList.remove('on');
@@ -558,7 +603,7 @@ export class UI {
       }, 600);
     }
   }
-  covering() { const g = document.getElementById('glimpses'), y = document.getElementById('yearcard'), t = document.getElementById('thanks'); return (g && !g.hidden && g.dataset.state) || (y && y.classList.contains('on')) || (t && t.classList.contains('on')); }
+  covering() { const g = document.getElementById('glimpses'), y = document.getElementById('yearcard'), t = document.getElementById('thanks'); return (g && !g.hidden && g.dataset.state && !g.classList.contains('gemba')) || (y && y.classList.contains('on')) || (t && t.classList.contains('on')); }
   // 'Press → for the next step' hint in stepped chapters
   stepHint(on) { const el = $('#stepHint'); if (el) el.classList.toggle('on', !!on); const b = $('#btnSkip'); if (b) b.firstChild.textContent = on ? 'Next step ' : 'Skip scene '; }
   hideTitleCard() { $('#titlecard').classList.remove('on'); this.cancel('tc'); }
@@ -976,6 +1021,18 @@ export class UI {
     if (p.type === 'zone') { const b = document.querySelector(`.proj[data-id="${p.id}"] .proj-head`); if (b && b.getAttribute('aria-expanded') !== 'true') { b.click(); return; } }
     if (p.type === 'kpiPillar') { const b = [...document.querySelectorAll('.chips button')].find(x => x.textContent === p.label); if (b) { b.click(); return; } }
     this.select(p.type, p.id);
+  }
+  // keep the Glimpses slide exactly on its board in the plant (Gemba walk)
+  trackGlimpse(camera, W, H) {
+    const B = this.glBoard, sec = document.getElementById('glimpses'); if (!B || !sec || sec.hidden) return;
+    const v = this._glV ||= [0, 1, 2, 3].map(() => new THREE.Vector3());
+    B.obj.updateMatrixWorld();
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9, behind = false;
+    [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sy], k) => { const p = v[k].set(sx * B.w / 2, sy * B.h / 2, 0.01); B.obj.localToWorld(p); p.project(camera); if (p.z > 1) behind = true;
+      const X = (p.x * 0.5 + 0.5) * W, Y = (-p.y * 0.5 + 0.5) * H; x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y); });
+    const sl = sec.querySelector('.gl-slide'); if (!sl) return;
+    sl.style.left = x0 + 'px'; sl.style.top = y0 + 'px'; sl.style.width = Math.max(0, x1 - x0) + 'px'; sl.style.height = Math.max(0, y1 - y0) + 'px';
+    sl.style.setProperty('--gls', ((x1 - x0) / Math.max(1, W)).toFixed(3)); sl.style.visibility = behind ? 'hidden' : '';
   }
   updatePins(camera, W, H) {
     for (const p of this.pins) {
