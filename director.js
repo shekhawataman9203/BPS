@@ -510,22 +510,22 @@ export class Director {
   }
 
   async factcheck(ctx) {
-    const ui = this.app.ui, F = this.app.data.factCheck, a = this.cast.bps;
+    const ui = this.app.ui, F = this.app.data.factCheck, A = F.audit, an = this.cast.bps;
     const cam = V(1.1, 1.66, 25.4), panel = V(2.6, 1.55, 22.6);
-    const toneGesture = { ok: 'thumbsUp', warn: 'think', bad: 'thumbsUp', fix: 'nod' };
-    a.lookAt(cam);
-    ui.factCheck('open'); a.gesture('wave', 2.4);
+    an.lookAt(cam);
+    ui.factCheck('open'); an.gesture('wave', 2.4);
     await this.waitStep(ctx);
-    for (let i = 0; i < F.claims.length; i++) {
-      const C = F.claims[i];
-      ui.factCheck('claim', i); a.lookAt(cam); a.gesture('present', 2.6);
-      await this.waitStep(ctx);
-      ui.factCheck('evidence', i); a.lookAt(panel); a.gesture('point', 2.6, { target: panel }); ctx.later(2.8, () => a.gesture('explain', 3));
-      await this.waitStep(ctx);
-      ui.factCheck('verdict', i); a.lookAt(cam); a.gesture(C.verdict.gesture || toneGesture[C.verdict.tone] || 'nod', 2.4);
-      await this.waitStep(ctx);
-    }
-    ui.factCheck('signoff'); a.lookAt(cam); a.gesture('armsOpen', 2.6); ctx.later(2.2, () => a.gesture('nod', 1.4));
+    ui.fcAudit('claim'); an.gesture('present', 2.6);                          // the claim: 85%
+    await this.waitStep(ctx);
+    ui.fcAudit('start'); an.lookAt(panel); an.gesture('point', 2.4, { target: panel }); // the roadmap check opens
+    await this.waitStep(ctx);
+    const n = A.blocks.reduce((s, b) => s + b.kpis.length, 0);
+    for (let i = 0; i < n; i++) { ui.fcAudit('kpi', i); an.gesture(i % 3 ? 'nod' : 'explain', 1.6); await this.waitStep(ctx); } // one KPI per Next
+    ui.fcAudit('result'); an.lookAt(cam); an.gesture('present', 2.4);       // the tally
+    await this.waitStep(ctx);
+    ui.fcAudit('verdict'); an.gesture('thumbsUp', 2.4);                     // the verdict
+    await this.waitStep(ctx);
+    ui.factCheck('signoff'); an.gesture('armsOpen', 2.6);
     await ctx.wait(1.0);
   }
 

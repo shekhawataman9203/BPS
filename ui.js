@@ -289,6 +289,7 @@ export class UI {
       $('.fc-ticker-track', el).append(h('span', {}, txt), h('span', { 'aria-hidden': 'true' }, txt));
     }
     el.hidden = false; document.body.classList.add('factcheck'); void el.offsetWidth; el.classList.add('on');
+    if (action === 'show') return;
     const card = $('.fc-card', el), ev = $('.fc-evidence', el), stamp = $('.fc-stamp', el), say = $('.fc-say', el);
     const idx = id => F.steps.findIndex(s => s.id === id);
     const setStep = (id, all = false) => $('.fc-steps', el).querySelectorAll('li').forEach(li => { li.classList.toggle('on', li.dataset.id === id); li.classList.toggle('done', all || (id != null && idx(li.dataset.id) < idx(id))); });
@@ -321,6 +322,62 @@ export class UI {
       stamp.append(h('small', {}, 'VERDICT'), h('span', {}, `${C.verdict.icon || ''} ${C.verdict.label}`));
       void stamp.offsetWidth; stamp.className = 'fc-stamp on t-' + C.verdict.tone + (C.stampTop ? ' top' : '');
       say.textContent = C.anchor || ''; pop(say);
+    }
+  }
+  // the 85% audit: 'claim' | 'start' (roadmap check opens) | 'kpi' n (reveal KPI n) | 'result' | 'verdict'
+  fcAudit(action, n) {
+    const el = $('#factcheck'), F = this.data.factCheck, A = F.audit; if (!el || !A) return;
+    this.factCheck('show');
+    const card = $('.fc-card', el), ev = $('.fc-evidence', el), stamp = $('.fc-stamp', el), say = $('.fc-say', el);
+    const all = A.blocks.flatMap((b, bi) => b.kpis.map(k => ({ ...k, bi })));
+    const pop = e => { e.classList.remove('in'); void e.offsetWidth; e.classList.add('in'); };
+    const steps = $('.fc-steps', el);
+    if (action === 'claim') {
+      el.dataset.state = 'claim'; el.classList.remove('audit'); stamp.className = 'fc-stamp'; stamp.textContent = ''; ev.innerHTML = ''; ev.classList.remove('on');
+      steps.querySelectorAll('li').forEach(li => { li.classList.toggle('on', li.dataset.id === 'target'); li.classList.remove('done'); });
+      card.innerHTML = '';
+      card.append(h('p', { class: 'fc-kicker' }, 'Fact check · BPS GO!+ 2026'),
+        h('div', { class: 'fc-claim' }, h('div', {}, h('span', { class: 'fc-claim-tag' }, 'CLAIM'), h('q', {}, A.claim), h('small', {}, '📣 ' + A.source))));
+      pop(card); say.textContent = A.check; pop(say); return;
+    }
+    if (action === 'start') {
+      el.dataset.state = 'evidence'; ev.innerHTML = '';
+      const cols = [h('div', { class: 'au-col' }), h('div', { class: 'au-col' })];
+      // balance the two columns by number of rows
+      const total = A.blocks.reduce((s, b) => s + b.kpis.length + 1, 0); const side = []; { let l = 0, r = 0; const half = Math.ceil(A.blocks.length / 2); A.blocks.forEach((b, i) => { side[i] = i < half ? 0 : 1; }); void l; void r; void total; }
+      let idx = 0;
+      A.blocks.forEach((b, bi) => {
+        const blk = h('div', { class: 'au-block', 'data-b': bi, style: `--c:${b.color};order:${bi}` }, h('p', { class: 'au-h' }, h('span', {}, b.name), h('small', {}, 'Target · 2026')));
+        b.kpis.forEach(k => blk.append(h('div', { class: 'au-row', 'data-n': idx++ }, h('span', { class: 'au-k' }, k.kpi), h('span', { class: 'au-t' }, k.target), h('span', { class: 'au-r' }, k.result), h('i', { class: 'au-m' }, k.ok ? '✅' : '❌'))));
+        cols[side[bi]].append(blk);
+      });
+      ev.append(h('p', { class: 'fc-ev-tag' }, '🔍 THE CHECK · BPS GO!+ Roadmap 2026'), h('div', { class: 'au-grid' }, cols),
+        h('div', { class: 'au-tally' }, h('span', { class: 'au-ok' }, '✅ 0'), h('span', { class: 'au-no' }, '❌ 0'), h('b', { class: 'au-pct' }, `0 of ${all.length} checked`)));
+      void ev.offsetWidth; ev.classList.add('on'); el.classList.add('audit');
+      say.textContent = `${A.blocks[0].name} first.`; pop(say); return;
+    }
+    if (action === 'kpi') {
+      const k = all[n]; if (!k) return;
+      const blk = ev.querySelector(`.au-block[data-b="${k.bi}"]`); blk?.classList.add('on');
+      const row = ev.querySelector(`.au-row[data-n="${n}"]`); row?.classList.add('on', k.ok ? 'ok' : 'no');
+      ev.querySelectorAll('.au-row.cur').forEach(r => r.classList.remove('cur')); row?.classList.add('cur');
+      const seen = all.slice(0, n + 1), ok = seen.filter(x => x.ok).length;
+      $('.au-ok', ev).textContent = `✅ ${ok}`; $('.au-no', ev).textContent = `❌ ${seen.length - ok}`; $('.au-pct', ev).textContent = `${seen.length} of ${all.length} checked`;
+      say.textContent = `${k.kpi}: target ${k.target}, 2026 ${k.result}. ${k.ok ? 'Achieved ✅' : 'Not achieved ❌'}`; pop(say); return;
+    }
+    const ok = all.filter(x => x.ok).length, pct = Math.round(ok / all.length * 100), pass = pct >= A.claimPct;
+    if (action === 'result') {
+      ev.querySelectorAll('.au-row.cur').forEach(r => r.classList.remove('cur'));
+      ev.classList.add('done');
+      $('.au-pct', ev).textContent = `${ok} of ${all.length} achieved = ${pct}%  ·  claimed ${A.claimPct}%`;
+      say.textContent = `${ok} of ${all.length} tasks achieved: ${pct}%. The claim was ${A.claimPct}%.`; pop(say); return;
+    }
+    if (action === 'verdict') {
+      el.dataset.state = 'verdict';
+      stamp.textContent = ''; stamp.append(h('small', {}, 'VERDICT'), h('span', {}, pass ? '✅ VERIFIED · TRUE' : `⚠️ NOT VERIFIED · ${pct}%`));
+      void stamp.offsetWidth; stamp.className = 'fc-stamp on au ' + (pass ? 't-ok' : 't-warn');
+      steps.querySelectorAll('li').forEach(li => { li.classList.remove('on'); li.classList.add('done'); });
+      say.textContent = pass ? `Claim verified: ${pct}% of the 2026 tasks achieved.` : `Claim not verified: ${pct}% achieved against ${A.claimPct}% claimed. The open points move into 2027.`; pop(say);
     }
   }
   fcEvidence(E) {

@@ -1697,6 +1697,152 @@
           ]
         ]
       }
-    ]
+    ],
+    "audit": {
+      "claimPct": 85,
+      "claim": "BPS is claiming they have completed and achieved 85% of their tasks in 2026.",
+      "source": "BPS department, PD Workshop 2026",
+      "check": "Let's check it against the BPS GO!+ Roadmap 2026, KPI by KPI.",
+      "blocks": [
+        {
+          "name": "Waste-Free, Stable Flow",
+          "color": "#005691",
+          "kpis": [
+            {
+              "kpi": "TPT · VE value stream",
+              "target": "Reduce (from 17 days)",
+              "result": "14.01 days",
+              "ok": true
+            },
+            {
+              "kpi": "TPT · NHA value stream",
+              "target": "Reduce (from 11.29 days)",
+              "result": "10.19 days",
+              "ok": true
+            },
+            {
+              "kpi": "Pull maturity",
+              "target": "≥ 80%",
+              "result": "< 80%",
+              "ok": false
+            }
+          ]
+        },
+        {
+          "name": "Investment Efficiency",
+          "color": "#78BE20",
+          "kpis": [
+            {
+              "kpi": "MAEs with technical loss < 3%",
+              "target": "90%",
+              "result": "60%",
+              "ok": false
+            },
+            {
+              "kpi": "Obsolescence management (MAE de-risking)",
+              "target": "100%",
+              "result": "50%",
+              "ok": false
+            }
+          ]
+        },
+        {
+          "name": "Everybody's CIP",
+          "color": "#B90276",
+          "kpis": [
+            {
+              "kpi": "Ideas per associate",
+              "target": "28",
+              "result": "28",
+              "ok": true
+            },
+            {
+              "kpi": "Individual employee involvement",
+              "target": "100%",
+              "result": "100%",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "name": "Leadership Commitment",
+          "color": "#50237F",
+          "kpis": [
+            {
+              "kpi": "DLPC usage maturity (Pull, 5S, DLR)",
+              "target": "Improve",
+              "result": "Improved",
+              "ok": true
+            },
+            {
+              "kpi": "BPS competency",
+              "target": "98%",
+              "result": "98%",
+              "ok": true
+            },
+            {
+              "kpi": "WaTS training coverage",
+              "target": "100%",
+              "result": "100%",
+              "ok": true
+            },
+            {
+              "kpi": "BLDP expert creation",
+              "target": "Experts created",
+              "result": "Not yet",
+              "ok": false
+            },
+            {
+              "kpi": "SCIP project completion",
+              "target": "≥ 85%",
+              "result": "< 85%",
+              "ok": false
+            }
+          ]
+        },
+        {
+          "name": "CIP in Indirect Areas",
+          "color": "#0A6EBD",
+          "kpis": [
+            {
+              "kpi": "Indirect area coverage (VSDiA)",
+              "target": "100%",
+              "result": "100%",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "name": "Digi Lean",
+          "color": "#1E88D9",
+          "kpis": [
+            {
+              "kpi": "Digital DLR (DDLR)",
+              "target": "Implement",
+              "result": "Live",
+              "ok": true
+            },
+            {
+              "kpi": "Digital SM",
+              "target": "Implement",
+              "result": "Live",
+              "ok": true
+            },
+            {
+              "kpi": "Idea scheme automation",
+              "target": "Implement",
+              "result": "Live",
+              "ok": true
+            },
+            {
+              "kpi": "Digital TPT",
+              "target": "Implement",
+              "result": "Live",
+              "ok": true
+            }
+          ]
+        }
+      ]
+    }
   }
 }
