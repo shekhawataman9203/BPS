@@ -24,6 +24,9 @@ export const SHOT = {
   c_crane: { pos: [0, 9.5, 11.5], target: [0, 1.8, 25], fov: 50 },
   fc_anchor: { pos: [1.1, 1.66, 25.4], target: [1.1, 1.42, 22.0], fov: 40 },
   sm_wide: { pos: [0.3, 3.0, -9.4], target: [0.3, 1.2, -3.2], fov: 62 },
+  sm_in: { pos: [-5.6, 2.5, -11.6], target: [-10.5, 1.3, -5.6], fov: 54 },
+  sm_watch: { pos: [-11.2, 2.5, -9.4], target: [-1.0, 1.3, -3.6], fov: 58 },
+  sm_after: { pos: [-6.3, 2.2, -9.6], target: [-6.35, 1.5, -3.6], fov: 52 },
 };
 // Fly-to shots for the tour stops
 export const ZONE_SHOT = {
@@ -154,7 +157,9 @@ export class Director {
       case 'plant':
         this.placeGroup(WAIT, () => PI); c.qual.place(23.4, 5.7, -PI * 0.75); c.ph.place(0, 21.5, PI); c.bps.place(0.9, 22.2, PI); this.setWorld({ gate: true, digital: true, future: true }); a.rig.cut(SHOT.p_high); break;
       case 'digitalsm':
-        this.placeGroup(WAIT, () => PI); c.ph.place(8.3, -4.9, -PI / 2); c.bps.place(8.9, -5.7, -PI / 2); this.setWorld({ gate: true }); a.rig.cut(SHOT.sm_wide); break;
+        // the team comes in along the supermarket aisle from the west
+        c.ph.place(-13.2, -6.0, PI / 2); c.bps.place(-14.0, -5.5, PI / 2); c.prod.place(-14.4, -6.5, PI / 2); c.qual.place(-13.0, -6.9, PI / 2);
+        this.setWorld({ gate: true }); a.rig.cut(SHOT.sm_in); break;
       case 'factcheck':
         // studio: the BPS Lead stands in the 2026 plant, framed on the left; the others step out of shot
         c.ph.place(-14, 19, PI); c.prod.place(-15, 20, PI); c.qual.place(-13, 20, PI); c.bps.place(0, 22.2, 0);
@@ -530,22 +535,38 @@ export class Director {
       if (M.improve) { ui.glimpses('improve', m); c.ph.gesture('point', 2.2, { target: V(b.x + 1.4, b.y, b.z) }); await this.waitStep(ctx); } // improvement staircase
       if (M.box) for (let k = 0; k < M.box.items.length; k++) { ui.glimpses('point', m, k); await this.waitStep(ctx); } // box: one item per Next
     }
+    if (part === 1) {
+      // from the Digital SM board: "let's see the result" — the team walks off towards the supermarket
+      ctx.cap("Let's see the result on the shop floor.", { hold: 600 });
+      c.ph.gesture('armsOpen', 1.4); await ctx.wait(1.2);
+      ui.glimpses('close'); ui.glimpses('gemba', null);
+      const p0 = c.ph.root.position;
+      ['ph', 'bps', 'prod', 'qual'].forEach((id, k) => { const m = c[id], q = m.root.position; ctx.later(k * 0.15, () => m.walkTo([[q.x, 18.3 + (k % 2) * 0.5], [q.x + 6, 18.3 + (k % 2) * 0.5]], { speed: 1.8 })); });
+      ctx.cam({ pos: [p0.x - 1.5, 2.6, 23.5], target: [p0.x + 4, 1.3, 17.5], fov: 56 }, 2.2, { easing: ease.inOutSine, arc: 0 });
+      await ctx.wait(2.0);
+      if (!this.catchUp) { this.next(); await new Promise(() => {}); } // on into the Digital SM scene (cancelled by the chapter change)
+    }
   }
 
   async digitalsm(ctx) {
-    const { tl, ph, bps } = this.cast, a = this.app, ui = a.ui, F = a.factory, S = F.sm, D = a.data.digitalSM;
-    const zA = -4.35, last = S.racks[S.racks.length - 1];
-    // ---- before: manual count, rack by rack
-    ctx.cut(SHOT.sm_wide);
+    const { tl, ph, bps, prod, qual } = this.cast, a = this.app, ui = a.ui, F = a.factory, S = F.sm, D = a.data.digitalSM;
+    const team = [ph, bps, prod, qual], zA = -4.35, last = S.racks[S.racks.length - 1], sp = S.screenPos;
+    const walkAll = (spots, speed = 1.7) => Promise.all(team.map((m, k) => new Promise(res => ctx.later(k * 0.15, () => m.walkTo([spots[k]], { speed, onArrive: () => res() })))));
+    // ---- the team arrives at the supermarket (about 2 s)
+    ctx.cap('At the supermarket.', { hold: 300 });
+    await Promise.race([walkAll([[-8.2, -6.2], [-9.0, -5.6], [-9.4, -6.7], [-7.8, -7.0]]), ctx.wait(3.2)]);
+    team.forEach(m => m.lookAt(tl));
+    // ---- before: one person counts the stock by hand, rack by rack
+    ctx.cam(SHOT.sm_watch, 1.6);
     ctx.cap('Before · manual stock count', { kind: 'marker' });
     ctx.cap(D.before.text);
-    ph.lookAt(tl); bps.lookAt(tl);
     await ctx.walk(tl, [[S.racks[0].x, zA]], { speed: 1.4, faceYaw: 0 });
     tl.holdClipboard(true); ui.smNote('open', 'before');
     for (let i = 0; i < S.racks.length; i++) {
       const r = S.racks[i];
       if (i) await ctx.walk(tl, [[r.x, zA]], { speed: 1.0, faceYaw: 0 });
       tl.faceYaw(0); tl.lookAt(r.center); tl.gesture('point', 1.1, { target: r.center });
+      if (i === 3) ctx.cam(SHOT.sm_wide, 3);
       await ctx.wait(1.1);
       tl.gesture('write', 1.6); tl.lookAt(null);
       ui.smNote('row', i);
@@ -558,23 +579,26 @@ export class Director {
     ui.smNote('done', D.before);
     ctx.cap(`${D.before.time} of walking and counting, and the numbers are already old.`);
     await this.waitStep(ctx);
-    // ---- after: Digital SM screen at the supermarket
+    // ---- after: the team moves to the Digital SM screen; one person comes, checks the stock at a glance and moves on
     ui.smNote('close');
-    await ctx.dip(() => { tl.place(-8.4, zA, PI / 2); tl.setMood(null); tl.holdClipboard(false); F.sm.setScreen(true); ctx.cut(SHOT.sm_wide); });
+    await ctx.dip(() => { tl.place(-1.5, zA, -PI / 2); tl.setMood(null); tl.holdClipboard(false); F.sm.setScreen(true); ctx.cut(SHOT.sm_after); });
     ctx.cap('After · Digital SM', { kind: 'marker' });
     ctx.cap(D.after.text);
-    const sp = S.screenPos;
-    await ctx.walk(tl, [[sp.x, zA - 0.4]], { speed: 1.3, faceYaw: 0 });
-    tl.lookAt(sp); tl.gesture('point', 1.6, { target: sp });
-    ctx.cam({ pos: [sp.x + 1.6, 1.9, zA - 2.6], target: [sp.x, 1.6, sp.z], fov: 44 }, 2);
+    await Promise.race([walkAll([[sp.x - 1.6, -5.7], [sp.x + 1.6, -5.8], [sp.x - 2.2, -6.6], [sp.x + 2.2, -6.7]], 1.6), ctx.wait(3.0)]);
+    team.forEach(m => m.lookAt(sp));
+    await ctx.walk(tl, [[sp.x + 0.15, zA - 0.4]], { speed: 1.5, faceYaw: 0 });
+    tl.faceYaw(0); tl.lookAt(sp); tl.gesture('point', 1.4, { target: sp });
+    ctx.cam({ pos: [sp.x + 1.4, 1.9, zA - 2.7], target: [sp.x, 1.6, sp.z], fov: 46 }, 1.6);
+    ui.smNote('open', 'after'); ui.smNote('fill');
+    await ctx.wait(1.8);
+    tl.lookAt(null); tl.setMood('happy'); tl.faceYaw(PI); tl.gesture('thumbsUp', 1.8);
+    ui.smNote('done', D.after);
+    ctx.cap(`Stock at a glance in ${D.after.time}, and he moves on. The counting time goes back into improvement.`);
     await ctx.wait(1.6);
-    tl.holdClipboard(true); tl.gesture('write', 2.2); ui.smNote('open', 'after'); ui.smNote('fill');
-    await ctx.wait(2.4);
-    tl.holdClipboard(false); tl.lookAt(null); tl.faceYaw(PI); tl.setMood('happy');
-    ctx.cam({ pos: [sp.x - 0.2, 1.75, zA - 0.4 - 2.4], target: [sp.x, 1.5, zA - 0.4], fov: 40 }, 1.8);
-    await ctx.wait(1.0);
-    tl.gesture('thumbsUp', 2.8); ui.smNote('done', D.after);
-    ctx.cap(`Stock at a glance in ${D.after.time}. The counting time goes back into improvement.`);
+    team.forEach(m => m.lookAt(tl));
+    ctx.walk(tl, [[sp.x + 0.6, zA - 0.2], [4.0, zA]], { speed: 1.5 }); // on to his next job
+    ctx.cam(SHOT.sm_after, 2.2);
+    ctx.later(1.2, () => { ph.gesture('clap', 2.2); bps.gesture('thumbsUp', 2.2); });
     await this.waitStep(ctx);
   }
 
