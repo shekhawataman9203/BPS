@@ -100,7 +100,15 @@ export class UI {
       if (k === 'Escape') { if (!$('#help').hidden) this.toggleHelp(false); else if (this.roadmapOpen) { if (this.rmFocus) this.zoomTo(null); else this.closeRoadmap(); } else if (this.explore) this.toggleExplore(false); return; }
       if (k === 'k' || k === 'K' || k === 'Pause') { e.preventDefault(); this.togglePause(); return; }
       if (k === 'b' || k === 'B') { this.roadmapOpen ? this.closeRoadmap() : this.openRoadmap(); return; }
-      if (this.roadmapOpen) return; // the roadmap overlay keeps the arrow keys for itself
+      if (this.roadmapOpen) {
+        // in the roadmap: Next zooms out first, then closes it (and moves the roadmap chapter on)
+        if (['ArrowRight', 'PageDown', ' '].includes(k)) {
+          e.preventDefault();
+          if (this.rmFocus) this.zoomTo(null);
+          else { this.closeRoadmap(); if (d.stepRes && CHAPTERS[d.index]?.id === 'roadmap') d.skip(); }
+        }
+        return;
+      }
       if (d.index === 0 && ['ArrowRight', 'PageDown', ' ', 'ArrowLeft', 'PageUp'].includes(k)) { e.preventDefault(); return; } // first chapter is already starting
       if (['ArrowRight', 'PageDown', ' '].includes(k)) { e.preventDefault(); if (this.paused) this.togglePause(false); d.scriptDone ? d.next() : d.skip(); }
       else if (['ArrowLeft', 'PageUp'].includes(k)) { e.preventDefault(); d.prev(); }

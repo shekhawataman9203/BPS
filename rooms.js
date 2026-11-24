@@ -161,7 +161,7 @@ function wrap(ctx, text, maxW) {
 class KpiWall {
   constructor(data, logoImg) {
     this.data = data; this.logoImg = logoImg; this.p = 1; this.animating = false;
-    this.hl = { pillar: null, row: null }; this.layouts = { house: {}, roadmap: {}, kpi: {}, house27: {}, flash: {} }; this.mode = 'kpi';
+    this.hl = { pillar: null, row: null }; this.layouts = { house: {}, roadmap: {}, kpi: {}, house27: {}, flash: {}, align: {} }; this.alignK = 1; this.mode = 'kpi';
     this.h27 = { drop: 1, dropT: 1, rev: [1, 1, 1, 1], shown: 4 };
     // 2026 house build-up, one stage per Next: 0 white, 1 roof, 2 band, 3 pillars, 4-7 pillar content, 8 boosters, 9 statement
     this.h26 = { stage: 9, v: { roof: 1, band: 1, pil: [1, 1, 1, 1], con: [1, 1, 1, 1], boost: 1, stmt: 1 } }; this.hits = []; this.hover = null;
@@ -174,7 +174,7 @@ class KpiWall {
   get layout() { return this.layouts[this.mode]; }
   replay() { this.p = 0; this.animating = true; }
   // screen views: 'house' (House of BPS GO!+), 'roadmap' (Roadmap 2026), 'kpi' (KPI wall)
-  setMode(m) { if (m === this.mode) return; this.mode = m; this.hl = { pillar: null, row: null }; this.replay(); this.ct.redraw(); this.onMode?.(m); }
+  setMode(m) { if (m === 'align') this.alignK = 0; if (m === this.mode) return; this.mode = m; this.hl = { pillar: null, row: null }; this.replay(); this.ct.redraw(); this.onMode?.(m); }
   highlight(pillar = null, row = null) { this.hl = { pillar, row }; this.ct.redraw(); }
   setHover(h) { const k = h ? h.type + h.id : null; if (k === this.hoverKey) return; this.hoverKey = k; this.hover = h; this.ct.redraw(); }
   // 2027 house: dropIn = house visible (drops from the top), shown = how many pillars have their content
@@ -191,6 +191,7 @@ class KpiWall {
   t26() { const s = this.h26.stage, b = x => (s >= x ? 1 : 0); return { roof: b(1), band: b(2), pil: [0, 1, 2, 3].map(() => b(3)), con: [0, 1, 2, 3].map(i => b(4 + i)), boost: b(8), stmt: b(9) }; }
   update(dt) {
     let dirty = false;
+    if (this.mode === 'align' && this.alignK < 1) { this.alignK = Math.min(1, this.alignK + dt / 6.5); dirty = true; }
     if (this.mode === 'house') {
       const v = this.h26.v, t = this.t26(), step = (a, b, r) => (a === b ? a : b > a ? Math.min(b, a + dt / r) : 0);
       const before = JSON.stringify(v);
@@ -243,13 +244,13 @@ class KpiWall {
       const lh = 150, lw = this.logoImg.naturalWidth * lh / this.logoImg.naturalHeight;
       ctx.drawImage(this.logoImg, 60, (HH - lh) / 2, lw, lh); hits.push({ type: 'logo', id: 'logo', x: 40, y: 20, w: lw + 40, h: HH - 40 }); lx0 = 60 + lw + 60;
     }
-    const TITLES = { house27: ['House of BPS GO!+ 2027', 'Strategy 2027 · new in 2027 shown in green · click any element'], house: ['House of BPS GO!+', 'Strategy 2026 · click any element to zoom in'], roadmap: ['BPS GO!+ Roadmap 2026', 'Aligned with the house · click a row for its plan'], kpi: ['KPI wall 2026', `Target against ${rm.ytdLabel} · click any tile for details`] };
+    const TITLES = { align: ['House of BPS GO!+  →  Roadmap 2026', 'Every element of the house has its block in the roadmap'], house27: ['House of BPS GO!+ 2027', 'Strategy 2027 · new in 2027 shown in green · click any element'], house: ['House of BPS GO!+', 'Strategy 2026 · click any element to zoom in'], roadmap: ['BPS GO!+ Roadmap 2026', 'Aligned with the house · click a row for its plan'], kpi: ['KPI wall 2026', `Target against ${rm.ytdLabel} · click any tile for details`] };
     const [tt, ts] = TITLES[this.mode];
     ctx.fillStyle = '#0A6EBD'; ctx.font = `800 96px ${FONT}`; ctx.fillText(tt, lx0, 118);
     ctx.fillStyle = '#4a525d'; ctx.font = `600 44px ${FONT}`; ctx.fillText(ts, lx0, 176);
     // view tabs: House · Roadmap · KPI wall
     let lx = W - 60;
-    for (const [m, label] of (this.mode === 'house27' ? [['house27', '2027']] : [['kpi', 'KPI wall'], ['roadmap', 'Roadmap'], ['house', 'House']])) {
+    for (const [m, label] of (this.mode === 'align' ? [] : this.mode === 'house27' ? [['house27', '2027']] : [['kpi', 'KPI wall'], ['roadmap', 'Roadmap'], ['house', 'House']])) {
       ctx.font = `700 44px ${FONT}`; const tw = ctx.measureText(label).width + 70, on = this.mode === m, hov = isHover('mode', m);
       ctx.fillStyle = on ? '#0A6EBD' : hov ? '#dfe9f4' : '#eef1f4'; ctx.fillRect(lx - tw, 50, tw, 100);
       ctx.fillStyle = on ? '#ffffff' : '#12161C'; ctx.textAlign = 'center'; ctx.fillText(label, lx - tw / 2, 116); ctx.textAlign = 'left';
@@ -262,6 +263,7 @@ class KpiWall {
     }
     ctx.fillStyle = CSS.red; ctx.fillRect(0, HH - 8, W, 8);
     const L = this.layouts[this.mode];
+    if (this.mode === 'align') { drawAlign(this, ctx, W, H, HH); return; }
     if (this.mode === 'house' || this.mode === 'house27') { drawHouse(this, ctx, W, H, HH, p, L, hits, isHover, this.mode === 'house27' ? d.house2027 : d.house, this.mode === 'house27' ? 'house27' : 'house'); return; }
     if (this.mode === 'roadmap') { drawRoadmap(this, ctx, W, H, HH, p, L, hits, isHover); return; }
     // six columns, one per element of the House of BPS GO!+, each with its roadmap KPIs
@@ -425,6 +427,64 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
   ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; const fs = fitText(ctx, h.statement, W - 200, 66, 600); ctx.font = `600 ${fs}px ${FONT}`; ctx.fillText(h.statement, W / 2, H - 52); ctx.textAlign = 'left';
   ctx.globalAlpha = 1;
   ctx.restore();
+}
+// ---------- House → Roadmap alignment (transition) ----------
+function drawAlign(w, ctx, W, H, HH) {
+  const d = w.data, k = w.alignK, rm = d.roadmap, Hs = d.house;
+  const seg = (a, b) => ease.inOut(clamp((k - a) / (b - a), 0, 1));
+  const shrink = seg(0, 0.28), appear = seg(0.2, 0.45);
+  // the house, shrinking to the left
+  const s = 1 - 0.56 * shrink, tx = 40 * shrink - 230 * shrink, ty = (HH + 10) * shrink * 0.35;
+  const Lh = {};
+  ctx.save(); ctx.translate(tx, ty); ctx.scale(s, s);
+  const sv = w.h26.stage; w.h26.stage = 9;
+  drawHouse(w, ctx, W, H, HH, 1, Lh, [], () => false, Hs, 'house');
+  w.h26.stage = sv; ctx.restore();
+  const hp = id => { const l = Lh[id]; return l ? [tx + l.u * W * s, ty + l.v * H * s] : null; };
+  // the roadmap, by pillar and block, on the right
+  const rx0 = 2080, rx1 = W - 70, ry0 = HH + 40, rows = [];
+  rm.pillars.forEach(p => { rows.push({ band: p }); p.groups.forEach(g => rows.push({ p, g })); });
+  const rh = (H - ry0 - 50) / rows.length, gy = {};
+  const links = [...Hs.pillars, ...Hs.boosters].map((e, i) => ({ e, i }));
+  const linkDone = gid => { const L = links.find(x => x.e.roadmap === gid); return L ? seg(0.42 + L.i * 0.09, 0.52 + L.i * 0.09) : 0; };
+  ctx.globalAlpha = appear;
+  ctx.save(); ctx.translate((1 - appear) * 300, 0);
+  rows.forEach((row, i) => {
+    const y = ry0 + i * rh;
+    if (row.band) {
+      ctx.fillStyle = row.band.color; ctx.fillRect(rx0, y + 6, rx1 - rx0, rh - 12);
+      ctx.fillStyle = '#fff'; ctx.font = `800 ${Math.min(64, rh * 0.5)}px ${FONT}`; ctx.fillText(row.band.name.toUpperCase(), rx0 + 30, y + rh * 0.66);
+      ctx.font = `600 ${Math.min(40, rh * 0.32)}px ${FONT}`; ctx.textAlign = 'right'; ctx.fillText(`${row.band.motto} ${row.band.tag}`, rx1 - 30, y + rh * 0.62); ctx.textAlign = 'left';
+    } else {
+      const on = linkDone(row.g.id);
+      ctx.fillStyle = on > 0.99 ? row.p.light : '#eef1f4'; ctx.fillRect(rx0, y + 6, rx1 - rx0, rh - 12);
+      ctx.fillStyle = row.p.color; ctx.fillRect(rx0, y + 6, 16, rh - 12);
+      ctx.fillStyle = '#12161C'; ctx.font = `800 ${Math.min(58, rh * 0.46)}px ${FONT}`; ctx.fillText(row.g.name, rx0 + 50, y + rh * 0.64);
+      ctx.fillStyle = '#5a6470'; ctx.font = `600 ${Math.min(40, rh * 0.32)}px ${FONT}`; ctx.textAlign = 'right';
+      ctx.fillText(`${row.g.rows.length} roadmap element${row.g.rows.length > 1 ? 's' : ''} · Q1–Q4`, rx1 - 30, y + rh * 0.62); ctx.textAlign = 'left';
+      if (on > 0.99) { ctx.strokeStyle = row.p.color; ctx.lineWidth = 8; ctx.strokeRect(rx0 + 4, y + 10, rx1 - rx0 - 8, rh - 20); }
+      gy[row.g.id] = y + rh / 2;
+    }
+  });
+  ctx.restore();
+  ctx.globalAlpha = 1;
+  // connectors: each house element draws a line to its roadmap block
+  const boosterCol = { 'h-digi': '#1E88D9', 'h-indirect': '#0A6EBD' };
+  links.forEach(({ e, i }) => {
+    const t = seg(0.42 + i * 0.09, 0.52 + i * 0.09); if (t <= 0) return;
+    const a = hp(e.id), by = gy[e.roadmap]; if (!a || by == null) return;
+    const b = [rx0 - 10, by], c1 = [a[0] + 520, a[1]], c2 = [b[0] - 420, b[1]];
+    const col = e.color || boosterCol[e.id] || '#1E88D9';
+    ctx.strokeStyle = col; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.beginPath();
+    const N = 60, n = Math.max(1, Math.round(N * t));
+    for (let j = 0; j <= n; j++) { const u = j / N, m = 1 - u; const x = m * m * m * a[0] + 3 * m * m * u * c1[0] + 3 * m * u * u * c2[0] + u * u * u * b[0], y = m * m * m * a[1] + 3 * m * m * u * c1[1] + 3 * m * u * u * c2[1] + u * u * u * b[1]; j ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+    ctx.stroke();
+    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(a[0], a[1], 22, 0, Math.PI * 2); ctx.fill();
+    if (t > 0.98) { ctx.beginPath(); ctx.moveTo(b[0] + 6, b[1]); ctx.lineTo(b[0] - 40, b[1] - 26); ctx.lineTo(b[0] - 40, b[1] + 26); ctx.closePath(); ctx.fill(); }
+  });
+  ctx.lineCap = 'butt';
+  const done = seg(0.95, 1);
+  if (done > 0) { ctx.globalAlpha = done; ctx.fillStyle = '#0A6EBD'; ctx.font = `800 60px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText('Roadmap 2026 · aligned with the House of BPS GO!+', W * 0.27, H - 70); ctx.textAlign = 'left'; ctx.globalAlpha = 1; }
 }
 // ---------- Roadmap 2026 (rows grouped by pillar, quarters with ticks) ----------
 function drawRoadmap(w, ctx, W, H, HH, p, L, hits, isHover) {

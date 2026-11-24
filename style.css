@@ -783,3 +783,4 @@ body.factcheck #topbar, body.factcheck #rail, body.factcheck #scenebar, body.fac
 .p-delta { display: block; color: #1E9E5C; font-weight: 800; font-size: clamp(12px, 1.05vw, 17px); }
 .fc-stamp.top { top: 6vh; bottom: auto; }
 body.screen-view #stepHint { top: calc(var(--top-h) + 14px); bottom: auto; right: 150px; }
+body.roadmap-open #stepHint { top: calc(var(--top-h) + 14px); bottom: auto; right: 150px; }

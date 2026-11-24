@@ -44,7 +44,7 @@ export const CHAPTERS = [
   { id: 'opening', title: 'Opening', loc: 'overview', dur: 20 },
   { id: 'flashback', title: '2026 Flashback', sub: 'Through the main gate, between NHA and VE Pump', loc: 'gate', dur: 24 },
   { id: 'house', title: 'House of BPS GO!+', sub: 'Where 2026 started: one operating system', loc: 'wall', dur: 30, stepped: true },
-  { id: 'kpis', title: 'KPI wall', sub: 'Every element of the house, target against YTD', loc: 'wall', dur: 30 },
+  { id: 'roadmap', title: 'BPS GO!+ Roadmap 2026', sub: 'Aligned with the House of BPS GO!+', loc: 'wall', dur: 30, stepped: true },
   { id: 'glimpses', title: 'Glimpses 2026', sub: 'Moments from the year', loc: 'wall', dur: 30, stepped: true },
   { id: 'digitalsm', title: 'Digital SM', sub: 'Before and after at the supermarket', loc: 'floor', dur: 45, stepped: true },
   { id: 'future', title: 'How 2027 looks like', sub: 'Back through the gate, into the plant of 2027', loc: 'gate', dur: 40, stepped: true },
@@ -198,7 +198,7 @@ export class Director {
     this.stage(ch.id);
     ui.fade(0, 0.8);
     // the gate chapter has no title card: '2026 Flashback' is written on the doors
-    if (!['opening', 'flashback', 'house', 'future', 'glimpses', 'thanks', 'factcheck'].includes(ch.id) && !skipTitle) ui.titleCard(i, ch.title, ch.sub);
+    if (!['opening', 'flashback', 'house', 'roadmap', 'future', 'glimpses', 'thanks', 'factcheck'].includes(ch.id) && !skipTitle) ui.titleCard(i, ch.title, ch.sub);
     const ctx = this.makeCtx();
     ui.showSkip(ch.id !== 'opening'); ui.letterbox(ch.id !== 'opening');
     try { await this[ch.id](ctx); } catch (e) { console.error(e); }
@@ -384,22 +384,18 @@ export class Director {
   }
 
   async roadmap(ctx) {
-    const { ph } = this.cast, a = this.app, rm = a.data.roadmap, team = this.all(), wall = a.entrance.wall;
-    ctx.cam(SHOT.k_wall, 2.0);
-    wall.replay();
-    const c = wall.spot(0.5, 0.5); team.forEach(m => m.lookAt(c)); ph.lookAt(c);
-    await ctx.wait(1.0);
-    ctx.cap('Aligned with the house, we built the BPS GO!+ Roadmap 2026: every element, quarter by quarter.');
-    await ctx.wait(3.4);
-    for (const p of rm.pillars) {
-      const s = wall.rowSpot(p.id);
-      wall.highlight(p.id, null); ph.lookAt(s); ph.gesture('point', 2.4, { target: s });
-      ctx.cap(`${p.name}: ${p.motto} ${p.tag}.`);
-      await ctx.wait(2.9);
-    }
-    wall.highlight(null, null); ph.lookAt(null);
-    ctx.cap('Click any block on the screen to zoom in, or the BPS GO!+ icon for the full roadmap.');
-    await ctx.wait(3.0);
+    // house (full display) → alignment animation → roadmap in full screen (click to zoom) → back to the scene
+    const ui = this.app.ui, wall = this.app.entrance.wall;
+    ctx.cut(SHOT.k_wall);
+    wall.setMode('house'); wall.set26(9, true); ui.toggleScreenView(true);
+    await this.waitStep(ctx);
+    wall.setMode('align');
+    ctx.cap('Aligned with the House of BPS GO!+, we built the BPS GO!+ Roadmap 2026: every element of the house has its block.');
+    await this.waitStep(ctx);
+    ui.toggleScreenView(false); ui.openRoadmap();
+    ctx.cap('Click any pillar, block or KPI to zoom in. Next zooms out, then returns to the plant.');
+    await this.waitStep(ctx);
+    ui.closeRoadmap(); wall.setMode('roadmap'); wall.p = 1; wall.ct.redraw();
   }
 
   async kpis(ctx) {
