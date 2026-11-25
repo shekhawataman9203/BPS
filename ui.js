@@ -84,6 +84,9 @@ export class UI {
     $('#btnReset').onclick = () => this.app.director.resetView();
     $('#panelToggle').onclick = () => this.panelOpen ? this.closePanel() : this.openPanel();
     $('#panelTab').onclick = () => this.openPanel();
+    // chapter bar at the bottom: hidden by default, Chapters button / T shows it
+    this.toggleChapters = (v = !document.body.classList.contains('show-rail')) => { document.body.classList.toggle('show-rail', v); this.pressed('#btnChapters', v); };
+    $('#btnChapters').onclick = () => this.toggleChapters();
     $('#btnPrev').onclick = () => this.app.director.prevAct();
     $('#btnNext').onclick = () => { if (this.roadmapOpen) this.closeRoadmap(); this.app.director.nextAct(); };
     $('#helpClose').onclick = () => this.toggleHelp(false);
@@ -114,6 +117,7 @@ export class UI {
       if (k === 'Escape' && this.detailOpen && !this.roadmapOpen) { this.closeDetail(); return; }
       if ((k === 'v' || k === 'V') && !this.roadmapOpen) { this.toggleScreenView(); return; }
       if (k === 'Escape') { if (!$('#help').hidden) this.toggleHelp(false); else if (this.roadmapOpen) { if (this.rmFocus) this.zoomTo(null); else this.closeRoadmap(); } else if (this.explore) this.toggleExplore(false); return; }
+      if (k === 't' || k === 'T') { this.toggleChapters(); return; }
       if (k === 'k' || k === 'K' || k === 'Pause') { e.preventDefault(); this.togglePause(); return; }
       if (k === 'b' || k === 'B') { this.roadmapOpen ? this.closeRoadmap() : this.openRoadmap(); return; }
       if (this.rm27Open && ['ArrowRight', 'PageDown', ' ', 'Escape'].includes(k)) {
