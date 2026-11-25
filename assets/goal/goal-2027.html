@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>The Goal We Promised</title>
+<title>Part 2: The Comeback</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
@@ -33,6 +33,19 @@ button.primary:hover { background: #ff1f33; }
 button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 #introNote { margin-top: 22px; font-size: 13px; color: #8a93a0; }
 
+/* trailer title card */
+#trailer { position: fixed; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; pointer-events: none; opacity: 0; transition: opacity .9s ease; background: radial-gradient(ellipse at center, rgba(5,7,12,0.35), rgba(5,7,12,0.78)); }
+#trailer.on { opacity: 1; }
+#trailer p, #trailer h2 { margin: 0; opacity: 0; transform: translateY(14px); transition: opacity .8s ease, transform .8s ease; }
+#trailer.on p, #trailer.on h2 { opacity: 1; transform: none; }
+#trailer.on .tr-part { transition-delay: .25s; } #trailer.on .tr-title { transition-delay: .6s; } #trailer.on .tr-sub { transition-delay: 1.1s; } #trailer.on .tr-soon { transition-delay: 1.6s; }
+.tr-kicker { letter-spacing: 0.32em; text-transform: uppercase; font-weight: 700; font-size: clamp(11px, 1.3vw, 15px); color: #c7cdd6; }
+.tr-part { margin-top: 18px !important; font-weight: 900; font-stretch: 75%; letter-spacing: 0.18em; text-transform: uppercase; font-size: clamp(20px, 2.8vw, 36px); color: var(--red); }
+.tr-title { font-weight: 900; font-stretch: 78%; line-height: 0.92; font-size: clamp(58px, 11vw, 160px); background: linear-gradient(180deg, #fff3c4, #ffd25a 40%, #d99a1c 70%, #ffe08a); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 4px 18px rgba(0,0,0,0.6)); }
+.tr-sub { margin-top: 10px !important; font-size: clamp(16px, 2vw, 26px); font-weight: 600; color: var(--white); }
+.tr-soon { margin-top: 28px !important; display: inline-flex; align-items: stretch; border: 2px solid var(--white); border-radius: 4px; overflow: hidden; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; font-size: clamp(12px, 1.5vw, 18px); }
+.tr-soon span { background: var(--white); color: var(--ink); padding: 8px 14px; } .tr-soon b { padding: 8px 16px; color: var(--white); }
+
 /* captions */
 #caption { position: fixed; left: 50%; bottom: calc(7vh + 28px); transform: translate(-50%, 12px); z-index: 4; max-width: min(92vw, 900px); text-align: center; font-size: clamp(18px, 2.3vw, 32px); font-weight: 600; line-height: 1.3; text-shadow: 0 2px 12px rgba(0,0,0,0.8); opacity: 0; transition: opacity .6s ease, transform .6s ease; pointer-events: none; }
 #caption.on { opacity: 1; transform: translate(-50%, 0); }
@@ -53,6 +66,13 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 #awardTag small { display: block; letter-spacing: 0.35em; font-size: clamp(11px, 1.2vw, 14px); font-weight: 700; color: #fff; opacity: 0.85; }
 #awardTag b { display: block; font-weight: 900; font-stretch: 78%; font-size: clamp(30px, 4.6vw, 64px); line-height: 1; background: linear-gradient(180deg, #fff3c4, #ffd25a 40%, #d99a1c 70%, #ffe08a); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 10px rgba(0,0,0,0.6)); }
 
+/* final tagline */
+#together { position: fixed; top: calc(7vh + 22px); left: 50%; transform: translate(-50%, -16px) scale(0.96); z-index: 4; text-align: center; width: max-content; max-width: 94vw; opacity: 0; transition: opacity 1s ease, transform 1s ease; pointer-events: none; }
+#together.on { opacity: 1; transform: translate(-50%, 0) scale(1); }
+#together small { display: block; letter-spacing: 0.32em; font-size: clamp(11px, 1.3vw, 15px); font-weight: 700; color: var(--white); margin-bottom: 6px; text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
+#together b { display: block; font-weight: 900; font-stretch: 78%; font-size: clamp(40px, 7vw, 100px); line-height: 0.95; color: var(--white); text-shadow: 0 4px 24px rgba(0,0,0,0.75), 0 0 2px rgba(0,0,0,0.6); }
+#together b::after { content: ""; display: block; width: 38%; height: 6px; margin: 12px auto 0; background: var(--red); border-radius: 3px; }
+
 /* end card */
 #endcard { position: fixed; inset: 0; z-index: 6; display: grid; place-items: center; text-align: center; padding: 24px; background: radial-gradient(ellipse at center, rgba(5,7,12,0.55), rgba(5,7,12,0.88)); opacity: 0; visibility: hidden; transition: opacity 1.4s ease, visibility 1.4s; }
 #endcard.on { opacity: 1; visibility: visible; }
@@ -63,17 +83,21 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 .compare span { color: #aeb6c1; font-size: clamp(14px, 1.5vw, 18px); }
 .compare .win span { color: var(--white); }
 #endcard h2 { margin: 0; font-weight: 900; font-stretch: 78%; font-size: clamp(40px, 7vw, 104px); line-height: 0.95; background: linear-gradient(180deg, #fff3c4, #ffd25a 40%, #d99a1c 70%, #ffe08a); -webkit-background-clip: text; background-clip: text; color: transparent; }
-#endcard p { color: #c7cdd6; font-size: clamp(15px, 1.6vw, 20px); margin: 14px 0 28px; }
+#endcard .kicker { color: var(--gold); margin-bottom: 10px; }
+#endcard .lead { margin: 0 0 30px; font-weight: 900; font-stretch: 85%; font-size: clamp(28px, 4.4vw, 60px); line-height: 1.05; color: var(--white); text-shadow: 0 3px 18px rgba(0,0,0,0.7); }
+#endcard h2 { margin-bottom: 28px; }
 
 /* controls */
-#controls { position: fixed; right: 16px; bottom: calc(7vh + 12px); z-index: 7; display: flex; gap: 8px; opacity: 0; transition: opacity .4s; }
-body.playing #controls { opacity: 0.25; }
+#controls { position: fixed; right: 16px; bottom: max(6px, calc(3.5vh - 17px)); z-index: 7; display: flex; gap: 8px; opacity: 0; transition: opacity .4s; }
+body.playing #controls { opacity: 0.6; }
 body.playing #controls:hover, body.playing.paused #controls { opacity: 1; }
+#controls { align-items: center; flex-wrap: wrap; justify-content: flex-end; }
 #controls button { padding: 8px 14px; font-size: 13px; background: rgba(0,0,0,0.45); }
+#sceneLabel { font-size: 12px; font-weight: 700; letter-spacing: 0.04em; padding: 6px 10px; border-radius: 4px; background: rgba(0,0,0,0.45); min-width: 150px; text-align: center; }
 body:not(.playing) #controls { pointer-events: none; }
 #pauseBadge { position: fixed; top: calc(7vh + 16px); right: 16px; z-index: 7; font-size: 12px; letter-spacing: 0.2em; font-weight: 700; padding: 6px 12px; border-radius: 4px; background: rgba(0,0,0,0.55); display: none; }
 body.paused #pauseBadge { display: block; }
-@media (max-width: 600px) { #controls { right: 50%; transform: translateX(50%); } }
+@media (max-width: 700px) { #controls { left: 8px; right: 8px; justify-content: center; } #sceneLabel { min-width: 0; } }
 @media (prefers-reduced-motion: reduce) { #goal.on span { animation: none; transform: none; } }
 </style>
 </head>
@@ -86,35 +110,47 @@ body.paused #pauseBadge { display: block; }
 
 <section id="intro" aria-labelledby="introTitle">
   <div>
-    <p class="kicker">PD Workshop · Closing film</p>
-    <h1 id="introTitle">The goal<span>we promised</span></h1>
+    <p class="kicker">BPS GO!+ · Part 2 · Trailer</p>
+    <h1 id="introTitle">Part 2<span>The Comeback</span></h1>
     <p class="sub">In 2026 the shot went wide. In 2027 we take it again: Mr. Singh, the team, and the Mobility Award.</p>
     <div class="btns">
       <button id="btnPlay" class="primary">Play</button>
       <button id="btnPlayFull">Play full screen</button>
     </div>
-    <p id="introNote">No audio · about 25 seconds · <kbd>K</kbd> pause · <kbd>R</kbd> replay · <kbd>F</kbd> full screen</p>
+    <p id="introNote">No audio · about 33 seconds · <kbd>←</kbd> <kbd>→</kbd> scenes · <kbd>K</kbd> pause · <kbd>R</kbd> replay · <kbd>F</kbd> full screen</p>
   </div>
 </section>
 
+<div id="trailer" aria-live="polite">
+  <p class="tr-kicker">BPS GO!+ &nbsp;·&nbsp; 2026 Flashback</p>
+  <p class="tr-part">Part 2</p>
+  <h2 class="tr-title">The Comeback</h2>
+  <p class="tr-sub">The goal we promised</p>
+  <p class="tr-soon"><span>Trailer</span><b>Coming soon · 2027</b></p>
+</div>
 <div id="caption" aria-live="polite"></div>
 <div id="goal" aria-hidden="true"><span>GOAL!</span></div>
+<div id="together" aria-live="polite"><small>ONE TEAM · ONE GOAL · 2027</small><b>Let's come together</b></div>
 <div id="awardTag" aria-live="polite"><small>WINNER</small><b>MOBILITY AWARD 2027</b></div>
 
 <section id="endcard" aria-labelledby="endTitle">
   <div>
+    <p class="kicker">Part 2 · The Comeback · Coming soon</p>
+    <p class="lead">That's the goal we have to score.</p>
     <div class="compare">
       <div><b>2026</b><span>The shot went wide</span></div>
       <div class="win"><b>2027</b><span>Goal. Award. Together.</span></div>
     </div>
     <h2 id="endTitle">Mobility Award 2027</h2>
-    <p>That's the goal we have to score.</p>
     <div class="btns"><button id="btnReplay2" class="primary">Replay</button></div>
   </div>
 </section>
 
 <div id="pauseBadge" aria-hidden="true">PAUSED</div>
 <nav id="controls" aria-label="Film controls">
+  <button id="btnBack" title="Previous scene (←)">◀ Back</button>
+  <span id="sceneLabel" aria-live="polite"></span>
+  <button id="btnNext" title="Next scene (→)">Next ▶</button>
   <button id="btnPause" aria-pressed="false">Pause</button>
   <button id="btnReplay">Replay</button>
   <button id="btnFull">Full screen</button>
@@ -5726,7 +5762,8 @@ void main() {
   }
 
   // football.js
-  var END = 25.5;
+  var END = 28;
+  var PRE = 4.6;
   var BALL_R = 0.11;
   var GOAL_W = 3.66;
   var GOAL_H = 2.44;
@@ -5860,6 +5897,28 @@ void main() {
       rKnee: [0.05, 0, 0],
       hipY: 0
     })
+  };
+  GESTURES.fbTogether = {
+    fadeIn: 0.6,
+    fn: (lt) => {
+      const up = smooth2(sat((lt - 1.1) / 0.8)), z = lerp(0.55, 2.6, up), x = lerp(-0.12, 0.12, up);
+      return {
+        hipY: 0,
+        hips: [0, 0, 0],
+        spine: [0, 0, 0],
+        chest: [-0.04 * up, 0, 0],
+        neck: [0, 0, 0],
+        head: [-0.14 * up, 0, 0],
+        lSh: [x, 0, z],
+        lEl: [-0.1, 0, 0],
+        rSh: [x, 0, -z],
+        rEl: [-0.1, 0, 0],
+        lHip: [0, 0, 0.05],
+        lKnee: [0.03, 0, 0],
+        rHip: [0, 0, -0.05],
+        rKnee: [0.03, 0, 0]
+      };
+    }
   };
   GESTURES.fbAirplane = { fadeIn: 0.3, fn: (lt) => ({ lSh: [-0.1, 0, 1.45 + 0.05 * Math.sin(lt * 3)], lEl: [-0.1, 0, 0], rSh: [-0.1, 0, -1.45 - 0.05 * Math.sin(lt * 3)], rEl: [-0.1, 0, 0], head: [-0.2, 0, 0], chest: [-0.05, 0, Math.sin(lt * 2.4) * 0.12] }) };
   function canvasTex(w, h, draw) {
@@ -6398,14 +6457,14 @@ void main() {
       P2.gk.j[s + "Hand"].add(gl);
     }
     const TR = {
-      t1: [[0, -9, 29.5], [1.6, -6, 25], [2.6, -5, 23.2], [8.6, -6, 15.8], [10.4, -6, 15.8], [15.6, 7.6, 10.4]],
-      singh: [[0, 8.6, 32], [2.6, 4.8, 24.2], [5.3, 3.4, 18.4], [6.8, 2, 15.6], [8.55, 1.6, 13.4], [10.2, 1.6, 13.4], [12.9, 6.8, 8.8]],
-      t2: [[0, -5.5, 18], [8.5, -3.4, 11], [10.3, -3.4, 11], [13.7, 5.9, 9.4]],
-      t3: [[0, 9.5, 21], [8.5, 6.2, 13.2], [10.3, 6.2, 13.2], [13, 7.7, 8]],
-      d1: [[0, 0.6, 21], [4.9, 3, 18], [5.6, 3.4, 17.4], [7, 1.6, 16.4], [8.8, 0.5, 15], [10.2, 0.5, 15]],
-      d2: [[0, -1.6, 14.2], [8.6, 0.2, 11.8], [9.3, 0.3, 11.6]],
-      d3: [[0, -3.6, 13.2], [8.5, -2.2, 10], [9.5, -2.4, 9.6]],
-      gk: [[0, -0.3, 0.9], [6, 0.3, 0.9], [8.6, 0.6, 0.85], [9.12, 0.6, 0.85]]
+      t1: [[0, -9, 29.5], [1.6, -6, 25], [2.6, -5, 23.2], [8.6, -6, 15.8], [10.4, -6, 15.8], [15.6, 7.6, 10.4], [20, 7.6, 10.4], [22.4, -2.5, 6]],
+      singh: [[0, 8.6, 32], [2.6, 4.8, 24.2], [5.3, 3.4, 18.4], [6.8, 2, 15.6], [8.55, 1.6, 13.4], [10.2, 1.6, 13.4], [12.9, 6.8, 8.8], [20, 6.8, 8.8], [22.4, -0.5, 6]],
+      t2: [[0, -5.5, 18], [8.5, -3.4, 11], [10.3, -3.4, 11], [13.7, 5.9, 9.4], [20, 5.9, 9.4], [22.4, 0.5, 6]],
+      t3: [[0, 9.5, 21], [8.5, 6.2, 13.2], [10.3, 6.2, 13.2], [13, 7.7, 8], [20, 7.7, 8], [22.4, 2.5, 6]],
+      d1: [[0, 0.6, 21], [4.9, 3, 18], [5.6, 3.4, 17.4], [7, 1.6, 16.4], [8.8, 0.5, 15], [10.2, 0.5, 15], [20, 0.5, 15], [22.4, -3.5, 6]],
+      d2: [[0, -1.6, 14.2], [8.6, 0.2, 11.8], [9.3, 0.3, 11.6], [20, 0.3, 11.6], [22.4, 3.5, 6]],
+      d3: [[0, -3.6, 13.2], [8.5, -2.2, 10], [9.5, -2.4, 9.6], [20, -2.4, 9.6], [22.4, -1.5, 6]],
+      gk: [[0, -0.3, 0.9], [6, 0.3, 0.9], [8.6, 0.6, 0.85], [9.12, 0.6, 0.85], [14.2, -2.9, 0.6], [20, -2.9, 0.6], [22.4, 1.5, 6]]
     };
     const spot = V(1.7, BALL_R, 12.85);
     const flight = new THREE.QuadraticBezierCurve3(spot.clone(), V(2.1, 3.1, 6.2), V(-2.95, 1.95, 0));
@@ -6469,7 +6528,7 @@ void main() {
       c.gestures.unshift(g);
     };
     const events = [
-      [0, () => {
+      [-100, () => {
         players.forEach((c) => {
           c.gestures.length = 0;
           if (c !== P2.gk) c.gesture("fbRun", 1e9);
@@ -6513,6 +6572,19 @@ void main() {
       }],
       [15.6, () => {
         act(P2.t1, "celebrate", 12);
+      }],
+      [20, () => {
+        players.forEach((c) => {
+          c.gestures.forEach((g) => {
+            if (g.name !== "fbRun") c.endGesture(g.name);
+          });
+          c.lookAt(null);
+        });
+        P2.gk.gesture("fbRun", 1e9);
+        world.setLed("normal");
+      }],
+      [22.5, () => {
+        players.forEach((c) => act(c, "fbTogether", 1e9));
       }]
     ];
     const jumps = { singh: 14, t3: 14.15, t2: 14.35, t1: 15.8 };
@@ -6521,12 +6593,12 @@ void main() {
     const confCols = [14811157, 16777215, 16762949, 16762949, 14811157];
     const cData = Array.from({ length: CONF }, (_, i) => {
       conf.setColorAt(i, new THREE.Color(confCols[i % confCols.length]));
-      const burst = i < CONF * 0.45 ? 0 : 1;
-      return { burst, v: V((Math.random() - 0.5) * 7, 3 + Math.random() * 5, (Math.random() - 0.5) * 6), o: V((Math.random() - 0.5) * (burst ? 9 : 7), 0, (Math.random() - 0.5) * (burst ? 7 : 3)), ph: Math.random() * 6, sp: 2 + Math.random() * 5, ax: V(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize() };
+      const burst = i < CONF * 0.35 ? 0 : i < CONF * 0.68 ? 1 : 2;
+      return { burst, v: V((Math.random() - 0.5) * 7, 3 + Math.random() * 5, (Math.random() - 0.5) * 6), o: V((Math.random() - 0.5) * (burst ? 9 : 7), 0, (Math.random() - 0.5) * (burst === 1 ? 7 : 3)), ph: Math.random() * 6, sp: 2 + Math.random() * 5, ax: V(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize() };
     });
     conf.frustumCulled = false;
     scene.add(conf);
-    const bursts = [{ t: 9.95, c: V(-1, 3.4, -1.2) }, { t: 14, c: V(6.8, 6.5, 8.8) }];
+    const bursts = [{ t: 9.95, c: V(-1, 3.4, -1.2) }, { t: 14, c: V(6.8, 6.5, 8.8) }, { t: 23.7, c: V(0, 6.5, 5.6) }];
     const cm = new THREE.Matrix4(), cq = new THREE.Quaternion(), cp = V(), cs = V();
     const updateConfetti = (T2) => {
       cData.forEach((d, i) => {
@@ -6555,6 +6627,13 @@ void main() {
     const cam = { pos: V(), tgt: V(), fov: 42, shot: -1 };
     const sp = V(), st = V();
     const shots = [
+      // trailer title: slow fly-in over the stadium that lands exactly on the first shot
+      { until: 0, snap: true, f: (T2) => {
+        const k = smooth2(sat((T2 + PRE) / PRE));
+        sp.set(lerp(-26, 13, k), lerp(34, 7.2, k), lerp(72, 33.5, k));
+        st.set(lerp(0, -5.4, k), lerp(0, 1, k), lerp(8, 25.6, k));
+        return 40;
+      } },
       { until: 2.7, snap: true, f: (T2) => {
         const b = ball.position;
         sp.set(13 - T2 * 0.8, 7.2, 33.5 - T2 * 0.6);
@@ -6591,11 +6670,17 @@ void main() {
         st.set(lerp(-2.6, 0, k), lerp(0.45, 2.05, k), lerp(-1.3, -3.5, k));
         return lerp(44, 38, k);
       } },
-      { until: 1e9, snap: true, f: (T2) => {
+      { until: 20, snap: true, f: (T2) => {
         const a = 0.55 + (T2 - 16.2) * 0.1, R = 6.6 - Math.min(1.2, (T2 - 16.2) * 0.12);
         sp.set(6.8 + Math.sin(a) * R, 2.3, 8.8 + Math.cos(a) * R);
         st.set(6.6, 1.15, 8.8);
         return 40;
+      } },
+      { until: 1e9, snap: false, f: (T2) => {
+        const k = smooth2(sat((T2 - 21.5) / 5)), fov = 40, need = 5.4 / (Math.tan(fov * Math.PI / 360) * camera.aspect), dist = Math.max(8.2, need) * lerp(1.08, 0.97, k);
+        sp.set(0, 2.35, 6 + dist);
+        st.set(0, 1.75, 2.5);
+        return fov;
       } }
     ];
     const updateCamera = (T2, dt, force) => {
@@ -6625,7 +6710,7 @@ void main() {
     let T = 0, evIdx = 0, finished = false;
     const prevBall = V(), axis = V(), q = new THREE.Quaternion();
     const reset = () => {
-      T = 0;
+      T = -PRE;
       evIdx = 0;
       finished = false;
       for (const c of players) {
@@ -6644,7 +6729,7 @@ void main() {
       step(0);
       updateCamera(0, 0, true);
     };
-    const step = (rawDt) => {
+    const step = (rawDt, light = false) => {
       const dt = rawDt * timeScale(T);
       T += dt;
       while (evIdx < events.length && events[evIdx][0] <= T) events[evIdx++][1]();
@@ -6664,7 +6749,7 @@ void main() {
       prevBall.copy(ball.position);
       for (const c of players) {
         const id = c.o.id;
-        if (id === "gk" && T >= 9.12) {
+        if (id === "gk" && T >= 9.12 && T < 14.2) {
           const kd = keeperDive(T);
           c.root.position.set(kd.x, kd.y, kd.z);
           c.root.rotation.set(0, 0, kd.roll);
@@ -6679,19 +6764,25 @@ void main() {
         if (dt > 0) c.runAmp = damp(c.runAmp, clamp(spd / 4.6, 0, 1), 6, dt);
         let want;
         if (spd > 0.8) want = Math.atan2(vx, vz);
+        else if (T > 21 || id === "gk" && T >= 14.2) want = 0;
         else if (id === "singh" && T > 8.2 && T < 10.2) want = Math.atan2(spot.x - 0.1 - c.root.position.x, -1);
         else if (id === "gk") want = Math.atan2(ball.position.x - c.root.position.x, Math.max(1, ball.position.z - c.root.position.z)) * 0.6;
         else if (T > 13 && id !== "d1" && id !== "d2" && id !== "d3") want = Math.atan2(P2.singh.root.position.x - c.root.position.x, P2.singh.root.position.z - c.root.position.z) || c.yaw;
         else want = Math.atan2(ball.position.x - c.root.position.x, ball.position.z - c.root.position.z);
-        if (id === "singh" && T >= 12.9) want = Math.atan2(cam.pos.x - c.root.position.x, cam.pos.z - c.root.position.z);
+        if (id === "singh" && T >= 12.9 && T < 20 && spd <= 0.8) want = Math.atan2(cam.pos.x - c.root.position.x, cam.pos.z - c.root.position.z);
         c.targetYaw = null;
         c.yaw = angleLerp(c.yaw, want, 1 - Math.exp(-7 * dt));
-        c.root.rotation.y = c.yaw;
+        c.root.rotation.set(0, c.yaw, 0);
         const js = jumps[id];
-        c.root.position.y = js !== void 0 && T > js ? 0.3 * Math.abs(Math.sin((T - js) * Math.PI / 0.62)) : 0;
+        c.root.position.y = js !== void 0 && T > js ? 0.3 * Math.abs(Math.sin((T - js) * Math.PI / 0.62)) * sat((20.4 - T) / 0.4) : 0;
         c.prevPos.copy(c.root.position).setY(0);
         c.update(dt);
       }
+      if (!finished && T >= END) {
+        finished = true;
+        ui.end();
+      }
+      if (light) return;
       world.updateNet(impact, netAmp(T));
       const ar = smooth2(sat((T - 11.4) / 1.6));
       world.award.position.y = lerp(-4.2, 0, ar);
@@ -6704,10 +6795,6 @@ void main() {
         f.material.map.offset.x = T * 0.04 % 1;
       });
       ui.tick(T);
-      if (!finished && T >= END) {
-        finished = true;
-        ui.end();
-      }
     };
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
@@ -6735,10 +6822,14 @@ void main() {
         const h = 1 / 60;
         while (T < t) {
           const before = T;
-          step(h);
+          step(h, true);
           updateCamera(T, h * timeScale(T));
           if (T === before) break;
         }
+        step(0);
+      },
+      get ended() {
+        return finished;
       },
       render() {
         lowQ ? renderer.render(scene, camera) : composer.render();
@@ -6768,15 +6859,27 @@ void main() {
     [2.9, 6, "<em>2027</em> Same pitch. Same team. One more chance."],
     [6.2, 8.4, "Mr. Singh takes it on\u2026"],
     [13.4, 16, "We said we would score. <strong>We did.</strong>"],
-    [17, 22.5, "This time, the whole team scores."]
+    [17, 20.2, "This time, the whole team scores."],
+    [20.6, 23.5, "Both sides of the pitch. <strong>One team.</strong>"]
   ];
+  var SCENES = [[-PRE, "Part 2 \xB7 Trailer"], [0, "The pass"], [2.6, "Mr. Singh on the ball"], [8.2, "The strike"], [9.05, "Goal!"], [10.9, "Mobility Award 2027"], [16.2, "Celebration"], [20, "Let's come together"]];
+  var sceneAt = (T) => {
+    let i = 0;
+    SCENES.forEach(([t], k) => {
+      if (T >= t - 0.01) i = k;
+    });
+    return i;
+  };
   function makeUI() {
-    const cap = $("caption"), goal = $("goal"), award = $("awardTag"), end = $("endcard");
-    let capIdx = -1, goalShown = false, awardShown = false;
+    const cap = $("caption"), goal = $("goal"), award = $("awardTag"), end = $("endcard"), tog = $("together"), label = $("sceneLabel"), trailer = $("trailer");
+    let capIdx = -1, goalShown = false, awardShown = false, togShown = false, trShown = false, sceneIdx = -1;
     return {
       reset() {
         capIdx = -1;
-        goalShown = awardShown = false;
+        sceneIdx = -1;
+        goalShown = awardShown = togShown = trShown = false;
+        tog.classList.remove("on");
+        trailer.classList.remove("on");
         cap.classList.remove("on");
         goal.classList.remove("on");
         award.classList.remove("on");
@@ -6799,15 +6902,34 @@ void main() {
           goalShown = g;
           goal.classList.toggle("on", g);
         }
-        const a = T >= 16.6 && T < 23.2;
+        const a = T >= 16.6 && T < 20.2;
         if (a !== awardShown) {
           awardShown = a;
           award.classList.toggle("on", a);
+        }
+        const tr = T >= -PRE + 0.15 && T < -0.45;
+        if (tr !== trShown) {
+          trShown = tr;
+          trailer.classList.toggle("on", tr);
+        }
+        const tg = T >= 23.9 && T < END;
+        if (tg !== togShown) {
+          togShown = tg;
+          tog.classList.toggle("on", tg);
+        }
+        const si = sceneAt(T);
+        if (!document.body.classList.contains("ended") && si !== sceneIdx) {
+          sceneIdx = si;
+          label.textContent = `${si + 1}/${SCENES.length + 1} \xB7 ${SCENES[si][1]}`;
         }
       },
       end() {
         end.classList.add("on");
         document.body.classList.add("ended");
+        tog.classList.remove("on");
+        togShown = false;
+        label.textContent = `${SCENES.length + 1}/${SCENES.length + 1} \xB7 The goal`;
+        sceneIdx = SCENES.length;
       }
     };
   }
@@ -6850,6 +6972,25 @@ void main() {
     $("btnReplay").onclick = () => play(false);
     $("btnReplay2").onclick = () => play(false);
     $("btnPause").onclick = () => setPaused(!film.paused);
+    const goTo = (t) => {
+      document.body.classList.add("playing");
+      film.playing = true;
+      film.seek(t);
+    };
+    const next = () => {
+      if (!document.body.classList.contains("playing")) return play(false);
+      if (film.ended) return;
+      const i = sceneAt(film.T) + 1;
+      goTo(i < SCENES.length ? SCENES[i][0] : END);
+    };
+    const back = () => {
+      if (!document.body.classList.contains("playing")) return;
+      if (film.ended) return goTo(SCENES[SCENES.length - 1][0]);
+      const i = sceneAt(film.T);
+      goTo(film.T - SCENES[i][0] > 1.2 || i === 0 ? SCENES[i][0] : SCENES[i - 1][0]);
+    };
+    $("btnNext").onclick = next;
+    $("btnBack").onclick = back;
     $("btnFull").onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.().catch(() => {
     });
     addEventListener("keydown", (e) => {
@@ -6859,7 +7000,13 @@ void main() {
         else play(false);
       } else if (e.key === "r" || e.key === "R") play(false);
       else if (e.key === "f" || e.key === "F") $("btnFull").click();
-      else if ((e.key === "Enter" || e.key === "ArrowRight" || e.key === "PageDown") && !document.body.classList.contains("playing")) play(false);
+      else if (e.key === "ArrowRight" || e.key === "PageDown") {
+        e.preventDefault();
+        next();
+      } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+        e.preventDefault();
+        back();
+      } else if (e.key === "Enter" && !document.body.classList.contains("playing")) play(false);
     });
     if (params.has("t")) {
       document.body.classList.add("playing");

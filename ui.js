@@ -1131,11 +1131,11 @@ export class UI {
     const b64 = (document.getElementById('goal-film')?.textContent || '').trim(); if (!b64) return;
     el?.remove();
     const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0)), html = new TextDecoder('utf-8').decode(bytes);
-    const fr = h('iframe', { title: 'The goal we promised · closing film', tabindex: '-1' });
+    const fr = h('iframe', { title: 'Part 2 · The Comeback · closing film', tabindex: '-1' });
     el = h('section', { id: 'goalfilm' }, fr);
     document.body.append(el);
     fr.addEventListener('load', () => {
-      try { const doc = fr.contentDocument; doc.getElementById('btnPlay')?.click(); } catch (e) { /* film shows its own Play button */ }
+      try { const doc = fr.contentDocument; const st = doc.createElement('style'); st.textContent = '#controls, #pauseBadge { display: none !important; }'; doc.head.append(st); doc.getElementById('btnPlay')?.click(); } catch (e) { /* film shows its own Play button */ }
       fr.blur(); window.focus(); // keys stay with the presentation (Next / Back)
     });
     fr.srcdoc = html;
