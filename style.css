@@ -1137,3 +1137,10 @@ body.factcheck #rail .arrow { visibility: visible; }
   filter: drop-shadow(.12cqw .12cqw 0 #9fb0c2) drop-shadow(.12cqw .12cqw 0 #8597ab) drop-shadow(.12cqw .12cqw 0 #6d8197) drop-shadow(0 .5cqw .6cqw rgba(0,25,70,.5)); }
 #thanks.look .ty-jap span { animation: tyJapShine 2.4s ease-in-out 1; }
 @keyframes tyJapShine { 50% { filter: drop-shadow(.12cqw .12cqw 0 #9fb0c2) drop-shadow(.12cqw .12cqw 0 #8597ab) drop-shadow(.12cqw .12cqw 0 #6d8197) drop-shadow(0 0 1.6cqw rgba(255,240,180,.95)); } }
+/* zoomed-out thank-you: bigger trophy on the roof, more sky above */
+.ty-trophy { left: 76%; top: .2%; width: 11.5%; }
+.ty-jap span { font-size: 6.46cqw; }
+.ty-glow { left: 72%; top: 17.6%; width: 12%; height: 10%; }
+/* names on the back of the shirts */
+.ty-p img { width: 100%; height: 100%; display: block; }
+.ty-name { position: absolute; transform: translate(-50%, -50%) rotate(-3deg); white-space: nowrap; font: 800 .74cqw/1 Arial, Helvetica, sans-serif; color: #fff; letter-spacing: .02em; text-shadow: 0 1px 2px rgba(0,0,0,.55); }
