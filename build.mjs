@@ -41,6 +41,8 @@ html = html.replace('__THANKS__', () => JSON.stringify(ty));
 const glimpses = {}, gDir = src('assets/glimpses');
 if (fs.existsSync(gDir)) for (const f of fs.readdirSync(gDir).sort()) if (/\.(jpe?g|png|webp)$/i.test(f)) glimpses[f] = dataUri('assets/glimpses/' + f, /png$/i.test(f) ? 'image/png' : /webp$/i.test(f) ? 'image/webp' : 'image/jpeg');
 html = html.replace('__GLIMPSES__', () => JSON.stringify(glimpses));
+// closing football film (assets/goal/goal-2027.html), embedded as base64 and played in an overlay
+{ const gf = src('assets/goal/goal-2027.html'); html = html.replace('__GOALFILM__', () => fs.existsSync(gf) ? fs.readFileSync(gf).toString('base64') : ''); }
 html = html.replace('/*__CSS__*/', () => css)
   .replace('__DATA__', () => esc(data))
   .replace('/*__VENDOR__*/', () => esc(vendor.outputFiles[0].text))

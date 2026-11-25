@@ -54,6 +54,7 @@ export const CHAPTERS = [
   { id: 'factcheck', title: 'BPS Fact Check', sub: 'The JaP Newsroom', loc: 'studio', dur: 900, stepped: true },
   { id: 'future', title: 'How 2027 looks like', sub: 'Back through the gate, into the plant of 2027', loc: 'gate', dur: 40, stepped: true },
   { id: 'plant', title: 'Picture of Future', sub: 'A walk through the modern plant', loc: 'floor', dur: 36 },
+  { id: 'goal', title: 'The Goal 2027', sub: 'Closing film', loc: 'close', dur: 30, stepped: true },
   { id: 'thanks', title: 'Thank You', sub: '', loc: 'close', dur: 14, stepped: true },
 ];
 // the activities the ‹ › buttons step through: chapter + mark
@@ -62,7 +63,7 @@ export const ACTS = [
   ['glimpses', 'vsp'], ['glimpses', 'dlpc'], ['glimpses', 'space'], ['glimpses', 'dlr'], ['glimpses', 'dsm'], ['digitalsm', 'dsmex'],
   ['glimpses2', 'twin'], ['glimpses2', 'vision'], ['glimpses2', 'award'], ['factcheck', 'factcheck'],
   ['future', 'future'], ['future', 'goal'], ['future', 'kpr'], ['future', 'kpi'], ['future', 'hunt'], ['future', 'strategy'],
-  ['future', 'roadmap27'], ['future', 'challenges'], ['plant', 'pof'], ['thanks', 'thanks'],
+  ['future', 'roadmap27'], ['future', 'challenges'], ['plant', 'pof'], ['goal', 'goal'], ['thanks', 'thanks'],
 ].map(([ch, m]) => ({ ch, m }));
 
 // Operators at work [x, z, yaw]: NHA assembly line (4), VE pump line (3), NHA component line, VE press,
@@ -132,7 +133,7 @@ export class Director {
     const a = this.app;
     a.factory.sm.setScreen(smScreen || future); a.ui.smNote('close');
     a.entrance.wall.setMode(screen); a.entrance.wall.set26(9, true);
-    a.factory.setDigital(digital); a.factory.setFuture(future); a.ui.yearCard(null); a.ui.glimpses('close'); a.ui.glimpses('gemba', null); a.ui.t27Board('close'); a.ui.roadmap27(false); a.ui.challenges('close'); if (a.ui.screenView) a.ui.toggleScreenView(false); a.ui.thanks('hide'); a.ui.factCheck('close');
+    a.factory.setDigital(digital); a.factory.setFuture(future); a.ui.yearCard(null); a.ui.glimpses('close'); a.ui.glimpses('gemba', null); a.ui.t27Board('close'); a.ui.roadmap27(false); a.ui.challenges('close'); a.ui.goalFilm(false); if (a.ui.screenView) a.ui.toggleScreenView(false); a.ui.thanks('hide'); a.ui.factCheck('close');
     a.factory.gate.snap(gate);
     a.entrance.snapBuild(build); a.entrance.highlight(null); a.entrance.hideConfetti();
     a.entrance.wall.highlight(null, null);
@@ -253,7 +254,7 @@ export class Director {
     this.stage(ch.id);
     if (this.catchUp) app.timeScale = 20; else ui.fade(0, noFade ? 0.01 : 0.8);
     // the gate chapter has no title card: '2026 Flashback' is written on the doors
-    if (!['opening', 'flashback', 'house', 'roadmap', 'future', 'glimpses', 'glimpses2', 'thanks', 'factcheck'].includes(ch.id) && !skipTitle) ui.titleCard(i, ch.title, ch.sub);
+    if (!['opening', 'flashback', 'house', 'roadmap', 'future', 'glimpses', 'glimpses2', 'thanks', 'factcheck', 'goal'].includes(ch.id) && !skipTitle) ui.titleCard(i, ch.title, ch.sub);
     const ctx = this.makeCtx();
     ui.showSkip(ch.id !== 'opening'); ui.letterbox(ch.id !== 'opening');
     try { await this[ch.id](ctx); } catch (e) { console.error(e); }
@@ -695,6 +696,13 @@ export class Director {
     await ctx.wait(1.0);
   }
 
+  // the closing football film: plays by itself; Next moves on to the thank-you
+  async goal(ctx) {
+    this.mark('goal');
+    this.app.ui.goalFilm(true);
+    await this.waitStep(ctx);
+    if (!this.catchUp) { this.next(); await new Promise(() => {}); } // straight on to the thank-you (the film closes with the chapter change)
+  }
   async thanks(ctx) {
     this.mark('thanks');
     const ui = this.app.ui;

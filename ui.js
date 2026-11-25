@@ -158,6 +158,7 @@ export class UI {
     if (v === this.paused) return;
     this.paused = v; this.pressed('#btnPause', v); document.body.classList.toggle('paused', v);
     document.querySelectorAll('#thanks *').forEach(e => e.getAnimations().forEach(a => (v ? a.pause() : a.play())));
+    try { const f = document.querySelector('#goalfilm iframe')?.contentWindow?.__film; if (f) f.paused = v; } catch (e) { /* film not reachable */ }
     $('#btnPause .lg').textContent = v ? 'Play' : 'Pause'; $('#btnPause .sm').textContent = v ? '▶' : '❚❚';
     $('#btnPause').setAttribute('title', v ? 'Play animation (K)' : 'Pause animation (K)');
     const now = performance.now();
@@ -671,7 +672,7 @@ export class UI {
       }, 600);
     }
   }
-  covering() { const g = document.getElementById('glimpses'), y = document.getElementById('yearcard'), t = document.getElementById('thanks'); return document.getElementById('rm27') || document.getElementById('chsu') || (g && !g.hidden && g.dataset.state && !g.classList.contains('gemba')) || (y && y.classList.contains('on')) || (t && t.classList.contains('on')); }
+  covering() { const g = document.getElementById('glimpses'), y = document.getElementById('yearcard'), t = document.getElementById('thanks'); return document.getElementById('goalfilm') || document.getElementById('rm27') || document.getElementById('chsu') || (g && !g.hidden && g.dataset.state && !g.classList.contains('gemba')) || (y && y.classList.contains('on')) || (t && t.classList.contains('on')); }
   // 'Press → for the next step' hint in stepped chapters
   stepHint(on) { const el = $('#stepHint'); if (el) el.classList.toggle('on', !!on); const b = $('#btnSkip'); if (b) b.firstChild.textContent = on ? 'Next step ' : 'Skip scene '; }
   hideTitleCard() { $('#titlecard').classList.remove('on'); this.cancel('tc'); }
@@ -1122,6 +1123,23 @@ export class UI {
     if (!el) return;
     el.querySelectorAll('.r7-sec').forEach(s => { const on = +s.dataset.i === k; s.classList.toggle('on', on); s.classList.toggle('past', +s.dataset.i < k); });
     el.querySelectorAll('.r7-tab').forEach(t => t.classList.toggle('on', +t.dataset.i === k));
+  }
+  // ------------------------------------------------------------ closing football film (embedded HTML, full screen)
+  goalFilm(on) {
+    let el = document.getElementById('goalfilm');
+    if (!on) { if (el) { el.classList.remove('on'); setTimeout(() => el.remove(), 600); } return; }
+    const b64 = (document.getElementById('goal-film')?.textContent || '').trim(); if (!b64) return;
+    el?.remove();
+    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0)), html = new TextDecoder('utf-8').decode(bytes);
+    const fr = h('iframe', { title: 'The goal we promised · closing film', tabindex: '-1' });
+    el = h('section', { id: 'goalfilm' }, fr);
+    document.body.append(el);
+    fr.addEventListener('load', () => {
+      try { const doc = fr.contentDocument; doc.getElementById('btnPlay')?.click(); } catch (e) { /* film shows its own Play button */ }
+      fr.blur(); window.focus(); // keys stay with the presentation (Next / Back)
+    });
+    fr.srcdoc = html;
+    requestAnimationFrame(() => el.classList.add('on'));
   }
   // ------------------------------------------------------------ Challenges & Support Required
   // 'open' | 'ch' k | 'sup' k | 'close'
