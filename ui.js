@@ -1026,21 +1026,38 @@ export class UI {
     if (p.type === 'kpiPillar') { const b = [...document.querySelectorAll('.chips button')].find(x => x.textContent === p.label); if (b) { b.click(); return; } }
     this.select(p.type, p.id);
   }
-  // ------------------------------------------------------------ BPS GO!+ Roadmap 2027 (full screen picture, click to zoom)
-  roadmap27(on) {
-    let el = document.getElementById('rm27');
-    if (!on) { if (el) { el.classList.remove('on'); setTimeout(() => el.remove(), 500); } this.rm27Open = false; return; }
-    const imgs = this._glImgs ||= JSON.parse(document.getElementById('glimpse-images')?.textContent || '{}');
-    if (!imgs['roadmap-2027.jpg']) return;
-    el?.remove();
-    const img = h('img', { src: imgs['roadmap-2027.jpg'], alt: 'BPS GO!+ Roadmap 2027' });
-    const frame = h('div', { class: 'rm27-frame' }, img);
-    el = h('section', { id: 'rm27' }, h('div', { class: 'rm27-head' }, h('b', {}, 'BPS GO!+ Roadmap 2027'), h('span', {}, 'Click to zoom · click again to zoom out')), frame);
-    frame.addEventListener('click', e => {
-      if (frame.classList.toggle('zoom')) { const r = frame.getBoundingClientRect(); img.style.transformOrigin = `${((e.clientX - r.left) / r.width) * 100}% ${((e.clientY - r.top) / r.height) * 100}%`; }
-    });
-    document.body.append(el); this.rm27Open = true;
-    requestAnimationFrame(() => el.classList.add('on'));
+  // ------------------------------------------------------------ BPS GO!+ Roadmap 2027 (modern view, one pillar per Next)
+  // roadmap27(true | 'open') · roadmap27('sec', k) · roadmap27(false)
+  roadmap27(action, k = 0) {
+    let el = document.getElementById('rm27'); const R = this.data.roadmap2027;
+    if (!action || action === 'close') { if (el) { el.classList.remove('on'); setTimeout(() => el.remove(), 500); } this.rm27Open = false; return; }
+    if (!R) return;
+    if (action === true || action === 'open') {
+      el?.remove();
+      const tabs = h('div', { class: 'r7-tabs' }, R.sections.map((s, i) => h('button', { class: 'r7-tab', style: `--c:${s.color}`, 'data-i': i, onclick: () => this.roadmap27('sec', i) }, h('b', {}, s.name), h('small', {}, s.rows.length + ' elements'))));
+      const secs = R.sections.map((s, i) => {
+        let last = null;
+        const rows = s.rows.map((r, j) => {
+          const grp = r.el !== last ? h('p', { class: 'r7-el' }, r.el) : null; last = r.el;
+          const qs = r.q.map((t, qi) => h('div', { class: 'r7-q' + (t ? '' : ' empty'), style: `--qi:${qi}` }, h('i', { class: 'r7-dot' }), h('small', {}, `Q${qi + 1}`), h('span', {}, t || '·')));
+          return [grp, h('div', { class: 'r7-row', style: `--j:${j}` },
+            h('div', { class: 'r7-name' }, r.new ? h('em', { class: 'r7-new' }, 'NEW') : null, r.name),
+            h('div', { class: 'r7-track' }, h('i', { class: 'r7-line' }), qs),
+            h('div', { class: 'r7-kpi' }, h('small', {}, r.kpi), h('b', {}, r.target), r.ytd ? h('span', { class: 'r7-ytd' }, 'YTD ' + r.ytd) : null))];
+        });
+        return h('section', { class: 'r7-sec', 'data-i': i, style: `--c:${s.color}` },
+          h('div', { class: 'r7-sechead' }, h('h3', {}, s.name), h('p', { class: 'r7-tag' }, s.tag[0], ' ', h('b', {}, s.tag[1]))),
+          h('div', { class: 'r7-cols' }, h('span', {}, 'Element'), h('span', { class: 'r7-qh' }, ['1Q', '2Q', '3Q', '4Q'].map(q => h('i', {}, q + '/2027'))), h('span', {}, 'KPI · Target')),
+          h('div', { class: 'r7-rows' }, rows.flat()));
+      });
+      el = h('section', { id: 'rm27' }, h('div', { class: 'r7-head' }, h('h2', {}, R.title), tabs), h('div', { class: 'r7-stage' }, secs));
+      document.body.append(el); this.rm27Open = true;
+      requestAnimationFrame(() => el.classList.add('on'));
+      k = 0;
+    }
+    if (!el) return;
+    el.querySelectorAll('.r7-sec').forEach(s => { const on = +s.dataset.i === k; s.classList.toggle('on', on); s.classList.toggle('past', +s.dataset.i < k); });
+    el.querySelectorAll('.r7-tab').forEach(t => t.classList.toggle('on', +t.dataset.i === k));
   }
   // ------------------------------------------------------------ Challenges & Support Required
   // 'open' | 'ch' k | 'sup' k | 'close'

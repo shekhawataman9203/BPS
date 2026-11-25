@@ -781,7 +781,9 @@ this.mark('strategy');     wall.setISA(0, true); wall.setTag(false, true); wall.
     this.app.ui.toggleScreenView(false);
     // BPS GO!+ Roadmap 2027 in full screen (click to zoom)
 this.mark('roadmap27');
-    { const ui = this.app.ui; ui.roadmap27(true); ctx.cap('BPS GO!+ Roadmap 2027: every element of the house, quarter by quarter.', { hold: 600 }); await this.waitStep(ctx); ui.roadmap27(false);
+    { const ui = this.app.ui; ui.roadmap27('open'); const RS = (this.app.data.roadmap2027 || {}).sections || [];
+      for (let s = 0; s < RS.length; s++) { if (s) ui.roadmap27('sec', s); ctx.cap(`Roadmap 2027 · ${RS[s].name}: ${RS[s].tag.join(' ')}.`, { hold: 600 }); await this.waitStep(ctx); }
+      ui.roadmap27(false);
       // Challenges & Support Required: each Next brings one in
       const C = this.app.data.challenges2027;
       if (C) {

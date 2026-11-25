@@ -2180,5 +2180,295 @@
         "text": "Strengthen VSDiA implementation through ownership, monitoring and leadership reviews"
       }
     ]
+  },
+  "roadmap2027": {
+    "title": "BPS GO!+ Roadmap 2027",
+    "sections": [
+      {
+        "id": "people",
+        "name": "PEOPLE",
+        "color": "#0E9384",
+        "tag": [
+          "Foster Competency & Learning",
+          "#Lead with Competent People"
+        ],
+        "rows": [
+          {
+            "el": "Leadership commitment",
+            "name": "DLPC cadence adherence",
+            "q": [
+              "Rollout of DLPC for Std. work, Levelling",
+              ">80% adherence",
+              ">85% adherence",
+              ">90% adherence"
+            ],
+            "kpi": "LPC adherence rate",
+            "target": ">90%",
+            "ytd": "",
+            "new": false
+          },
+          {
+            "el": "Leadership commitment",
+            "name": "No. of coaches & lean multipliers",
+            "q": [
+              "Silver Star Agile Masters 03",
+              "BPS Assessors 02",
+              "Speed week coach 01",
+              "BLDP 01"
+            ],
+            "kpi": "No. of coaches",
+            "target": "7",
+            "ytd": "",
+            "new": true
+          },
+          {
+            "el": "Leadership commitment",
+            "name": "BPS competency",
+            "q": [
+              "WAtS training >100%",
+              "LBP for planners 99%",
+              "BPS Basics 97%",
+              "LLB 99%"
+            ],
+            "kpi": "BPS qualification rate",
+            "target": "99%",
+            "ytd": "97%",
+            "new": false
+          },
+          {
+            "el": "Everybody's CIP",
+            "name": "Ideas / associate with high business impact",
+            "q": [
+              "Individual contribution 30%",
+              "60%",
+              "90%",
+              "100%"
+            ],
+            "kpi": "Ideas / associate",
+            "target": ">30",
+            "ytd": "",
+            "new": false
+          },
+          {
+            "el": "Everybody's CIP",
+            "name": "Fast problem solvers thru agile (SW + Scrum)",
+            "q": [
+              "Scrum 02 · SW 04",
+              "Scrum 04 · SW 08",
+              "Scrum 06 · SW 12",
+              "Scrum 08 · SW 16"
+            ],
+            "kpi": "SCIP completion rate",
+            "target": ">90%",
+            "ytd": "80%",
+            "new": false
+          },
+          {
+            "el": "Everybody's CIP",
+            "name": "Reward & recognition",
+            "q": [
+              "CIP savings 0.25 mINR",
+              "0.50 mINR",
+              "0.75 mINR",
+              "1 mINR"
+            ],
+            "kpi": "CIP savings",
+            "target": ">1 mINR",
+            "ytd": "",
+            "new": false
+          }
+        ]
+      },
+      {
+        "id": "process",
+        "name": "PROCESS",
+        "color": "#1E88D9",
+        "tag": [
+          "Set Base right",
+          "#Work with basics"
+        ],
+        "rows": [
+          {
+            "el": "Waste-free, stable flow",
+            "name": "TPT reduction > 10%",
+            "q": [
+              "Flow project · 1:1 flow >55%",
+              ">58%",
+              ">60%",
+              ">62%"
+            ],
+            "kpi": "TPT VE · TPT NHA",
+            "target": "12 d · 8.8 d",
+            "ytd": "",
+            "new": false
+          },
+          {
+            "el": "Waste-free, stable flow",
+            "name": "E2E connected VS",
+            "q": [
+              "A-class · Upstream Pull 92.3% · W/H 50%",
+              "Upstream Pull 100% · W/H 65%",
+              "Upstream Pull 100% · W/H 70%",
+              "STL & STS >85% · W/H 80%"
+            ],
+            "kpi": "E2E coverage · DIO",
+            "target": ">80% · 35 d",
+            "ytd": "",
+            "new": false
+          },
+          {
+            "el": "Waste-free, stable flow",
+            "name": "DLPC maturity of BPS elements",
+            "q": [
+              "DLPC maturity >75%",
+              ">80%",
+              ">85%",
+              ">90%"
+            ],
+            "kpi": "DLPC maturity",
+            "target": ">90%",
+            "ytd": "",
+            "new": false
+          },
+          {
+            "el": "Waste-free, stable flow",
+            "name": "TPM maturity ≥ Level 3",
+            "q": [
+              "MAEs at S4: 10/20",
+              "14/20",
+              "18/20",
+              "20/20"
+            ],
+            "kpi": "MAEs at S4",
+            "target": "20",
+            "ytd": "",
+            "new": true
+          },
+          {
+            "el": "CIP in indirect areas",
+            "name": "Indirect function involvement in SCIP",
+            "q": [
+              "90%",
+              "90%",
+              "100%",
+              "100%"
+            ],
+            "kpi": "Indirect involvement",
+            "target": "100%",
+            "ytd": "",
+            "new": true
+          },
+          {
+            "el": "CIP in indirect areas",
+            "name": "Indirect area coverage under VSDiA",
+            "q": [
+              "VSDiA 1",
+              "VSDiA 2",
+              "VSDiA 4",
+              "VSDiA 5"
+            ],
+            "kpi": "No. of VSDiA",
+            "target": "5",
+            "ytd": "",
+            "new": false
+          }
+        ]
+      },
+      {
+        "id": "system",
+        "name": "SYSTEM",
+        "color": "#8E2C8C",
+        "tag": [
+          "Focusing on right enablers",
+          "#Win More with less"
+        ],
+        "rows": [
+          {
+            "el": "Digi Lean (BPS + I4.0)",
+            "name": "Digital solution deployment (BPS level 3)",
+            "q": [
+              "Digital solutions 3/12",
+              "6/12",
+              "9/12",
+              "12/12"
+            ],
+            "kpi": "Digital tools implemented",
+            "target": "12 (>65%)",
+            "ytd": "",
+            "new": true
+          },
+          {
+            "el": "Digi Lean (BPS + I4.0)",
+            "name": "Platform project · Hunt Runner @ RO-IN",
+            "q": [
+              "Idea scheme modernisation",
+              "Digital SM & Digital JIS",
+              "MTO dashboard ↔ Digital Twin",
+              "Digital W/H management"
+            ],
+            "kpi": "Platform projects",
+            "target": "04",
+            "ytd": "",
+            "new": true
+          },
+          {
+            "el": "Investment efficiency",
+            "name": "Zero breakdown approach",
+            "q": [
+              "MAEs tech. loss <3%: 75%",
+              "80%",
+              "85%",
+              "90%"
+            ],
+            "kpi": "MAEs with tech. loss <3%",
+            "target": ">90%",
+            "ytd": "",
+            "new": false
+          },
+          {
+            "el": "Investment efficiency",
+            "name": "MOC reduction",
+            "q": [
+              "Kick-off",
+              "",
+              "",
+              ""
+            ],
+            "kpi": "MOC",
+            "target": "NHA · VE",
+            "ytd": "",
+            "new": true
+          },
+          {
+            "el": "Investment efficiency",
+            "name": "Low capex retrofit",
+            "q": [
+              "De-risking MAEs 02",
+              "04",
+              "07",
+              "10"
+            ],
+            "kpi": "De-risking MAEs",
+            "target": "10",
+            "ytd": "",
+            "new": true
+          },
+          {
+            "el": "Investment efficiency",
+            "name": "Smart & scalable automation",
+            "q": [
+              "Kick-off",
+              "",
+              "",
+              ""
+            ],
+            "kpi": "Automation (cobot, robot, AOI / vision)",
+            "target": "10",
+            "ytd": "",
+            "new": true
+          }
+        ]
+      }
+    ]
   }
 }
