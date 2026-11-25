@@ -1148,3 +1148,5 @@ body.factcheck #rail .arrow { visibility: visible; }
 .ty-name { transform: translate(-50%, -50%) rotate(var(--r, 0deg)) scaleX(.92); font: 900 .6cqw/1 Arial, Helvetica, sans-serif; letter-spacing: .03em; text-shadow: none;
   color: #d8232a; background: linear-gradient(180deg, #ef3a40 0%, #d8232a 55%, #a5161c 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
   opacity: .93; filter: blur(.012cqw) drop-shadow(0 .03cqw 0 rgba(0,0,0,.25)); }
+/* names: white print */
+.ty-name { color: #f4f6f8; background: linear-gradient(180deg, #ffffff 0%, #eef1f4 55%, #c9d0d8 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; opacity: .95; }
