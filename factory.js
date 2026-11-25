@@ -1003,10 +1003,39 @@ export function buildFactory(scene, renderer, data = {}) {
     });
   }
 
+  // ---------- Target 2027 boards (2027 plant only): Key Performance Results, KPIs, Hunt Runner ----------
+  const t27G = new THREE.Group(); t27G.name = 'target27-boards'; t27G.visible = false; root.add(t27G);
+  const t27Boards = [];
+  ((data.targets2027 || {}).boards || []).forEach((B, k) => {
+    const PW = 4.0, PH = 2.25, PY = 1.95, BZ = 15.8, x = 7.6 + k * 4.6;
+    const g = new THREE.Group(); g.position.set(x, 0, BZ); t27G.add(g);
+    const ct = new CanvasTex(1600, 900, (ctx, w, h) => {
+      const gr = ctx.createLinearGradient(0, 0, w, h); gr.addColorStop(0, '#071426'); gr.addColorStop(1, '#10335a'); ctx.fillStyle = gr; ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = 'rgba(41,211,255,0.18)'; ctx.lineWidth = 2; for (let i = 0; i < w; i += 64) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, h); ctx.stroke(); } for (let j = 0; j < h; j += 64) { ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(w, j); ctx.stroke(); }
+      ctx.fillStyle = '#29d3ff'; ctx.font = `800 44px ${FONT}`; ctx.fillText(B.kicker, 70, 120);
+      ctx.fillStyle = '#ffffff'; ctx.font = `900 92px ${FONT}`; ctx.fillText(B.title, 70, 230);
+      ctx.fillStyle = CSS.red; ctx.fillRect(70, 262, 220, 10);
+      const n = B.cards.length, cols = B.cols || 2, rows = Math.ceil(n / cols), cw = (w - 140 - (cols - 1) * 30) / cols, chh = (h - 340 - (rows - 1) * 30) / rows;
+      for (let i = 0; i < n; i++) { const cx = 70 + (i % cols) * (cw + 30), cy = 310 + Math.floor(i / cols) * (chh + 30); ctx.strokeStyle = 'rgba(41,211,255,0.45)'; ctx.setLineDash([16, 12]); ctx.lineWidth = 3; ctx.strokeRect(cx, cy, cw, chh); ctx.setLineDash([]); ctx.fillStyle = 'rgba(41,211,255,0.5)'; ctx.font = `800 70px ${FONT}`; ctx.fillText(String(i + 1), cx + 30, cy + 90); }
+    });
+    const panel = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), new THREE.MeshBasicMaterial({ map: ct.tex, toneMapped: false }));
+    panel.position.set(0, PY, 0.05); g.add(panel);
+    const edge = new THREE.Mesh(new THREE.PlaneGeometry(PW + 0.12, PH + 0.12), new THREE.MeshBasicMaterial({ color: 0x29d3ff, toneMapped: false })); edge.position.set(0, PY, 0.02); g.add(edge);
+    box(PW + 0.2, PH + 0.2, 0.08, mat(0x1b2430, { rough: 0.35, metal: 0.7 }), 0, PY, -0.03, g);
+    const legM = mat(0x2a3440, { rough: 0.4, metal: 0.6 });
+    for (const sx of [-PW / 2 + 0.25, PW / 2 - 0.25]) { box(0.07, PY - PH / 2, 0.07, legM, sx, (PY - PH / 2) / 2, -0.03, g); box(0.09, 0.04, 0.7, legM, sx, 0.02, 0, g); }
+    const hd = new CanvasTex(1024, 128, (ctx, w, h) => { ctx.fillStyle = '#071426'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#29d3ff'; ctx.fillRect(0, h - 10, w, 10);
+      ctx.fillStyle = '#fff'; ctx.font = `800 58px ${FONT}`; ctx.fillText('TARGET 2027', 30, 82); ctx.fillStyle = '#29d3ff'; ctx.font = `700 40px ${FONT}`; ctx.textAlign = 'right'; ctx.fillText(`${k + 1} / 3`, w - 30, 80); });
+    const hm = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.325), new THREE.MeshBasicMaterial({ map: hd.tex, toneMapped: false })); hm.position.set(0, PY + PH / 2 + 0.3, 0.02); g.add(hm);
+    box(0.05, 0.22, 0.05, legM, -0.9, PY + PH / 2 + 0.1, 0, g); box(0.05, 0.22, 0.05, legM, 0.9, PY + PH / 2 + 0.1, 0, g);
+    shadows(g, true, false);
+    t27Boards.push({ obj: panel, group: g, w: PW, h: PH, x, z: BZ, y: PY, part: 2 });
+  });
+
   return {
-    root, hotspots, agvs, outside: out, sm: smRow, glBoards,
+    root, hotspots, agvs, outside: out, sm: smRow, glBoards, t27Boards,
     setFuture(on) {
-      futureOn = on; future.visible = on; glG.visible = !on; digitalTarget = on ? 1 : digitalTarget;
+      futureOn = on; future.visible = on; glG.visible = !on; t27G.visible = on; digitalTarget = on ? 1 : digitalTarget;
       doorWords = on ? { left: ['2027', 'How 2027 looks like'], right: ['FUTURE', 'BPS GO!+'], accent: '#29d3ff' } : { left: ['2026', 'Reflection'], right: ['FLASHBACK', 'BPS GO!+'], accent: CSS.red };
       leafTexes.forEach(t => t.redraw());
     },

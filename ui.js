@@ -1022,8 +1022,64 @@ export class UI {
     if (p.type === 'kpiPillar') { const b = [...document.querySelectorAll('.chips button')].find(x => x.textContent === p.label); if (b) { b.click(); return; } }
     this.select(p.type, p.id);
   }
+  // ------------------------------------------------------------ Target 2027 boards (Gemba walk in the 2027 plant)
+  // 'open' i board | 'card' i k | 'close'
+  t27Board(action, i, b) {
+    const T = (this.data.targets2027 || {}).boards || [];
+    let root = document.getElementById('t27b');
+    if (action === 'close') { if (root) root.remove(); this.t27Track = null; return; }
+    const B = T[i]; if (!B) return;
+    if (action === 'open') {
+      if (root) root.remove();
+      const cols = B.cols || 2, grouped = !!B.groups;
+      const cards = B.cards.map((c, k) => {
+        const el = h('div', { class: 'tb-card', 'data-k': k },
+          h('span', { class: 'tb-num' }, String(k + 1).padStart(2, '0')),
+          h('div', { class: 'tb-icon' }, c.icon || '🎯'),
+          h('p', { class: 'tb-label' }, c.label),
+          h('p', { class: 'tb-big' + (String(c.big).length > 12 ? ' long' : '') }, h('b', {}, c.big), c.unit ? h('small', {}, ' ' + c.unit) : null),
+          c.sub ? h('p', { class: 'tb-sub' }, c.sub) : null,
+          h('i', { class: 'tb-wave', 'aria-hidden': 'true' }), h('i', { class: 'tb-scan', 'aria-hidden': 'true' }));
+        if (grouped) { const g = c.group || 0, r = B.cards.filter((x, j) => j < k && (x.group || 0) === g).length; el.style.gridColumn = String(g + 1); el.style.gridRow = String(r + 2); }
+        return el;
+      });
+      const grid = h('div', { class: 'tb-grid', style: `--cols:${cols}` },
+        grouped ? B.groups.map((g, j) => h('p', { class: 'tb-group', style: `grid-column:${j + 1};grid-row:1` }, g)) : null, cards);
+      const board = h('div', { class: 'tb-board' + (grouped ? ' grouped' : '') + (B.cards.length > 4 ? ' many' : '') },
+        h('div', { class: 'tb-head' }, h('span', { class: 'tb-kicker' }, B.kicker), h('h2', { class: 'tb-title' }, B.title),
+          h('div', { class: 'tb-dots' }, B.cards.map(() => h('i', {})))), grid);
+      root = h('section', { id: 't27b', 'aria-live': 'polite' }, board);
+      document.body.append(root);
+      this.t27Track = b ? { obj: b.obj, w: b.w, h: b.h, el: board } : null;
+      requestAnimationFrame(() => root.classList.add('on'));
+      return;
+    }
+    if (action === 'card' && root) {
+      const k = b, el = root.querySelector(`.tb-card[data-k="${k}"]`), board = root.querySelector('.tb-board'); if (!el) return;
+      root.querySelectorAll('.tb-card').forEach((c, j) => { if (j < k) c.classList.add('in', 'done'); });
+      el.classList.remove('in'); void el.offsetWidth; el.classList.add('in');
+      root.querySelectorAll('.tb-dots i').forEach((d, j) => d.classList.toggle('on', j <= k));
+      // the board takes the hit
+      setTimeout(() => { board.classList.remove('hit'); void board.offsetWidth; board.classList.add('hit'); }, 430);
+      // numbers count up
+      const bEl = el.querySelector('.tb-big b'), txt = String(B.cards[k].big), m = txt.match(/^([^\d]*)(\d+(?:\.\d+)?)(.*)$/);
+      if (m && bEl) { const to = parseFloat(m[2]), dec = (m[2].split('.')[1] || '').length, t0 = performance.now() + 380;
+        const step = now => { const u = Math.min(1, Math.max(0, (now - t0) / 900)), e = 1 - Math.pow(1 - u, 3); bEl.textContent = m[1] + (to * e).toFixed(dec) + m[3]; if (u < 1 && el.isConnected) requestAnimationFrame(step); };
+        bEl.textContent = m[1] + (0).toFixed(dec) + m[3]; requestAnimationFrame(step); }
+    }
+  }
+  _trackEl(B, el, camera, W, H) {
+    const v = this._glV ||= [0, 1, 2, 3].map(() => new THREE.Vector3());
+    B.obj.updateMatrixWorld();
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9, behind = false;
+    [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sy], k) => { const p = v[k].set(sx * B.w / 2, sy * B.h / 2, 0.01); B.obj.localToWorld(p); p.project(camera); if (p.z > 1) behind = true;
+      const X = (p.x * 0.5 + 0.5) * W, Y = (-p.y * 0.5 + 0.5) * H; x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y); });
+    el.style.left = x0 + 'px'; el.style.top = y0 + 'px'; el.style.width = Math.max(0, x1 - x0) + 'px'; el.style.height = Math.max(0, y1 - y0) + 'px';
+    el.style.visibility = behind ? 'hidden' : '';
+  }
   // keep the Glimpses slide exactly on its board in the plant (Gemba walk)
   trackGlimpse(camera, W, H) {
+    if (this.t27Track && this.t27Track.el.isConnected) this._trackEl(this.t27Track, this.t27Track.el, camera, W, H);
     const B = this.glBoard, sec = document.getElementById('glimpses'); if (!B || !sec || sec.hidden) return;
     const v = this._glV ||= [0, 1, 2, 3].map(() => new THREE.Vector3());
     B.obj.updateMatrixWorld();

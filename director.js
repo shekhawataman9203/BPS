@@ -125,7 +125,7 @@ export class Director {
     const a = this.app;
     a.factory.sm.setScreen(smScreen || future); a.ui.smNote('close');
     a.entrance.wall.setMode(screen); a.entrance.wall.set26(9, true);
-    a.factory.setDigital(digital); a.factory.setFuture(future); a.ui.yearCard(null); a.ui.glimpses('close'); a.ui.glimpses('gemba', null); a.ui.thanks('hide'); a.ui.factCheck('close');
+    a.factory.setDigital(digital); a.factory.setFuture(future); a.ui.yearCard(null); a.ui.glimpses('close'); a.ui.glimpses('gemba', null); a.ui.t27Board('close'); a.ui.thanks('hide'); a.ui.factCheck('close');
     a.factory.gate.snap(gate);
     a.entrance.snapBuild(build); a.entrance.highlight(null); a.entrance.hideConfetti();
     a.entrance.wall.highlight(null, null);
@@ -495,6 +495,34 @@ export class Director {
     const C = V(b.x, b.y, b.z);
     ids.forEach(id => { c[id].faceTo?.(C); c[id].lookAt(C); });
   }
+  // Target 2027 boards in the 2027 plant: Key Performance Results, Key Performance Indicators, Hunt Runner @ ROIN
+  async targetBoards(ctx) {
+    const a = this.app, ui = a.ui, c = this.cast, T = (a.data.targets2027 || {}).boards || [], boards = a.factory.t27Boards || [];
+    for (let i = 0; i < T.length; i++) {
+      const b = boards[i]; if (!b) continue;
+      ui.t27Board('close');
+      ctx.cap(`Target 2027 · ${T[i].title}`, { hold: 400 });
+      await this.walkToBoard(ctx, b);
+      c.ph.gesture('present', 2.4);
+      ctx.cam(this.boardShot(b, true), 1.6);
+      await ctx.wait(1.5);
+      ui.t27Board('open', i, b);
+      await this.waitStep(ctx);
+      for (let k = 0; k < T[i].cards.length; k++) {
+        ui.t27Board('card', i, k);
+        // the board shakes when the target hits it
+        ctx.later(0.43, () => { const g = b.group, x0 = b.x; ctx.tween(0.5, u => { const d = (1 - u) * 0.035; g.position.x = x0 + Math.sin(u * 60) * d; g.rotation.z = Math.sin(u * 47) * d * 0.4; }); ctx.later(0.55, () => { g.position.x = x0; g.rotation.z = 0; }); });
+        ctx.cap(`${T[i].cards[k].label}: ${T[i].cards[k].big}${T[i].cards[k].unit ? ' ' + T[i].cards[k].unit : ''}`, { hold: 600 });
+        await this.waitStep(ctx);
+      }
+    }
+    ui.t27Board('close');
+    // back to the big screen: how we do it
+    await ctx.dip(() => {
+      this.placeGroup(WALLTEAM, this.yawTo(KPI_WALL.x, KPI_WALL.z)); c.ph.place(-4.6, 24.4, Math.atan2(KPI_WALL.x + 4.6, KPI_WALL.z - 24.4));
+      const C = this.wallCenter(); this.all().forEach(m => m.lookAt(C)); c.ph.lookAt(C); ctx.cut(SHOT.k_wall);
+    });
+  }
   // Glimpses, part 1 (before the Digital SM scene) or part 2 (after it): a Gemba walk, one board per story
   async runGlimpses(ctx, part) {
     const ui = this.app.ui, G = this.app.data.glimpses, boards = this.app.factory.glBoards || [], c = this.cast;
@@ -675,6 +703,8 @@ export class Director {
     wall.setT27(2); ph.gesture('point', 2.4, { target: wall.spot(0.75, 0.55) });
     ctx.cap('Goal 2: recognised in the Mobility BPS Award at BBM level.', { hold: 600 });
     await this.waitStep(ctx);
+    // Target 2027: a Gemba walk to three boards; each Next fires one target onto the board
+    await this.targetBoards(ctx);
     // step 4: how we do it: the house drops in, its pillars still empty
     wall.setISA(0, true); wall.setMode('house27'); wall.set27(false, 0, true); wall.set27(true, 0);
     ph.gesture('present', 2.6);
