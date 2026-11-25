@@ -11,7 +11,7 @@ import { mat, clamp, lerp, damp, angleLerp, FONT } from './util.js';
   Silent by design, like the main workshop file.
 */
 
-const END = 25.5;            // scene seconds until the end card
+const END = 28.0;            // scene seconds until the end card
 const BALL_R = 0.11;
 const GOAL_W = 3.66, GOAL_H = 2.44, NET_D = 2.0;
 const smooth = x => x * x * (3 - 2 * x);
@@ -80,6 +80,17 @@ GESTURES.fbDejected = {
     lSh: [0.3, 0.3, 0.5], lEl: [-1.35, 0, 0], rSh: [0.3, -0.3, -0.5], rEl: [-1.35, 0, 0],
     lHip: [0, 0, 0.07], lKnee: [0.05, 0, 0], rHip: [0, 0, -0.07], rKnee: [0.05, 0, 0], hipY: 0,
   }),
+};
+// everyone in one line: hands joined low, then raised together (neighbours' hands meet at 1 m spacing)
+GESTURES.fbTogether = {
+  fadeIn: 0.6, fn: lt => {
+    const up = smooth(sat((lt - 1.1) / 0.8)), z = lerp(0.55, 2.6, up), x = lerp(-0.12, 0.12, up);
+    return {
+      hipY: 0, hips: [0, 0, 0], spine: [0, 0, 0], chest: [-0.04 * up, 0, 0], neck: [0, 0, 0], head: [-0.14 * up, 0, 0],
+      lSh: [x, 0, z], lEl: [-0.1, 0, 0], rSh: [x, 0, -z], rEl: [-0.1, 0, 0],
+      lHip: [0, 0, 0.05], lKnee: [0.03, 0, 0], rHip: [0, 0, -0.05], rKnee: [0.03, 0, 0],
+    };
+  },
 };
 GESTURES.fbAirplane = { fadeIn: 0.3, fn: lt => ({ lSh: [-0.1, 0, 1.45 + 0.05 * Math.sin(lt * 3)], lEl: [-0.1, 0, 0], rSh: [-0.1, 0, -1.45 - 0.05 * Math.sin(lt * 3)], rEl: [-0.1, 0, 0], head: [-0.2, 0, 0], chest: [-0.05, 0, Math.sin(lt * 2.4) * 0.12] }) };
 
@@ -384,14 +395,14 @@ export function createFilm(canvas, ui) {
   for (const s of ['l', 'r']) { const gl = new THREE.Mesh(new THREE.SphereGeometry(0.05, 14, 10), mat(0xf2f2f2, { rough: 0.6 })); gl.scale.set(0.9, 1.2, 1.3); gl.position.y = -0.06; P.gk.j[s + 'Hand'].add(gl); }
 
   const TR = {
-    t1: [[0, -9.0, 29.5], [1.6, -6.0, 25.0], [2.6, -5.0, 23.2], [8.6, -6.0, 15.8], [10.4, -6.0, 15.8], [15.6, 7.6, 10.4]],
-    singh: [[0, 8.6, 32.0], [2.6, 4.8, 24.2], [5.3, 3.4, 18.4], [6.8, 2.0, 15.6], [8.55, 1.6, 13.4], [10.2, 1.6, 13.4], [12.9, 6.8, 8.8]],
-    t2: [[0, -5.5, 18], [8.5, -3.4, 11.0], [10.3, -3.4, 11.0], [13.7, 5.9, 9.4]],
-    t3: [[0, 9.5, 21], [8.5, 6.2, 13.2], [10.3, 6.2, 13.2], [13.0, 7.7, 8.0]],
-    d1: [[0, 0.6, 21.0], [4.9, 3.0, 18.0], [5.6, 3.4, 17.4], [7.0, 1.6, 16.4], [8.8, 0.5, 15.0], [10.2, 0.5, 15.0]],
-    d2: [[0, -1.6, 14.2], [8.6, 0.2, 11.8], [9.3, 0.3, 11.6]],
-    d3: [[0, -3.6, 13.2], [8.5, -2.2, 10.0], [9.5, -2.4, 9.6]],
-    gk: [[0, -0.3, 0.9], [6.0, 0.3, 0.9], [8.6, 0.6, 0.85], [9.12, 0.6, 0.85]],
+    t1: [[0, -9.0, 29.5], [1.6, -6.0, 25.0], [2.6, -5.0, 23.2], [8.6, -6.0, 15.8], [10.4, -6.0, 15.8], [15.6, 7.6, 10.4], [20.0, 7.6, 10.4], [22.4, -2.5, 6]],
+    singh: [[0, 8.6, 32.0], [2.6, 4.8, 24.2], [5.3, 3.4, 18.4], [6.8, 2.0, 15.6], [8.55, 1.6, 13.4], [10.2, 1.6, 13.4], [12.9, 6.8, 8.8], [20.0, 6.8, 8.8], [22.4, -0.5, 6]],
+    t2: [[0, -5.5, 18], [8.5, -3.4, 11.0], [10.3, -3.4, 11.0], [13.7, 5.9, 9.4], [20.0, 5.9, 9.4], [22.4, 0.5, 6]],
+    t3: [[0, 9.5, 21], [8.5, 6.2, 13.2], [10.3, 6.2, 13.2], [13.0, 7.7, 8.0], [20.0, 7.7, 8.0], [22.4, 2.5, 6]],
+    d1: [[0, 0.6, 21.0], [4.9, 3.0, 18.0], [5.6, 3.4, 17.4], [7.0, 1.6, 16.4], [8.8, 0.5, 15.0], [10.2, 0.5, 15.0], [20.0, 0.5, 15.0], [22.4, -3.5, 6]],
+    d2: [[0, -1.6, 14.2], [8.6, 0.2, 11.8], [9.3, 0.3, 11.6], [20.0, 0.3, 11.6], [22.4, 3.5, 6]],
+    d3: [[0, -3.6, 13.2], [8.5, -2.2, 10.0], [9.5, -2.4, 9.6], [20.0, -2.4, 9.6], [22.4, -1.5, 6]],
+    gk: [[0, -0.3, 0.9], [6.0, 0.3, 0.9], [8.6, 0.6, 0.85], [9.12, 0.6, 0.85], [14.2, -2.9, 0.6], [20.0, -2.9, 0.6], [22.4, 1.5, 6]],
   };
 
   // ---- ball path ----
@@ -451,6 +462,12 @@ export function createFilm(canvas, ui) {
     [13.7, () => { act(P.t2, 'celebrate', 12); }],
     [14.0, () => { act(P.gk, 'fbDejected', 20); }],
     [15.6, () => { act(P.t1, 'celebrate', 12); }],
+    [20.0, () => { // everyone stops celebrating and walks into one line
+      players.forEach(c => { c.gestures.forEach(g => { if (g.name !== 'fbRun') c.endGesture(g.name); }); c.lookAt(null); });
+      P.gk.gesture('fbRun', 1e9);
+      world.setLed('normal');
+    }],
+    [22.5, () => { players.forEach(c => act(c, 'fbTogether', 1e9)); }],
   ];
   const jumps = { singh: 14.0, t3: 14.15, t2: 14.35, t1: 15.8 };
 
@@ -460,11 +477,11 @@ export function createFilm(canvas, ui) {
   const confCols = [0xE20015, 0xffffff, 0xffc845, 0xffc845, 0xE20015];
   const cData = Array.from({ length: CONF }, (_, i) => {
     conf.setColorAt(i, new THREE.Color(confCols[i % confCols.length]));
-    const burst = i < CONF * 0.45 ? 0 : 1;
-    return { burst, v: V((Math.random() - 0.5) * 7, 3 + Math.random() * 5, (Math.random() - 0.5) * 6), o: V((Math.random() - 0.5) * (burst ? 9 : 7), 0, (Math.random() - 0.5) * (burst ? 7 : 3)), ph: Math.random() * 6, sp: 2 + Math.random() * 5, ax: V(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize() };
+    const burst = i < CONF * 0.35 ? 0 : i < CONF * 0.68 ? 1 : 2;
+    return { burst, v: V((Math.random() - 0.5) * 7, 3 + Math.random() * 5, (Math.random() - 0.5) * 6), o: V((Math.random() - 0.5) * (burst ? 9 : 7), 0, (Math.random() - 0.5) * (burst === 1 ? 7 : 3)), ph: Math.random() * 6, sp: 2 + Math.random() * 5, ax: V(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize() };
   });
   conf.frustumCulled = false; scene.add(conf);
-  const bursts = [{ t: 9.95, c: V(-1.0, 3.4, -1.2) }, { t: 14.0, c: V(6.8, 6.5, 8.8) }];
+  const bursts = [{ t: 9.95, c: V(-1.0, 3.4, -1.2) }, { t: 14.0, c: V(6.8, 6.5, 8.8) }, { t: 23.7, c: V(0, 6.5, 5.6) }];
   const cm = new THREE.Matrix4(), cq = new THREE.Quaternion(), cp = V(), cs = V();
   const updateConfetti = T => {
     cData.forEach((d, i) => {
@@ -489,7 +506,8 @@ export function createFilm(canvas, ui) {
     { until: 10.9, snap: true, f: T => { const b = ball.position; sp.set(-1.4, 1.55, -4.7); st.set(lerp(-1.6, b.x, 0.7), lerp(1.2, b.y, 0.6), lerp(4, b.z, 0.55)); return 50; } },
     { until: 12.4, snap: true, f: T => { const k = smooth(sat((T - 10.9) / 1.5)); sp.set(lerp(0.6, -1.5, k), lerp(2.1, 1.85, k), lerp(7.0, 3.4, k)); st.set(-2.6, 0.45, -1.3); return 44; } },
     { until: 16.2, snap: false, f: T => { const k = smooth(sat((T - 12.4) / 2.6)); sp.set(lerp(-1.5, -0.2, k), lerp(1.85, 1.7, k), lerp(3.4, 4.6, k)); st.set(lerp(-2.6, 0, k), lerp(0.45, 2.05, k), lerp(-1.3, -3.5, k)); return lerp(44, 38, k); } },
-    { until: 1e9, snap: true, f: T => { const a = 0.55 + (T - 16.2) * 0.1, R = 6.6 - Math.min(1.2, (T - 16.2) * 0.12); sp.set(6.8 + Math.sin(a) * R, 2.3, 8.8 + Math.cos(a) * R); st.set(6.6, 1.15, 8.8); return 40; } },
+    { until: 20.0, snap: true, f: T => { const a = 0.55 + (T - 16.2) * 0.1, R = 6.6 - Math.min(1.2, (T - 16.2) * 0.12); sp.set(6.8 + Math.sin(a) * R, 2.3, 8.8 + Math.cos(a) * R); st.set(6.6, 1.15, 8.8); return 40; } },
+    { until: 1e9, snap: false, f: T => { const k = smooth(sat((T - 21.5) / 5)), fov = 40, need = 5.4 / (Math.tan(fov * Math.PI / 360) * camera.aspect), dist = Math.max(8.2, need) * lerp(1.08, 0.97, k); sp.set(0, 2.35, 6 + dist); st.set(0, 1.75, 2.5); return fov; } },
   ];
   const updateCamera = (T, dt, force) => {
     let i = shots.findIndex(s => T < s.until); if (i < 0) i = shots.length - 1;
@@ -513,7 +531,7 @@ export function createFilm(canvas, ui) {
     step(0);
     updateCamera(0, 0, true);
   };
-  const step = (rawDt) => {
+  const step = (rawDt, light = false) => {
     const dt = rawDt * timeScale(T);
     T += dt;
     while (evIdx < events.length && events[evIdx][0] <= T) events[evIdx++][1]();
@@ -526,7 +544,7 @@ export function createFilm(canvas, ui) {
     // players
     for (const c of players) {
       const id = c.o.id;
-      if (id === 'gk' && T >= 9.12) {
+      if (id === 'gk' && T >= 9.12 && T < 14.2) {
         const kd = keeperDive(T); c.root.position.set(kd.x, kd.y, kd.z); c.root.rotation.set(0, 0, kd.roll); c.yaw = 0;
         c.update(dt); continue;
       }
@@ -538,19 +556,22 @@ export function createFilm(canvas, ui) {
       // facing: the way they run; when still, toward the ball (Mr. Singh keeps facing the goal for his strike)
       let want;
       if (spd > 0.8) want = Math.atan2(vx, vz);
+      else if (T > 21.0 || (id === 'gk' && T >= 14.2)) want = 0;
       else if (id === 'singh' && T > 8.2 && T < 10.2) want = Math.atan2(spot.x - 0.1 - c.root.position.x, -1);
       else if (id === 'gk') want = Math.atan2(ball.position.x - c.root.position.x, Math.max(1, ball.position.z - c.root.position.z)) * 0.6;
       else if (T > 13 && id !== 'd1' && id !== 'd2' && id !== 'd3') want = Math.atan2(P.singh.root.position.x - c.root.position.x, P.singh.root.position.z - c.root.position.z) || c.yaw;
       else want = Math.atan2(ball.position.x - c.root.position.x, ball.position.z - c.root.position.z);
-      if (id === 'singh' && T >= 12.9) want = Math.atan2(cam.pos.x - c.root.position.x, cam.pos.z - c.root.position.z);
-      c.targetYaw = null; c.yaw = angleLerp(c.yaw, want, 1 - Math.exp(-7 * dt)); c.root.rotation.y = c.yaw;
+      if (id === 'singh' && T >= 12.9 && T < 20 && spd <= 0.8) want = Math.atan2(cam.pos.x - c.root.position.x, cam.pos.z - c.root.position.z);
+      c.targetYaw = null; c.yaw = angleLerp(c.yaw, want, 1 - Math.exp(-7 * dt)); c.root.rotation.set(0, c.yaw, 0);
       // celebration jumps
       const js = jumps[id];
-      c.root.position.y = js !== undefined && T > js ? 0.3 * Math.abs(Math.sin((T - js) * Math.PI / 0.62)) : 0;
+      c.root.position.y = js !== undefined && T > js ? 0.3 * Math.abs(Math.sin((T - js) * Math.PI / 0.62)) * sat((20.4 - T) / 0.4) : 0;
       c.prevPos.copy(c.root.position).setY(0);
       c.update(dt);
     }
     // net, award board, crowd, confetti, LEDs
+    if (!finished && T >= END) { finished = true; ui.end(); }
+    if (light) return;
     world.updateNet(impact, netAmp(T));
     const ar = smooth(sat((T - 11.4) / 1.6));
     world.award.position.y = lerp(-4.2, 0, ar);
@@ -561,7 +582,6 @@ export function createFilm(canvas, ui) {
     updateConfetti(T);
     world.leds.forEach(f => { f.material.map.offset.x = (T * 0.04) % 1; });
     ui.tick(T);
-    if (!finished && T >= END) { finished = true; ui.end(); }
   };
 
   // ---- post-processing ----
@@ -576,7 +596,8 @@ export function createFilm(canvas, ui) {
     playing: false, paused: false,
     get T() { return T; },
     reset,
-    seek(t) { reset(); const h = 1 / 60; while (T < t) { const before = T; step(h); updateCamera(T, h * timeScale(T)); if (T === before) break; } },
+    seek(t) { reset(); const h = 1 / 60; while (T < t) { const before = T; step(h, true); updateCamera(T, h * timeScale(T)); if (T === before) break; } step(0); },
+    get ended() { return finished; },
     render() { lowQ ? renderer.render(scene, camera) : composer.render(); },
     frame(rawDt) {
       if (this.playing && !this.paused) { step(Math.min(rawDt, 0.05)); updateCamera(T, Math.min(rawDt, 0.05) * timeScale(T)); }
@@ -596,20 +617,26 @@ const CAPTIONS = [
   [2.9, 6.0, '<em>2027</em> Same pitch. Same team. One more chance.'],
   [6.2, 8.4, 'Mr. Singh takes it on…'],
   [13.4, 16.0, 'We said we would score. <strong>We did.</strong>'],
-  [17.0, 22.5, 'This time, the whole team scores.'],
+  [17.0, 20.2, 'This time, the whole team scores.'],
+  [20.6, 23.5, 'Both sides of the pitch. <strong>One team.</strong>'],
 ];
+// scenes for the Back / Next buttons (the end card is the last stop)
+const SCENES = [[0, 'The pass'], [2.6, 'Mr. Singh on the ball'], [8.2, 'The strike'], [9.05, 'Goal!'], [10.9, 'Mobility Award 2027'], [16.2, 'Celebration'], [20.0, "Let's come together"]];
+const sceneAt = T => { let i = 0; SCENES.forEach(([t], k) => { if (T >= t - 0.01) i = k; }); return i; };
 function makeUI() {
-  const cap = $('caption'), goal = $('goal'), award = $('awardTag'), end = $('endcard');
-  let capIdx = -1, goalShown = false, awardShown = false;
+  const cap = $('caption'), goal = $('goal'), award = $('awardTag'), end = $('endcard'), tog = $('together'), label = $('sceneLabel');
+  let capIdx = -1, goalShown = false, awardShown = false, togShown = false, sceneIdx = -1;
   return {
-    reset() { capIdx = -1; goalShown = awardShown = false; cap.classList.remove('on'); goal.classList.remove('on'); award.classList.remove('on'); end.classList.remove('on'); document.body.classList.remove('ended'); },
+    reset() { capIdx = -1; sceneIdx = -1; goalShown = awardShown = togShown = false; tog.classList.remove('on'); cap.classList.remove('on'); goal.classList.remove('on'); award.classList.remove('on'); end.classList.remove('on'); document.body.classList.remove('ended'); },
     tick(T) {
       const i = CAPTIONS.findIndex(([a, b]) => T >= a && T < b);
       if (i !== capIdx) { capIdx = i; cap.classList.remove('on'); if (i >= 0) { cap.innerHTML = CAPTIONS[i][2]; void cap.offsetWidth; cap.classList.add('on'); } }
       const g = T >= 9.9 && T < 12.2; if (g !== goalShown) { goalShown = g; goal.classList.toggle('on', g); }
-      const a = T >= 16.6 && T < 23.2; if (a !== awardShown) { awardShown = a; award.classList.toggle('on', a); }
+      const a = T >= 16.6 && T < 20.2; if (a !== awardShown) { awardShown = a; award.classList.toggle('on', a); }
+      const tg = T >= 23.9 && T < END; if (tg !== togShown) { togShown = tg; tog.classList.toggle('on', tg); }
+      const si = sceneAt(T); if (!document.body.classList.contains('ended') && si !== sceneIdx) { sceneIdx = si; label.textContent = `${si + 1}/${SCENES.length + 1} · ${SCENES[si][1]}`; }
     },
-    end() { end.classList.add('on'); document.body.classList.add('ended'); },
+    end() { end.classList.add('on'); document.body.classList.add('ended'); tog.classList.remove('on'); togShown = false; label.textContent = `${SCENES.length + 1}/${SCENES.length + 1} · The goal`; sceneIdx = SCENES.length; },
   };
 }
 
@@ -635,12 +662,28 @@ function boot() {
   $('btnReplay').onclick = () => play(false);
   $('btnReplay2').onclick = () => play(false);
   $('btnPause').onclick = () => setPaused(!film.paused);
+  const goTo = t => { document.body.classList.add('playing'); film.playing = true; film.seek(t); };
+  const next = () => {
+    if (!document.body.classList.contains('playing')) return play(false);
+    if (film.ended) return;
+    const i = sceneAt(film.T) + 1;
+    goTo(i < SCENES.length ? SCENES[i][0] : END);
+  };
+  const back = () => {
+    if (!document.body.classList.contains('playing')) return;
+    if (film.ended) return goTo(SCENES[SCENES.length - 1][0]);
+    const i = sceneAt(film.T);
+    goTo(film.T - SCENES[i][0] > 1.2 || i === 0 ? SCENES[i][0] : SCENES[i - 1][0]);
+  };
+  $('btnNext').onclick = next; $('btnBack').onclick = back;
   $('btnFull').onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.().catch(() => { });
   addEventListener('keydown', e => {
     if (e.key === 'k' || e.key === 'K' || (e.key === ' ' && document.body.classList.contains('playing'))) { e.preventDefault(); if (document.body.classList.contains('playing')) setPaused(!film.paused); else play(false); }
     else if (e.key === 'r' || e.key === 'R') play(false);
     else if (e.key === 'f' || e.key === 'F') $('btnFull').click();
-    else if ((e.key === 'Enter' || e.key === 'ArrowRight' || e.key === 'PageDown') && !document.body.classList.contains('playing')) play(false);
+    else if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); back(); }
+    else if (e.key === 'Enter' && !document.body.classList.contains('playing')) play(false);
   });
   // ?t=12 jumps to a moment (paused) for checking; ?autoplay=1 starts straight away (for embedding)
   if (params.has('t')) { document.body.classList.add('playing'); film.playing = true; film.seek(parseFloat(params.get('t')) || 0); setPaused(true); }

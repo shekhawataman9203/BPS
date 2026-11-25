@@ -26,5 +26,5 @@ To use real 3D models later, load GLB files with Three.js GLTFLoader and swap th
 
 ## Closing film: "The goal we promised" (separate file)
 
-- `football.js`, `football.html` — a separate ~25 s silent film for the end of the PD workshop: eight players, Mr. Singh (#10) scores past the diving goalkeeper, the camera moves to the net where the MOBILITY AWARD 2027 board rises, and the team celebrates. It reuses the same characters as the main file.
+- `football.js`, `football.html` — a separate ~28 s silent film for the end of the PD workshop: eight players, Mr. Singh (#10) scores past the diving goalkeeper, the camera moves to the net where the MOBILITY AWARD 2027 board rises, the team celebrates, and finally all eight players join hands and raise them under "Let's come together". Back / Next (or ← →, clicker Page Up / Down) jump between scenes. It reuses the same characters as the main file.
 - `npm run build` also writes `dist/goal-2027.html`. URL options: `?autoplay=1` starts straight away (for embedding), `?t=12` jumps to a moment, `?quality=low` for slow machines. Keys: `K` pause, `R` replay, `F` full screen.
