@@ -700,12 +700,14 @@ export class Director {
     const ui = this.app.ui;
     ui.thanks('show');
     await ctx.wait(1.0);
-    ui.thanks('walk');                 // the three walk to their places on the BPS plinth
-    await ctx.wait(4.6);
-    ui.thanks('look');                 // and look up at JaP
-    for (let k = 0; k < 3; k++) { await this.waitStep(ctx); ui.thanks('check', k); } // each Next: one item drops in with a blast
-    await ctx.wait(1.5);
+    ui.thanks('drop');                 // the three drop from above and land on the BPS plinth
+    await ctx.wait(3.6);
+    ui.thanks('jap');                  // JaP lands on the building
+    await this.waitStep(ctx);
+    ui.thanks('trophy');               // Next: the Mobility BPS Award 2027 trophy comes down
+    await this.waitStep(ctx);
   }
+
 
   async future(ctx) {
     this.mark('future');

@@ -4,6 +4,22 @@ import { CHAPTERS } from './director.js';
 import { allRows, STATUS_LABEL, houseColumns } from './rooms.js';
 
 const $ = (s, r = document) => r.querySelector(s);
+const TROPHY_SVG = `<svg viewBox="0 0 400 560" xmlns="http://www.w3.org/2000/svg"><defs>
+<linearGradient id="tg1" x1="0" x2="1"><stop offset="0" stop-color="#8a5a00"/><stop offset=".25" stop-color="#ffe27a"/><stop offset=".5" stop-color="#fff6c8"/><stop offset=".7" stop-color="#e8b020"/><stop offset="1" stop-color="#7a4a00"/></linearGradient>
+<linearGradient id="tg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a3240"/><stop offset="1" stop-color="#0c1018"/></linearGradient>
+<radialGradient id="tg3" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".4" stop-color="#ffe27a"/><stop offset="1" stop-color="#b07800"/></radialGradient></defs>
+<path d="M95 70 C20 70 20 190 115 205 L120 185 C60 175 55 100 100 95 Z" fill="url(#tg1)"/><path d="M305 70 C380 70 380 190 285 205 L280 185 C340 175 345 100 300 95 Z" fill="url(#tg1)"/>
+<path d="M80 40 H320 C320 190 280 250 200 262 C120 250 80 190 80 40 Z" fill="url(#tg1)" stroke="#7a4a00" stroke-width="3"/>
+<ellipse cx="200" cy="40" rx="120" ry="16" fill="#fff2b0" stroke="#b07800" stroke-width="3"/>
+<path d="M120 60 C125 150 150 210 190 235" stroke="#fffbe0" stroke-width="10" fill="none" opacity=".6" stroke-linecap="round"/>
+<circle cx="200" cy="130" r="44" fill="url(#tg3)" stroke="#8a5a00" stroke-width="3"/><path d="M200 102 L208 122 L230 124 L213 138 L219 160 L200 148 L181 160 L187 138 L170 124 L192 122 Z" fill="#E20015"/>
+<rect x="182" y="262" width="36" height="58" fill="url(#tg1)"/><path d="M150 320 H250 L262 350 H138 Z" fill="url(#tg1)" stroke="#7a4a00" stroke-width="2"/>
+<rect x="100" y="350" width="200" height="150" rx="10" fill="url(#tg2)" stroke="#e8b020" stroke-width="5"/>
+<rect x="118" y="368" width="164" height="114" rx="6" fill="none" stroke="#e8b020" stroke-width="1.5" opacity=".6"/>
+<text x="200" y="404" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="25" fill="#ffe27a">MOBILITY</text>
+<text x="200" y="432" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="25" fill="#ffffff">BPS AWARD</text>
+<text x="200" y="468" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="32" fill="#ffe27a">2027</text>
+<rect x="84" y="500" width="232" height="26" rx="6" fill="url(#tg1)"/></svg>`;
 function h(tag, attrs = {}, ...kids) {
   const e = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs || {})) {
@@ -570,15 +586,35 @@ export class UI {
       stage.append(h('i', { class: 'ty-glow', 'aria-hidden': 'true' }));
       (T.layout.people || []).forEach((r, i) => { const p = h('img', { class: 'ty-p', src: T.img['p' + (i + 1)], alt: '' }); place(p, r); stage.append(p); });
       (T.layout.checks || []).forEach((r, i) => { const c = h('img', { class: 'ty-c', src: T.img['c' + (i + 1)], alt: '' }); place(c, r); stage.append(c); });
+      if (T.img.jap && T.layout.jap) { const j = h('img', { class: 'ty-jap', src: T.img.jap, alt: 'JaP' }); place(j, T.layout.jap); stage.append(j); }
+      stage.append(h('div', { class: 'ty-trophy', 'aria-hidden': 'true' }, h('i', { class: 'ty-rays' }), h('div', { class: 'ty-cup', html: TROPHY_SVG })));
     }
     const people = [...stage.querySelectorAll('.ty-p')], checks = [...stage.querySelectorAll('.ty-c')];
+    const jap = stage.querySelector('.ty-jap'), trophy = stage.querySelector('.ty-trophy');
+    // dust burst on landing: clouds rolling out sideways, bits flung into the air (as on the 2027 house)
+    const dust = (cx, gy, wd) => {
+      for (let j = 0; j < 22; j++) {
+        const side = j % 2 ? 1 : -1, sp = 0.4 + Math.random() * 0.9, sz = 3 + Math.random() * 4;
+        const d = h('i', { class: 'ty-dust', style: `left:${cx + side * wd * 0.3}%;top:${gy}%;width:${sz}%;` }); stage.append(d);
+        d.animate([{ transform: 'translate(-50%,-50%) scale(.3)', opacity: .8 }, { transform: `translate(calc(-50% + ${side * (40 + sp * 160)}%), calc(-50% - ${20 + Math.random() * 90}%)) scale(1.6)`, opacity: 0 }], { duration: 1400 + Math.random() * 900, easing: 'cubic-bezier(.1,.7,.3,1)', fill: 'forwards' }).onfinish = () => d.remove();
+      }
+      for (let j = 0; j < 18; j++) {
+        const b = h('i', { class: 'ty-bit', style: `left:${cx + (Math.random() - .5) * wd}%;top:${gy}%;background:${['#FFD34D', '#0A6EBD', '#9a9288'][j % 3]}` }); stage.append(b);
+        const vx = (Math.random() - .5) * 14, vy = 6 + Math.random() * 12, kf = [];
+        for (let s = 0; s <= 10; s++) { const t = s / 10; kf.push({ transform: `translate(${vx * t * 10}vw, ${(-vy * t + 22 * t * t) * 1.6}vh) rotate(${t * 540}deg)`, opacity: 1 - t * t }); }
+        b.animate(kf, { duration: 1300 + Math.random() * 600, easing: 'linear', fill: 'forwards' }).onfinish = () => b.remove();
+      }
+      const ring = h('i', { class: 'ty-ring', style: `left:${cx}%;top:${gy}%;width:${wd * 1.6}%` }); stage.append(ring); setTimeout(() => ring.remove(), 900);
+      stage.animate([{ transform: 'translate(0,0)' }, { transform: 'translate(-6px,4px)' }, { transform: 'translate(7px,-3px)' }, { transform: 'translate(-4px,2px)' }, { transform: 'translate(0,0)' }], { duration: 380 });
+    };
     const stop = e => e.getAnimations().forEach(a => a.cancel());
     if (action === 'hide') { el.classList.remove('on'); el.hidden = true; return; }
     el.hidden = false;
     if (action === 'show' || action === 'final') {
       [...people, ...checks].forEach(stop); el.classList.remove('look');
       const fin = action === 'final';
-      people.forEach(p => p.style.opacity = fin ? 1 : 0); checks.forEach(c => c.style.opacity = fin ? 1 : 0);
+      people.forEach(p => p.style.opacity = fin ? 1 : 0); checks.forEach(c => c.style.opacity = 0);
+      if (jap) { stop(jap); jap.style.opacity = fin ? 1 : 0; } if (trophy) { trophy.classList.toggle('in', fin); trophy.classList.toggle('done', fin); trophy.classList.toggle('parked', fin); }
       if (fin) el.classList.add('look');
       void el.offsetWidth; el.classList.add('on'); return;
     }
@@ -593,6 +629,31 @@ export class UI {
         const a = p.animate(kf, { duration: 2600, delay: i * 900, easing: 'linear', fill: 'forwards' });
         if (i === 2) a.onfinish = () => p.animate([{ transform: 'translateY(-5%)' }, { transform: 'translateY(0)' }], { duration: 450, easing: 'ease-out' }); // kneels
       });
+      return;
+    }
+    if (action === 'drop') {
+      // the three drop from above and land on the plinth, one after another
+      people.forEach((p, i) => {
+        const r = T.layout.people[i]; p.style.opacity = 0;
+        setTimeout(() => {
+          p.style.opacity = 1;
+          p.animate([{ transform: 'translateY(-260%) scale(.96)', opacity: 0 }, { transform: 'translateY(-120%)', opacity: 1, offset: .35 }, { transform: 'translateY(0) scaleY(.9) scaleX(1.06)', offset: .78, easing: 'ease-out' }, { transform: 'translateY(-3%) scaleY(1.03)', offset: .9 }, { transform: 'none', opacity: 1 }], { duration: 900, easing: 'cubic-bezier(.55,0,1,.45)', fill: 'forwards' });
+          setTimeout(() => dust(r[0] + r[2] / 2, r[1] + r[3] - 1, r[2]), 700);
+        }, i * 1100);
+      });
+      return;
+    }
+    if (action === 'jap') {
+      // JaP lands on the building glass
+      if (!jap) return; const r = T.layout.jap; jap.style.opacity = 1;
+      jap.animate([{ transform: 'translateY(-160%) rotate(-6deg)', opacity: 0 }, { transform: 'translateY(4%) rotate(0)', opacity: 1, offset: .75 }, { transform: 'translateY(-2%)', offset: .88 }, { transform: 'none', opacity: 1 }], { duration: 900, easing: 'cubic-bezier(.55,0,1,.45)', fill: 'forwards' });
+      setTimeout(() => { dust(r[0] + r[2] / 2, r[1] + r[3] - 2, r[2]); el.classList.add('look'); }, 680);
+      return;
+    }
+    if (action === 'trophy') {
+      if (!trophy) return; trophy.classList.remove('in', 'done', 'parked'); void trophy.offsetWidth; trophy.classList.add('in');
+      setTimeout(() => { dust(50, 86, 26); this.crackers(stage, [[30, 10, 40, 60]], 3600); trophy.classList.add('done'); }, 900);
+      setTimeout(() => { if (trophy.classList.contains('done')) trophy.classList.add('parked'); }, 3400); // then moves aside so the three stay in view
       return;
     }
     if (action === 'look') { el.classList.add('look'); return; }
