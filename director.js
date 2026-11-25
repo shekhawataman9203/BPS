@@ -125,7 +125,7 @@ export class Director {
     const a = this.app;
     a.factory.sm.setScreen(smScreen || future); a.ui.smNote('close');
     a.entrance.wall.setMode(screen); a.entrance.wall.set26(9, true);
-    a.factory.setDigital(digital); a.factory.setFuture(future); a.ui.yearCard(null); a.ui.glimpses('close'); a.ui.glimpses('gemba', null); a.ui.t27Board('close'); a.ui.thanks('hide'); a.ui.factCheck('close');
+    a.factory.setDigital(digital); a.factory.setFuture(future); a.ui.yearCard(null); a.ui.glimpses('close'); a.ui.glimpses('gemba', null); a.ui.t27Board('close'); if (a.ui.screenView) a.ui.toggleScreenView(false); a.ui.thanks('hide'); a.ui.factCheck('close');
     a.factory.gate.snap(gate);
     a.entrance.snapBuild(build); a.entrance.highlight(null); a.entrance.hideConfetti();
     a.entrance.wall.highlight(null, null);
@@ -512,6 +512,7 @@ export class Director {
         ui.t27Board('card', i, k);
         // the board shakes when the target hits it
         ctx.later(0.43, () => { const g = b.group, x0 = b.x; ctx.tween(0.5, u => { const d = (1 - u) * 0.035; g.position.x = x0 + Math.sin(u * 60) * d; g.rotation.z = Math.sin(u * 47) * d * 0.4; }); ctx.later(0.55, () => { g.position.x = x0; g.rotation.z = 0; }); });
+        b.setShown?.(k + 1); // the board in the plant keeps what was shown on it
         ctx.cap(`${T[i].cards[k].label}: ${T[i].cards[k].big}${T[i].cards[k].unit ? ' ' + T[i].cards[k].unit : ''}`, { hold: 600 });
         await this.waitStep(ctx);
       }
@@ -707,6 +708,7 @@ export class Director {
     await this.targetBoards(ctx);
     // step 4: how we do it: the house drops in, its pillars still empty
     wall.setISA(0, true); wall.setMode('house27'); wall.set27(false, 0, true); wall.set27(true, 0);
+    this.app.ui.toggleScreenView(true); // full display: the 4K screen pixel-sharp
     ph.gesture('present', 2.6);
     ctx.cap('How we do it: the House of BPS GO!+ 2027.', { hold: 600 });
     await this.waitStep(ctx);
@@ -728,6 +730,7 @@ export class Director {
       ctx.cap(it.cap, { hold: 600 });
       await this.waitStep(ctx);
     }
+    this.app.ui.toggleScreenView(false); // back to the plant for the applause
     wall.highlight(null, null); ph.lookAt(null); ph.faceYaw(PI * 0.6); team.forEach(m => m.lookAt(ph));
     ph.gesture('armsOpen', 2.6);
     team.forEach((m, i) => ctx.later(0.6 + i * 0.15, () => m.gesture('clap', 2.4)));

@@ -1009,14 +1009,35 @@ export function buildFactory(scene, renderer, data = {}) {
   ((data.targets2027 || {}).boards || []).forEach((B, k) => {
     const PW = 4.0, PH = 2.25, PY = 1.95, BZ = 15.8, x = 7.6 + k * 4.6;
     const g = new THREE.Group(); g.position.set(x, 0, BZ); t27G.add(g);
+    let shown = 0; // how many targets the board shows when seen from a distance (filled as the team leaves it)
     const ct = new CanvasTex(1600, 900, (ctx, w, h) => {
       const gr = ctx.createLinearGradient(0, 0, w, h); gr.addColorStop(0, '#071426'); gr.addColorStop(1, '#10335a'); ctx.fillStyle = gr; ctx.fillRect(0, 0, w, h);
-      ctx.strokeStyle = 'rgba(41,211,255,0.18)'; ctx.lineWidth = 2; for (let i = 0; i < w; i += 64) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, h); ctx.stroke(); } for (let j = 0; j < h; j += 64) { ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(w, j); ctx.stroke(); }
-      ctx.fillStyle = '#29d3ff'; ctx.font = `800 44px ${FONT}`; ctx.fillText(B.kicker, 70, 120);
-      ctx.fillStyle = '#ffffff'; ctx.font = `900 92px ${FONT}`; ctx.fillText(B.title, 70, 230);
-      ctx.fillStyle = CSS.red; ctx.fillRect(70, 262, 220, 10);
-      const n = B.cards.length, cols = B.cols || 2, rows = Math.ceil(n / cols), cw = (w - 140 - (cols - 1) * 30) / cols, chh = (h - 340 - (rows - 1) * 30) / rows;
-      for (let i = 0; i < n; i++) { const cx = 70 + (i % cols) * (cw + 30), cy = 310 + Math.floor(i / cols) * (chh + 30); ctx.strokeStyle = 'rgba(41,211,255,0.45)'; ctx.setLineDash([16, 12]); ctx.lineWidth = 3; ctx.strokeRect(cx, cy, cw, chh); ctx.setLineDash([]); ctx.fillStyle = 'rgba(41,211,255,0.5)'; ctx.font = `800 70px ${FONT}`; ctx.fillText(String(i + 1), cx + 30, cy + 90); }
+      ctx.strokeStyle = 'rgba(41,211,255,0.12)'; ctx.lineWidth = 2; for (let i = 0; i < w; i += 64) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, h); ctx.stroke(); } for (let j = 0; j < h; j += 64) { ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(w, j); ctx.stroke(); }
+      ctx.fillStyle = '#29d3ff'; ctx.font = `800 40px ${FONT}`; ctx.fillText(B.kicker, 70, 104);
+      ctx.fillStyle = '#ffffff'; ctx.font = `900 84px ${FONT}`; ctx.fillText(B.title, 70, 200);
+      ctx.fillStyle = CSS.red; ctx.fillRect(70, 226, 220, 10);
+      const n = B.cards.length, grouped = !!B.groups, cols = grouped ? B.groups.length : (B.cols || 2);
+      let top = 270;
+      if (grouped) { B.groups.forEach((gname, j) => { const cw = (w - 140 - (cols - 1) * 30) / cols, gx = 70 + j * (cw + 30); ctx.fillStyle = '#29d3ff'; ctx.font = `900 42px ${FONT}`; ctx.fillText(gname, gx, top + 40); ctx.fillRect(gx, top + 56, cw, 5); }); top += 86; }
+      const rows = grouped ? Math.max(...B.groups.map((_, j) => B.cards.filter(c => (c.group || 0) === j).length)) : Math.ceil(n / cols);
+      const cw = (w - 140 - (cols - 1) * 30) / cols, chh = (h - top - 50 - (rows - 1) * 26) / rows;
+      const fit = (t, mw, size, weight) => { let s = size; do { ctx.font = `${weight} ${s}px ${FONT}`; s -= 2; } while (ctx.measureText(t).width > mw && s > 16); };
+      B.cards.forEach((c, i) => {
+        const col = grouped ? (c.group || 0) : i % cols, row = grouped ? B.cards.filter((x, j) => j < i && (x.group || 0) === (c.group || 0)).length : Math.floor(i / cols);
+        const cx = 70 + col * (cw + 30), cy = top + row * (chh + 26);
+        if (i >= shown) { ctx.strokeStyle = 'rgba(41,211,255,0.45)'; ctx.setLineDash([16, 12]); ctx.lineWidth = 3; ctx.strokeRect(cx, cy, cw, chh); ctx.setLineDash([]); ctx.fillStyle = 'rgba(41,211,255,0.5)'; ctx.font = `800 64px ${FONT}`; ctx.fillText(String(i + 1), cx + 26, cy + 80); return; }
+        const cg = ctx.createLinearGradient(cx, cy, cx + cw, cy + chh); cg.addColorStop(0, '#10345a'); cg.addColorStop(1, '#081a30'); ctx.fillStyle = cg; ctx.fillRect(cx, cy, cw, chh);
+        const bg = ctx.createLinearGradient(cx, cy, cx + cw, cy + chh); bg.addColorStop(0, '#29d3ff'); bg.addColorStop(0.5, '#0A6EBD'); bg.addColorStop(1, '#E20015'); ctx.strokeStyle = bg; ctx.lineWidth = 5; ctx.strokeRect(cx + 2, cy + 2, cw - 4, chh - 4);
+        const r = Math.min(chh * 0.26, 58), ix = cx + 30 + r, iy = cy + chh / 2;
+        ctx.fillStyle = 'rgba(41,211,255,0.25)'; ctx.beginPath(); ctx.arc(ix, iy, r, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = 3; ctx.stroke();
+        ctx.textAlign = 'center'; ctx.font = `${Math.round(r * 1.05)}px ${FONT}`; ctx.fillStyle = '#fff'; ctx.fillText(c.icon || '🎯', ix, iy + r * 0.38); ctx.textAlign = 'left';
+        const tx = ix + r + 28, tw = cx + cw - tx - 24, big = String(c.big) + (c.unit ? ' ' + c.unit : '');
+        const lines = [[c.label.toUpperCase(), '#9fdcf2', 800, Math.min(30, chh * 0.13)], [big, '#ffffff', 900, Math.min(big.length > 12 ? 54 : 76, chh * 0.3)]];
+        if (c.sub) lines.push([c.sub, '#c7d6e2', 500, Math.min(28, chh * 0.12)]);
+        const tot = lines.reduce((a, l) => a + l[3] * 1.25, 0); let y = cy + (chh - tot) / 2;
+        lines.forEach(([t, col2, wt, sz]) => { y += sz * 1.08; fit(t, tw, Math.round(sz), wt); ctx.fillStyle = col2; ctx.fillText(t, tx, y); y += sz * 0.17; });
+        ctx.fillStyle = 'rgba(41,211,255,0.9)'; ctx.font = `900 30px ${FONT}`; ctx.textAlign = 'right'; ctx.fillText(String(i + 1).padStart(2, '0'), cx + cw - 18, cy + 40); ctx.textAlign = 'left';
+      });
     });
     const panel = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), new THREE.MeshBasicMaterial({ map: ct.tex, toneMapped: false }));
     panel.position.set(0, PY, 0.05); g.add(panel);
@@ -1029,13 +1050,13 @@ export function buildFactory(scene, renderer, data = {}) {
     const hm = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.325), new THREE.MeshBasicMaterial({ map: hd.tex, toneMapped: false })); hm.position.set(0, PY + PH / 2 + 0.3, 0.02); g.add(hm);
     box(0.05, 0.22, 0.05, legM, -0.9, PY + PH / 2 + 0.1, 0, g); box(0.05, 0.22, 0.05, legM, 0.9, PY + PH / 2 + 0.1, 0, g);
     shadows(g, true, false);
-    t27Boards.push({ obj: panel, group: g, w: PW, h: PH, x, z: BZ, y: PY, part: 2 });
+    t27Boards.push({ obj: panel, group: g, w: PW, h: PH, x, z: BZ, y: PY, part: 2, setShown(nn) { if (nn === shown) return; shown = nn; ct.redraw(); } });
   });
 
   return {
     root, hotspots, agvs, outside: out, sm: smRow, glBoards, t27Boards,
     setFuture(on) {
-      futureOn = on; future.visible = on; glG.visible = !on; t27G.visible = on; digitalTarget = on ? 1 : digitalTarget;
+      futureOn = on; future.visible = on; glG.visible = !on; t27G.visible = on; t27Boards.forEach(b => b.setShown(0)); digitalTarget = on ? 1 : digitalTarget;
       doorWords = on ? { left: ['2027', 'How 2027 looks like'], right: ['FUTURE', 'BPS GO!+'], accent: '#29d3ff' } : { left: ['2026', 'Reflection'], right: ['FLASHBACK', 'BPS GO!+'], accent: CSS.red };
       leafTexes.forEach(t => t.redraw());
     },
