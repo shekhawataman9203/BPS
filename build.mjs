@@ -32,3 +32,13 @@ html = html.replace('/*__CSS__*/', () => css)
 fs.mkdirSync(outDir, { recursive: true });
 fs.writeFileSync(outFile, html);
 console.log('built', path.relative(root, outFile), (html.length / 1024).toFixed(0) + ' KB');
+
+// ---- separate closing film: football.html + football.js -> dist/goal-2027.html ----
+{
+  const film = await esbuild.build({ entryPoints: [src('football.js')], bundle: true, minify: false, format: 'iife', write: false, target: 'es2020' });
+  let fh = fs.readFileSync(src('football.html'), 'utf8').replaceAll('__BPS_LOGO__', images.__BPS_LOGO__);
+  fh = fh.replace('/*__VENDOR__*/', () => esc(vendor.outputFiles[0].text)).replace('/*__APP__*/', () => esc(film.outputFiles[0].text));
+  const filmOut = path.join(outDir, 'goal-2027.html');
+  fs.writeFileSync(filmOut, fh);
+  console.log('built', path.relative(root, filmOut), (fh.length / 1024).toFixed(0) + ' KB');
+}
