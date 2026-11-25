@@ -586,7 +586,7 @@ export class UI {
       stage.append(h('i', { class: 'ty-glow', 'aria-hidden': 'true' }));
       (T.layout.people || []).forEach((r, i) => { const p = h('img', { class: 'ty-p', src: T.img['p' + (i + 1)], alt: '' }); place(p, r); stage.append(p); });
       (T.layout.checks || []).forEach((r, i) => { const c = h('img', { class: 'ty-c', src: T.img['c' + (i + 1)], alt: '' }); place(c, r); stage.append(c); });
-      if (T.img.jap && T.layout.jap) { const j = h('img', { class: 'ty-jap', src: T.img.jap, alt: 'JaP' }); place(j, T.layout.jap); stage.append(j); }
+      if (T.layout.jap) { const j = h('div', { class: 'ty-jap', 'aria-label': 'JaP' }, h('span', {}, 'JaP')); place(j, T.layout.jap); stage.append(j); }
       stage.append(h('div', { class: 'ty-trophy', 'aria-hidden': 'true' }, h('i', { class: 'ty-rays' }), h('div', { class: 'ty-cup', html: TROPHY_SVG })));
     }
     const people = [...stage.querySelectorAll('.ty-p')], checks = [...stage.querySelectorAll('.ty-c')];
@@ -614,7 +614,7 @@ export class UI {
       [...people, ...checks].forEach(stop); el.classList.remove('look');
       const fin = action === 'final';
       people.forEach(p => p.style.opacity = fin ? 1 : 0); checks.forEach(c => c.style.opacity = 0);
-      if (jap) { stop(jap); jap.style.opacity = fin ? 1 : 0; } if (trophy) { trophy.classList.toggle('in', fin); trophy.classList.toggle('done', fin); trophy.classList.toggle('parked', fin); }
+      if (jap) { stop(jap); jap.style.opacity = fin ? 1 : 0; } if (trophy) { trophy.classList.toggle('in', fin); trophy.classList.toggle('done', fin);  }
       if (fin) el.classList.add('look');
       void el.offsetWidth; el.classList.add('on'); return;
     }
@@ -652,8 +652,7 @@ export class UI {
     }
     if (action === 'trophy') {
       if (!trophy) return; trophy.classList.remove('in', 'done', 'parked'); void trophy.offsetWidth; trophy.classList.add('in');
-      setTimeout(() => { dust(50, 86, 26); this.crackers(stage, [[30, 10, 40, 60]], 3600); trophy.classList.add('done'); }, 900);
-      setTimeout(() => { if (trophy.classList.contains('done')) trophy.classList.add('parked'); }, 3400); // then moves aside so the three stay in view
+      setTimeout(() => { dust(80.6, 16.2, 9); this.crackers(stage, [[72, 0, 18, 22]], 3600); trophy.classList.add('done'); }, 900); // lands on the roof of the building
       return;
     }
     if (action === 'look') { el.classList.add('look'); return; }

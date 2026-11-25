@@ -1125,3 +1125,15 @@ body.factcheck #rail .arrow { visibility: visible; }
 @keyframes tyRays { to { transform: translate(-50%,-50%) rotate(360deg); } }
 .ty-trophy { transition: left 1.3s cubic-bezier(.4,0,.2,1), top 1.3s cubic-bezier(.4,0,.2,1), width 1.3s cubic-bezier(.4,0,.2,1); }
 .ty-trophy.parked { left: 16.5%; top: 37%; width: 14.5%; }
+/* the trophy lands on the roof of the JaP building */
+.ty-trophy { left: 80.6%; top: -2.2%; width: 7.4%; transition: none; }
+@keyframes tyTrophy { 0% { transform: translate(-50%, -140%) scale(.85); opacity: 0; } 20% { opacity: 1; } 85% { transform: translate(-50%, 3%) scale(1.05, .94); } 100% { transform: translate(-50%, 0); opacity: 1; } }
+.ty-rays { width: 330%; }
+/* JaP: clean 3D letters on the building glass */
+.ty-stage { container-type: inline-size; }
+.ty-jap { display: grid; place-items: center; filter: none; }
+.ty-jap span { font: 900 7.6cqw/1 "Arial Black", Arial, Helvetica, sans-serif; letter-spacing: -.02em; color: #fff;
+  background: linear-gradient(180deg, #ffffff 0%, #eef3f8 45%, #c9d4df 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(.12cqw .12cqw 0 #9fb0c2) drop-shadow(.12cqw .12cqw 0 #8597ab) drop-shadow(.12cqw .12cqw 0 #6d8197) drop-shadow(0 .5cqw .6cqw rgba(0,25,70,.5)); }
+#thanks.look .ty-jap span { animation: tyJapShine 2.4s ease-in-out 1; }
+@keyframes tyJapShine { 50% { filter: drop-shadow(.12cqw .12cqw 0 #9fb0c2) drop-shadow(.12cqw .12cqw 0 #8597ab) drop-shadow(.12cqw .12cqw 0 #6d8197) drop-shadow(0 0 1.6cqw rgba(255,240,180,.95)); } }
