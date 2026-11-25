@@ -12,6 +12,7 @@ import { mat, clamp, lerp, damp, angleLerp, FONT } from './util.js';
 */
 
 const END = 28.0;            // scene seconds until the end card
+const PRE = 4.6;             // trailer title card before kick-off (scene time runs from -PRE)
 const BALL_R = 0.11;
 const GOAL_W = 3.66, GOAL_H = 2.44, NET_D = 2.0;
 const smooth = x => x * x * (3 - 2 * x);
@@ -446,7 +447,7 @@ export function createFilm(canvas, ui) {
   const act = (c, name, dur) => { const g = c.gesture(name, dur); c.gestures.splice(c.gestures.indexOf(g), 1); c.gestures.unshift(g); };
   // ---- events ----
   const events = [
-    [0, () => {
+    [-100, () => {
       players.forEach(c => { c.gestures.length = 0; if (c !== P.gk) c.gesture('fbRun', 1e9); });
       P.gk.gesture('fbKeeper', 1e9);
       players.forEach(c => c.lookAt(ball.position));
@@ -500,6 +501,8 @@ export function createFilm(canvas, ui) {
   const cam = { pos: V(), tgt: V(), fov: 42, shot: -1 };
   const sp = V(), st = V();
   const shots = [
+    // trailer title: slow fly-in over the stadium that lands exactly on the first shot
+    { until: 0, snap: true, f: T => { const k = smooth(sat((T + PRE) / PRE)); sp.set(lerp(-26, 13, k), lerp(34, 7.2, k), lerp(72, 33.5, k)); st.set(lerp(0, -5.4, k), lerp(0, 1, k), lerp(8, 25.6, k)); return 40; } },
     { until: 2.7, snap: true, f: T => { const b = ball.position; sp.set(13 - T * 0.8, 7.2, 33.5 - T * 0.6); st.set(b.x * 0.6, 1.0, b.z * 0.7 + 5); return 40; } },
     { until: 8.2, snap: true, f: T => { const p = P.singh.root.position; sp.set(p.x + 1.1, 2.0, p.z + 4.4); st.set(p.x - 0.5, 1.05, p.z - 5.5); return 44; } },
     { until: 9.05, snap: true, f: T => { const k = sat((T - 8.2) / 0.85); sp.set(lerp(4.4, 3.8, k), lerp(0.95, 0.8, k), lerp(16.2, 15.4, k)); st.set(1.3, 0.8, 12.4); return 40; } },
@@ -524,7 +527,7 @@ export function createFilm(canvas, ui) {
   let T = 0, evIdx = 0, finished = false;
   const prevBall = V(), axis = V(), q = new THREE.Quaternion();
   const reset = () => {
-    T = 0; evIdx = 0; finished = false;
+    T = -PRE; evIdx = 0; finished = false;
     for (const c of players) { const p = trackPos(TR[c.o.id], 0, V()); c.place(p.x, p.z, c === P.gk ? 0 : Math.PI); c.root.position.y = 0; c.root.rotation.set(0, c.yaw, 0); c.prevPos.copy(c.root.position); c.runAmp = c === P.gk ? 0 : 0.8; }
     world.award.position.y = -4; ball.quaternion.identity(); ballAt(0, ball.position); prevBall.copy(ball.position);
     ui.reset();
@@ -621,18 +624,19 @@ const CAPTIONS = [
   [20.6, 23.5, 'Both sides of the pitch. <strong>One team.</strong>'],
 ];
 // scenes for the Back / Next buttons (the end card is the last stop)
-const SCENES = [[0, 'The pass'], [2.6, 'Mr. Singh on the ball'], [8.2, 'The strike'], [9.05, 'Goal!'], [10.9, 'Mobility Award 2027'], [16.2, 'Celebration'], [20.0, "Let's come together"]];
+const SCENES = [[-PRE, 'Part 2 · Trailer'], [0, 'The pass'], [2.6, 'Mr. Singh on the ball'], [8.2, 'The strike'], [9.05, 'Goal!'], [10.9, 'Mobility Award 2027'], [16.2, 'Celebration'], [20.0, "Let's come together"]];
 const sceneAt = T => { let i = 0; SCENES.forEach(([t], k) => { if (T >= t - 0.01) i = k; }); return i; };
 function makeUI() {
-  const cap = $('caption'), goal = $('goal'), award = $('awardTag'), end = $('endcard'), tog = $('together'), label = $('sceneLabel');
-  let capIdx = -1, goalShown = false, awardShown = false, togShown = false, sceneIdx = -1;
+  const cap = $('caption'), goal = $('goal'), award = $('awardTag'), end = $('endcard'), tog = $('together'), label = $('sceneLabel'), trailer = $('trailer');
+  let capIdx = -1, goalShown = false, awardShown = false, togShown = false, trShown = false, sceneIdx = -1;
   return {
-    reset() { capIdx = -1; sceneIdx = -1; goalShown = awardShown = togShown = false; tog.classList.remove('on'); cap.classList.remove('on'); goal.classList.remove('on'); award.classList.remove('on'); end.classList.remove('on'); document.body.classList.remove('ended'); },
+    reset() { capIdx = -1; sceneIdx = -1; goalShown = awardShown = togShown = trShown = false; tog.classList.remove('on'); trailer.classList.remove('on'); cap.classList.remove('on'); goal.classList.remove('on'); award.classList.remove('on'); end.classList.remove('on'); document.body.classList.remove('ended'); },
     tick(T) {
       const i = CAPTIONS.findIndex(([a, b]) => T >= a && T < b);
       if (i !== capIdx) { capIdx = i; cap.classList.remove('on'); if (i >= 0) { cap.innerHTML = CAPTIONS[i][2]; void cap.offsetWidth; cap.classList.add('on'); } }
       const g = T >= 9.9 && T < 12.2; if (g !== goalShown) { goalShown = g; goal.classList.toggle('on', g); }
       const a = T >= 16.6 && T < 20.2; if (a !== awardShown) { awardShown = a; award.classList.toggle('on', a); }
+      const tr = T >= -PRE + 0.15 && T < -0.45; if (tr !== trShown) { trShown = tr; trailer.classList.toggle('on', tr); }
       const tg = T >= 23.9 && T < END; if (tg !== togShown) { togShown = tg; tog.classList.toggle('on', tg); }
       const si = sceneAt(T); if (!document.body.classList.contains('ended') && si !== sceneIdx) { sceneIdx = si; label.textContent = `${si + 1}/${SCENES.length + 1} · ${SCENES[si][1]}`; }
     },

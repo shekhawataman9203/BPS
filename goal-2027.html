@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#05070c">
-<title>The Goal We Promised</title>
+<title>Part 2: The Comeback</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
@@ -32,6 +32,19 @@ button.primary { background: var(--red); border-color: var(--red); }
 button.primary:hover { background: #ff1f33; }
 button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 #introNote { margin-top: 22px; font-size: 13px; color: #8a93a0; }
+
+/* trailer title card */
+#trailer { position: fixed; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; pointer-events: none; opacity: 0; transition: opacity .9s ease; background: radial-gradient(ellipse at center, rgba(5,7,12,0.35), rgba(5,7,12,0.78)); }
+#trailer.on { opacity: 1; }
+#trailer p, #trailer h2 { margin: 0; opacity: 0; transform: translateY(14px); transition: opacity .8s ease, transform .8s ease; }
+#trailer.on p, #trailer.on h2 { opacity: 1; transform: none; }
+#trailer.on .tr-part { transition-delay: .25s; } #trailer.on .tr-title { transition-delay: .6s; } #trailer.on .tr-sub { transition-delay: 1.1s; } #trailer.on .tr-soon { transition-delay: 1.6s; }
+.tr-kicker { letter-spacing: 0.32em; text-transform: uppercase; font-weight: 700; font-size: clamp(11px, 1.3vw, 15px); color: #c7cdd6; }
+.tr-part { margin-top: 18px !important; font-weight: 900; font-stretch: 75%; letter-spacing: 0.18em; text-transform: uppercase; font-size: clamp(20px, 2.8vw, 36px); color: var(--red); }
+.tr-title { font-weight: 900; font-stretch: 78%; line-height: 0.92; font-size: clamp(58px, 11vw, 160px); background: linear-gradient(180deg, #fff3c4, #ffd25a 40%, #d99a1c 70%, #ffe08a); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 4px 18px rgba(0,0,0,0.6)); }
+.tr-sub { margin-top: 10px !important; font-size: clamp(16px, 2vw, 26px); font-weight: 600; color: var(--white); }
+.tr-soon { margin-top: 28px !important; display: inline-flex; align-items: stretch; border: 2px solid var(--white); border-radius: 4px; overflow: hidden; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; font-size: clamp(12px, 1.5vw, 18px); }
+.tr-soon span { background: var(--white); color: var(--ink); padding: 8px 14px; } .tr-soon b { padding: 8px 16px; color: var(--white); }
 
 /* captions */
 #caption { position: fixed; left: 50%; bottom: calc(7vh + 28px); transform: translate(-50%, 12px); z-index: 4; max-width: min(92vw, 900px); text-align: center; font-size: clamp(18px, 2.3vw, 32px); font-weight: 600; line-height: 1.3; text-shadow: 0 2px 12px rgba(0,0,0,0.8); opacity: 0; transition: opacity .6s ease, transform .6s ease; pointer-events: none; }
@@ -70,6 +83,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 .compare span { color: #aeb6c1; font-size: clamp(14px, 1.5vw, 18px); }
 .compare .win span { color: var(--white); }
 #endcard h2 { margin: 0; font-weight: 900; font-stretch: 78%; font-size: clamp(40px, 7vw, 104px); line-height: 0.95; background: linear-gradient(180deg, #fff3c4, #ffd25a 40%, #d99a1c 70%, #ffe08a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+#endcard .kicker { color: var(--gold); margin-bottom: 10px; }
 #endcard .lead { margin: 0 0 30px; font-weight: 900; font-stretch: 85%; font-size: clamp(28px, 4.4vw, 60px); line-height: 1.05; color: var(--white); text-shadow: 0 3px 18px rgba(0,0,0,0.7); }
 #endcard h2 { margin-bottom: 28px; }
 
@@ -96,17 +110,24 @@ body.paused #pauseBadge { display: block; }
 
 <section id="intro" aria-labelledby="introTitle">
   <div>
-    <p class="kicker">PD Workshop · Closing film</p>
-    <h1 id="introTitle">The goal<span>we promised</span></h1>
+    <p class="kicker">BPS GO!+ · Part 2 · Trailer</p>
+    <h1 id="introTitle">Part 2<span>The Comeback</span></h1>
     <p class="sub">In 2026 the shot went wide. In 2027 we take it again: Mr. Singh, the team, and the Mobility Award.</p>
     <div class="btns">
       <button id="btnPlay" class="primary">Play</button>
       <button id="btnPlayFull">Play full screen</button>
     </div>
-    <p id="introNote">No audio · about 28 seconds · <kbd>←</kbd> <kbd>→</kbd> scenes · <kbd>K</kbd> pause · <kbd>R</kbd> replay · <kbd>F</kbd> full screen</p>
+    <p id="introNote">No audio · about 33 seconds · <kbd>←</kbd> <kbd>→</kbd> scenes · <kbd>K</kbd> pause · <kbd>R</kbd> replay · <kbd>F</kbd> full screen</p>
   </div>
 </section>
 
+<div id="trailer" aria-live="polite">
+  <p class="tr-kicker">BPS GO!+ &nbsp;·&nbsp; 2026 Flashback</p>
+  <p class="tr-part">Part 2</p>
+  <h2 class="tr-title">The Comeback</h2>
+  <p class="tr-sub">The goal we promised</p>
+  <p class="tr-soon"><span>Trailer</span><b>Coming soon · 2027</b></p>
+</div>
 <div id="caption" aria-live="polite"></div>
 <div id="goal" aria-hidden="true"><span>GOAL!</span></div>
 <div id="together" aria-live="polite"><small>ONE TEAM · ONE GOAL · 2027</small><b>Let's come together</b></div>
@@ -114,6 +135,7 @@ body.paused #pauseBadge { display: block; }
 
 <section id="endcard" aria-labelledby="endTitle">
   <div>
+    <p class="kicker">Part 2 · The Comeback · Coming soon</p>
     <p class="lead">That's the goal we have to score.</p>
     <div class="compare">
       <div><b>2026</b><span>The shot went wide</span></div>
@@ -5741,6 +5763,7 @@ void main() {
 
   // football.js
   var END = 28;
+  var PRE = 4.6;
   var BALL_R = 0.11;
   var GOAL_W = 3.66;
   var GOAL_H = 2.44;
@@ -6505,7 +6528,7 @@ void main() {
       c.gestures.unshift(g);
     };
     const events = [
-      [0, () => {
+      [-100, () => {
         players.forEach((c) => {
           c.gestures.length = 0;
           if (c !== P2.gk) c.gesture("fbRun", 1e9);
@@ -6604,6 +6627,13 @@ void main() {
     const cam = { pos: V(), tgt: V(), fov: 42, shot: -1 };
     const sp = V(), st = V();
     const shots = [
+      // trailer title: slow fly-in over the stadium that lands exactly on the first shot
+      { until: 0, snap: true, f: (T2) => {
+        const k = smooth2(sat((T2 + PRE) / PRE));
+        sp.set(lerp(-26, 13, k), lerp(34, 7.2, k), lerp(72, 33.5, k));
+        st.set(lerp(0, -5.4, k), lerp(0, 1, k), lerp(8, 25.6, k));
+        return 40;
+      } },
       { until: 2.7, snap: true, f: (T2) => {
         const b = ball.position;
         sp.set(13 - T2 * 0.8, 7.2, 33.5 - T2 * 0.6);
@@ -6680,7 +6710,7 @@ void main() {
     let T = 0, evIdx = 0, finished = false;
     const prevBall = V(), axis = V(), q = new THREE.Quaternion();
     const reset = () => {
-      T = 0;
+      T = -PRE;
       evIdx = 0;
       finished = false;
       for (const c of players) {
@@ -6832,7 +6862,7 @@ void main() {
     [17, 20.2, "This time, the whole team scores."],
     [20.6, 23.5, "Both sides of the pitch. <strong>One team.</strong>"]
   ];
-  var SCENES = [[0, "The pass"], [2.6, "Mr. Singh on the ball"], [8.2, "The strike"], [9.05, "Goal!"], [10.9, "Mobility Award 2027"], [16.2, "Celebration"], [20, "Let's come together"]];
+  var SCENES = [[-PRE, "Part 2 \xB7 Trailer"], [0, "The pass"], [2.6, "Mr. Singh on the ball"], [8.2, "The strike"], [9.05, "Goal!"], [10.9, "Mobility Award 2027"], [16.2, "Celebration"], [20, "Let's come together"]];
   var sceneAt = (T) => {
     let i = 0;
     SCENES.forEach(([t], k) => {
@@ -6841,14 +6871,15 @@ void main() {
     return i;
   };
   function makeUI() {
-    const cap = $("caption"), goal = $("goal"), award = $("awardTag"), end = $("endcard"), tog = $("together"), label = $("sceneLabel");
-    let capIdx = -1, goalShown = false, awardShown = false, togShown = false, sceneIdx = -1;
+    const cap = $("caption"), goal = $("goal"), award = $("awardTag"), end = $("endcard"), tog = $("together"), label = $("sceneLabel"), trailer = $("trailer");
+    let capIdx = -1, goalShown = false, awardShown = false, togShown = false, trShown = false, sceneIdx = -1;
     return {
       reset() {
         capIdx = -1;
         sceneIdx = -1;
-        goalShown = awardShown = togShown = false;
+        goalShown = awardShown = togShown = trShown = false;
         tog.classList.remove("on");
+        trailer.classList.remove("on");
         cap.classList.remove("on");
         goal.classList.remove("on");
         award.classList.remove("on");
@@ -6875,6 +6906,11 @@ void main() {
         if (a !== awardShown) {
           awardShown = a;
           award.classList.toggle("on", a);
+        }
+        const tr = T >= -PRE + 0.15 && T < -0.45;
+        if (tr !== trShown) {
+          trShown = tr;
+          trailer.classList.toggle("on", tr);
         }
         const tg = T >= 23.9 && T < END;
         if (tg !== togShown) {
