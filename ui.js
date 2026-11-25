@@ -584,7 +584,7 @@ export class UI {
     if (!stage.childElementCount && T.img) {
       stage.append(h('img', { class: 'ty-bg', src: T.img.bg, alt: '' }));
       stage.append(h('i', { class: 'ty-glow', 'aria-hidden': 'true' }));
-      (T.layout.people || []).forEach((r, i) => { const n = (T.layout.names || [])[i]; const p = h('div', { class: 'ty-p' }, h('img', { src: T.img['p' + (i + 1)], alt: n ? n[0] : '' }), n ? h('span', { class: 'ty-name', style: `left:${n[1] * 100}%;top:${n[2] * 100}%` }, n[0]) : null); place(p, r); stage.append(p); });
+      (T.layout.people || []).forEach((r, i) => { const n = (T.layout.names || [])[i]; const p = h('div', { class: 'ty-p' }, h('img', { src: T.img['p' + (i + 1)], alt: n ? n[0] : '' }), n ? h('span', { class: 'ty-name', style: `left:${n[1] * 100}%;top:${n[2] * 100}%;--r:${n[3] || 0}deg` }, n[0]) : null); place(p, r); stage.append(p); });
       (T.layout.checks || []).forEach((r, i) => { const c = h('img', { class: 'ty-c', src: T.img['c' + (i + 1)], alt: '' }); place(c, r); stage.append(c); });
       if (T.layout.jap) { const j = h('div', { class: 'ty-jap', 'aria-label': 'JaP' }, h('span', {}, 'JaP')); place(j, T.layout.jap); stage.append(j); }
       stage.append(h('div', { class: 'ty-trophy', 'aria-hidden': 'true' }, h('i', { class: 'ty-rays' }), h('div', { class: 'ty-cup', html: TROPHY_SVG })));
