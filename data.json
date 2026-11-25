@@ -2149,5 +2149,28 @@
         ]
       }
     ]
+  },
+  "challenges2027": {
+    "title": "Challenges & Support Required",
+    "challenges": [
+      {
+        "icon": "⚙️",
+        "text": "Improve System CIP project completion rate in Indirect Functions"
+      },
+      {
+        "icon": "📦",
+        "text": "Inventory reduction in A-Class part families through focused improvement initiatives"
+      }
+    ],
+    "support": [
+      {
+        "icon": "🧭",
+        "text": "Align departmental improvement initiatives with Vision 2030"
+      },
+      {
+        "icon": "🤝",
+        "text": "Strengthen VSDiA implementation through ownership, monitoring and leadership reviews"
+      }
+    ]
   }
 }

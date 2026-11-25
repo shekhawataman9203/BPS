@@ -100,6 +100,10 @@ export class UI {
       if (k === 'Escape') { if (!$('#help').hidden) this.toggleHelp(false); else if (this.roadmapOpen) { if (this.rmFocus) this.zoomTo(null); else this.closeRoadmap(); } else if (this.explore) this.toggleExplore(false); return; }
       if (k === 'k' || k === 'K' || k === 'Pause') { e.preventDefault(); this.togglePause(); return; }
       if (k === 'b' || k === 'B') { this.roadmapOpen ? this.closeRoadmap() : this.openRoadmap(); return; }
+      if (this.rm27Open && ['ArrowRight', 'PageDown', ' ', 'Escape'].includes(k)) {
+        const f = document.querySelector('#rm27 .rm27-frame');
+        if (f && f.classList.contains('zoom')) { e.preventDefault(); f.classList.remove('zoom'); return; }
+      }
       if (this.roadmapOpen) {
         // in the roadmap: Next zooms out first, then closes it (and moves the roadmap chapter on)
         if (['ArrowRight', 'PageDown', ' '].includes(k)) {
@@ -603,7 +607,7 @@ export class UI {
       }, 600);
     }
   }
-  covering() { const g = document.getElementById('glimpses'), y = document.getElementById('yearcard'), t = document.getElementById('thanks'); return (g && !g.hidden && g.dataset.state && !g.classList.contains('gemba')) || (y && y.classList.contains('on')) || (t && t.classList.contains('on')); }
+  covering() { const g = document.getElementById('glimpses'), y = document.getElementById('yearcard'), t = document.getElementById('thanks'); return document.getElementById('rm27') || document.getElementById('chsu') || (g && !g.hidden && g.dataset.state && !g.classList.contains('gemba')) || (y && y.classList.contains('on')) || (t && t.classList.contains('on')); }
   // 'Press → for the next step' hint in stepped chapters
   stepHint(on) { const el = $('#stepHint'); if (el) el.classList.toggle('on', !!on); const b = $('#btnSkip'); if (b) b.firstChild.textContent = on ? 'Next step ' : 'Skip scene '; }
   hideTitleCard() { $('#titlecard').classList.remove('on'); this.cancel('tc'); }
@@ -1021,6 +1025,52 @@ export class UI {
     if (p.type === 'zone') { const b = document.querySelector(`.proj[data-id="${p.id}"] .proj-head`); if (b && b.getAttribute('aria-expanded') !== 'true') { b.click(); return; } }
     if (p.type === 'kpiPillar') { const b = [...document.querySelectorAll('.chips button')].find(x => x.textContent === p.label); if (b) { b.click(); return; } }
     this.select(p.type, p.id);
+  }
+  // ------------------------------------------------------------ BPS GO!+ Roadmap 2027 (full screen picture, click to zoom)
+  roadmap27(on) {
+    let el = document.getElementById('rm27');
+    if (!on) { if (el) { el.classList.remove('on'); setTimeout(() => el.remove(), 500); } this.rm27Open = false; return; }
+    const imgs = this._glImgs ||= JSON.parse(document.getElementById('glimpse-images')?.textContent || '{}');
+    if (!imgs['roadmap-2027.jpg']) return;
+    el?.remove();
+    const img = h('img', { src: imgs['roadmap-2027.jpg'], alt: 'BPS GO!+ Roadmap 2027' });
+    const frame = h('div', { class: 'rm27-frame' }, img);
+    el = h('section', { id: 'rm27' }, h('div', { class: 'rm27-head' }, h('b', {}, 'BPS GO!+ Roadmap 2027'), h('span', {}, 'Click to zoom · click again to zoom out')), frame);
+    frame.addEventListener('click', e => {
+      if (frame.classList.toggle('zoom')) { const r = frame.getBoundingClientRect(); img.style.transformOrigin = `${((e.clientX - r.left) / r.width) * 100}% ${((e.clientY - r.top) / r.height) * 100}%`; }
+    });
+    document.body.append(el); this.rm27Open = true;
+    requestAnimationFrame(() => el.classList.add('on'));
+  }
+  // ------------------------------------------------------------ Challenges & Support Required
+  // 'open' | 'ch' k | 'sup' k | 'close'
+  challenges(action, k) {
+    const C = this.data.challenges2027; let el = document.getElementById('chsu');
+    if (action === 'close') { if (el) { el.classList.remove('on'); setTimeout(() => el.remove(), 500); } return; }
+    if (!C) return;
+    if (action === 'open') {
+      el?.remove();
+      const card = (it, i, kind) => h('div', { class: 'cs-card ' + kind, 'data-i': i },
+        h('span', { class: 'cs-n' }, String(i + 1).padStart(2, '0')), h('span', { class: 'cs-ic' }, it.icon), h('p', {}, it.text),
+        kind === 'ch' ? h('i', { class: 'cs-crack', 'aria-hidden': 'true' }) : h('i', { class: 'cs-beam', 'aria-hidden': 'true' }));
+      el = h('section', { id: 'chsu' },
+        h('div', { class: 'cs-bg', 'aria-hidden': 'true' }),
+        h('h2', { class: 'cs-title' }, 'Challenges', h('em', {}, ' & '), 'Support Required'),
+        h('div', { class: 'cs-cols' },
+          h('div', { class: 'cs-col ch' }, h('p', { class: 'cs-h' }, '⚠️ Challenges'), C.challenges.map((it, i) => card(it, i, 'ch'))),
+          h('div', { class: 'cs-mid', 'aria-hidden': 'true' }, h('div', { class: 'cs-goal' }, h('b', {}, '2027'), h('small', {}, 'Goal'))),
+          h('div', { class: 'cs-col su' }, h('p', { class: 'cs-h' }, '🤝 Support Required'), C.support.map((it, i) => card(it, i, 'su')))));
+      document.body.append(el);
+      requestAnimationFrame(() => el.classList.add('on'));
+      return;
+    }
+    if (!el) return;
+    const c = el.querySelector(`.cs-col.${action === 'ch' ? 'ch' : 'su'} .cs-card[data-i="${k}"]`); if (!c) return;
+    c.classList.add('in');
+    if (action === 'ch') setTimeout(() => { el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); }, 380);
+    // the goal lights up as support arrives
+    const n = el.querySelectorAll('.cs-card.su.in').length; el.querySelector('.cs-goal').style.setProperty('--lit', n / C.support.length);
+    if (action === 'sup' && n === C.support.length) setTimeout(() => this.crackers(el, [[40, 30, 20, 30]], 2600), 700);
   }
   // ------------------------------------------------------------ Target 2027 boards (Gemba walk in the 2027 plant)
   // 'open' i board | 'card' i k | 'close'

@@ -125,7 +125,7 @@ export class Director {
     const a = this.app;
     a.factory.sm.setScreen(smScreen || future); a.ui.smNote('close');
     a.entrance.wall.setMode(screen); a.entrance.wall.set26(9, true);
-    a.factory.setDigital(digital); a.factory.setFuture(future); a.ui.yearCard(null); a.ui.glimpses('close'); a.ui.glimpses('gemba', null); a.ui.t27Board('close'); if (a.ui.screenView) a.ui.toggleScreenView(false); a.ui.thanks('hide'); a.ui.factCheck('close');
+    a.factory.setDigital(digital); a.factory.setFuture(future); a.ui.yearCard(null); a.ui.glimpses('close'); a.ui.glimpses('gemba', null); a.ui.t27Board('close'); a.ui.roadmap27(false); a.ui.challenges('close'); if (a.ui.screenView) a.ui.toggleScreenView(false); a.ui.thanks('hide'); a.ui.factCheck('close');
     a.factory.gate.snap(gate);
     a.entrance.snapBuild(build); a.entrance.highlight(null); a.entrance.hideConfetti();
     a.entrance.wall.highlight(null, null);
@@ -732,7 +732,18 @@ export class Director {
     }
     // the tagline in the bottom band
     if (H.tagline) { wall.highlight(null, null); wall.setTag(true); ctx.cap(H.tagline.join('  ') + '.', { hold: 600 }); await this.waitStep(ctx); }
-    this.app.ui.toggleScreenView(false); // back to the plant for the applause
+    this.app.ui.toggleScreenView(false);
+    // BPS GO!+ Roadmap 2027 in full screen (click to zoom)
+    { const ui = this.app.ui; ui.roadmap27(true); ctx.cap('BPS GO!+ Roadmap 2027: every element of the house, quarter by quarter.', { hold: 600 }); await this.waitStep(ctx); ui.roadmap27(false);
+      // Challenges & Support Required: each Next brings one in
+      const C = this.app.data.challenges2027;
+      if (C) {
+        ui.challenges('open'); await this.waitStep(ctx);
+        for (let k = 0; k < C.challenges.length; k++) { ui.challenges('ch', k); ctx.cap('Challenge: ' + C.challenges[k].text + '.', { hold: 600 }); await this.waitStep(ctx); }
+        for (let k = 0; k < C.support.length; k++) { ui.challenges('sup', k); ctx.cap('Support required: ' + C.support[k].text + '.', { hold: 600 }); await this.waitStep(ctx); }
+        ui.challenges('close');
+      } }
+    // back to the plant for the applause
     wall.highlight(null, null); ph.lookAt(null); ph.faceYaw(PI * 0.6); team.forEach(m => m.lookAt(ph));
     ph.gesture('armsOpen', 2.6);
     team.forEach((m, i) => ctx.later(0.6 + i * 0.15, () => m.gesture('clap', 2.4)));
