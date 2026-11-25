@@ -957,7 +957,8 @@
             ]
           ],
           "note": "11.16 → 10.19 days · −8.7%"
-        }
+        },
+        "mark": "vsp"
       },
       {
         "month": "DLPC maturity",
@@ -990,7 +991,8 @@
               "sub": "JaP · LPC adherence – Pull"
             }
           }
-        ]
+        ],
+        "mark": "dlpc"
       },
       {
         "month": "April 2026",
@@ -1027,7 +1029,8 @@
             ]
           }
         ],
-        "part": 1
+        "part": 1,
+        "mark": "space"
       },
       {
         "month": "Digital DLR tool",
@@ -1066,7 +1069,8 @@
               "No manual charts"
             ]
           }
-        ]
+        ],
+        "mark": "dlr"
       },
       {
         "month": "Digital SM Application",
@@ -1098,7 +1102,8 @@
             "Stop Housing Pre-part SM"
           ]
         },
-        "part": 1
+        "part": 1,
+        "mark": "dsm"
       },
       {
         "month": "Digital Twin",
@@ -1126,7 +1131,8 @@
               58
             ]
           }
-        ]
+        ],
+        "mark": "twin"
       },
       {
         "month": "Vision Workshop",
@@ -1178,7 +1184,8 @@
             }
           }
         ],
-        "slideEvent": "VE Vision 2030 · co-created with HigP"
+        "slideEvent": "VE Vision 2030 · co-created with HigP",
+        "mark": "vision"
       },
       {
         "month": "February 2026",
@@ -1270,7 +1277,8 @@
             "VCC"
           ]
         },
-        "part": 2
+        "part": 2,
+        "mark": "award"
       }
     ]
   },

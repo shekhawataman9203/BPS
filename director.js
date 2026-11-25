@@ -54,9 +54,16 @@ export const CHAPTERS = [
   { id: 'factcheck', title: 'BPS Fact Check', sub: 'The JaP Newsroom', loc: 'studio', dur: 900, stepped: true },
   { id: 'future', title: 'How 2027 looks like', sub: 'Back through the gate, into the plant of 2027', loc: 'gate', dur: 40, stepped: true },
   { id: 'plant', title: 'Picture of Future', sub: 'A walk through the modern plant', loc: 'floor', dur: 36 },
-  { id: 'closing', title: 'Lead. Work. Win.', sub: 'Creating value. Together.', loc: 'close', dur: 18 },
   { id: 'thanks', title: 'Thank You', sub: '', loc: 'close', dur: 14, stepped: true },
 ];
+// the activities the ‹ › buttons step through: chapter + mark
+export const ACTS = [
+  ['flashback', 'flashback'], ['house', 'house26'], ['roadmap', 'roadmap26'], ['glimpses', 'glimpses'],
+  ['glimpses', 'vsp'], ['glimpses', 'dlpc'], ['glimpses', 'space'], ['glimpses', 'dlr'], ['glimpses', 'dsm'], ['digitalsm', 'dsmex'],
+  ['glimpses2', 'twin'], ['glimpses2', 'vision'], ['glimpses2', 'award'], ['factcheck', 'factcheck'],
+  ['future', 'future'], ['future', 'goal'], ['future', 'kpr'], ['future', 'kpi'], ['future', 'hunt'], ['future', 'strategy'],
+  ['future', 'roadmap27'], ['future', 'challenges'], ['plant', 'pof'], ['thanks', 'thanks'],
+].map(([ch, m]) => ({ ch, m }));
 
 // Operators at work [x, z, yaw]: NHA assembly line (4), VE pump line (3), NHA component line, VE press,
 // calibration cell, NHA machining (front and back), VE end of line test
@@ -206,23 +213,45 @@ export class Director {
     if (this.index > 0 && at > 1) { this.go(this.index, { toStep: at - 1 }); return; }
     if (this.index > 1) this.go(this.index - 1, { toStep: Infinity }); else if (this.index === 1) this.go(0);
   }
+  // ---------- activities (the ‹ › buttons): each script calls mark(id) where an activity starts ----------
+  mark(id) {
+    this.curMark = id; this.markAt = this.stepNo || 0; this.markT = performance.now();
+    if (this.catchUp && this.targetMark === id) this.endCatchUp();
+    this.app.ui.setActivity?.(id);
+  }
+  actIndex() { return ACTS.findIndex(x => x.m === this.curMark); }
+  goAct(k) {
+    if (k < 0) { this.go(0); return; }
+    const A = ACTS[Math.min(k, ACTS.length - 1)], ci = CHAPTERS.findIndex(c => c.id === A.ch); if (ci < 0) return;
+    const first = ACTS.find(x => x.ch === A.ch) === A;
+    if (first) this.go(ci); else this.go(ci, { toMark: A.m });
+  }
+  nextAct() { if (this.catchUp) return; const k = this.actIndex(); this.goAct(k < 0 ? ACTS.findIndex(x => CHAPTERS.findIndex(c => c.id === x.ch) > this.index) : k + 1); }
+  prevAct() {
+    if (this.catchUp) return; const k = this.actIndex();
+    if (k < 0) { this.prev(); return; }
+    // inside the activity → back to its start; already at its start → the activity before
+    const atStart = !this.scriptDone && (this.stepNo || 0) <= this.markAt + 1 && (!!this.stepRes || performance.now() - (this.markT || 0) < 3000);
+    this.goAct(atStart ? k - 1 : k);
+  }
   endCatchUp() {
     if (!this.catchUp) return;
-    this.catchUp = false; this.targetStep = 0; this.app.timeScale = 1; this.app.ui.fade(0, 0.6);
+    this.catchUp = false; this.targetStep = 0; this.targetMark = null; this.app.timeScale = 1; this.app.ui.fade(0, 0.6);
   }
-  async go(i, { skipTitle = false, toStep = 0 } = {}) {
+  async go(i, { skipTitle = false, toStep = 0, toMark = null, noFade = false } = {}) {
     i = clamp(i, 0, CHAPTERS.length - 1);
     const app = this.app, ui = app.ui, ch = CHAPTERS[i];
     const gt = ++this.goToken;
     this.makeCtx(); // cancels running script
-    this.stepRes = null; app.timeScale = 1; ui.stepHint(false);
+    this.stepRes = null; this.onSkip = null; app.timeScale = 1; ui.stepHint(false);
     app.rig.stop(); this.userCam = false; ui.showResetView(false); ui.clearCaptions(); ui.setPins([]); ui.closePanel(true); ui.showSkip(false); ui.closeRoadmap();
-    if (this.index >= 0) { ui.fade(1, 0.45); await new Promise(r => setTimeout(r, 470)); if (gt !== this.goToken) return; }
+    if (this.index >= 0 && !noFade) { ui.fade(1, 0.45); await new Promise(r => setTimeout(r, 470)); if (gt !== this.goToken) return; }
     this.index = i; this.chapterTime = 0; this.scriptDone = false; this.stepNo = 0;
-    this.targetStep = toStep; this.catchUp = toStep > 0; if (this.catchUp) skipTitle = true;
+    this.targetStep = toStep; this.targetMark = toMark; this.catchUp = toStep > 0 || !!toMark; if (this.catchUp) skipTitle = true;
+    this.curMark = null; this.markAt = 0;
     ui.setChapter(i);
     this.stage(ch.id);
-    if (this.catchUp) app.timeScale = 20; else ui.fade(0, 0.8);
+    if (this.catchUp) app.timeScale = 20; else ui.fade(0, noFade ? 0.01 : 0.8);
     // the gate chapter has no title card: '2026 Flashback' is written on the doors
     if (!['opening', 'flashback', 'house', 'roadmap', 'future', 'glimpses', 'glimpses2', 'thanks', 'factcheck'].includes(ch.id) && !skipTitle) ui.titleCard(i, ch.title, ch.sub);
     const ctx = this.makeCtx();
@@ -243,7 +272,7 @@ export class Director {
   waitStep(ctx, autoAfter = null) {
     this.stepNo = (this.stepNo || 0) + 1;
     // replaying after Back: run through the earlier steps without stopping
-    if (this.catchUp && this.stepNo < this.targetStep) return new Promise(r => setTimeout(r, 90));
+    if (this.catchUp && (this.targetMark || this.stepNo < this.targetStep)) return new Promise(r => setTimeout(r, 90));
     this.endCatchUp();
     this.app.timeScale = 1;
     const auto = null; void autoAfter; // nothing moves on by itself: every step waits for Next
@@ -258,6 +287,7 @@ export class Director {
     const ch = CHAPTERS[this.index]; if (!ch || this.scriptDone || this.catchUp) return;
     if (ch.stepped) {
       if (this.stepRes) { this.stepRes(); return; }
+      if (this.onSkip) { this.onSkip(); return; }
       this.app.timeScale = 5; // fast-forward the current animation to the next step
       return;
     }
@@ -361,6 +391,7 @@ export class Director {
   async opening(ctx) { await ctx.wait(0.1); }
 
   async flashback(ctx) {
+    this.mark('flashback');
     const { ph, bps, prod, qual } = this.cast, a = this.app, gate = a.factory.gate, d = a.data;
     const team = this.all(), sign = a.factory.hotspots.gate;
     ph.place(0, 40.5, PI);
@@ -399,12 +430,13 @@ export class Director {
     ph.faceTo(W); ph.lookAt(W); bps.lookAt(W); team.forEach(m => m.lookAt(W));
     ph.gesture('point', 2.6, { target: W });
     ctx.cap('On the screen: 2026 Flashback.');
-    ctx.cam(SHOT.in_both, 3);
-    await ctx.wait(3.2);
+    await ctx.wait(1.2);
+    if (!this.catchUp) { this.go(this.index + 1, { noFade: true }); await new Promise(() => {}); } // straight into the screen, full display
   }
 
   async house(ctx) {
     // the screen opens in full display with '2026 Flashback'; each Next builds the House of BPS GO!+
+    this.mark('house26');
     const ui = this.app.ui, wall = this.app.entrance.wall;
     ctx.cut(SHOT.k_wall);
     wall.setMode('flash'); wall.set26(0, true);
@@ -415,6 +447,7 @@ export class Director {
   }
 
   async roadmap(ctx) {
+    this.mark('roadmap26');
     // straight from the House of BPS GO!+ to the roadmap in full screen (click to zoom) → back to the scene
     const ui = this.app.ui, wall = this.app.entrance.wall;
     ctx.cut(SHOT.k_wall);
@@ -500,6 +533,7 @@ export class Director {
     const a = this.app, ui = a.ui, c = this.cast, T = (a.data.targets2027 || {}).boards || [], boards = a.factory.t27Boards || [];
     for (let i = 0; i < T.length; i++) {
       const b = boards[i]; if (!b) continue;
+      this.mark(T[i].id === 'kpr' ? 'kpr' : T[i].id === 'kpi' ? 'kpi' : 'hunt');
       ui.t27Board('close');
       ctx.cap(`Target 2027 · ${T[i].title}`, { hold: 400 });
       await this.walkToBoard(ctx, b);
@@ -530,6 +564,7 @@ export class Director {
     const have = JSON.parse(document.getElementById('glimpse-images')?.textContent || '{}');
     if (part === 1) {
       // the cover on the big screen
+      this.mark('glimpses');
       ctx.cap('Glimpses 2026: a Gemba walk through the year.', { hold: 600 });
       await this.waitStep(ctx);
     }
@@ -538,6 +573,7 @@ export class Director {
       const M = G.months[m]; if ((M.part || 1) !== part) continue;
       const b = boards[m]; if (!b) continue;
       if (!M.images.some(im => have[im.src])) continue; // no pictures for this story yet
+      if (M.mark) this.mark(M.mark);
       // walk to the board
       ui.glimpses('close'); ui.glimpses('gemba', null);
       ctx.cap(`Gemba walk · ${M.month}`, { hold: 400 });
@@ -578,6 +614,7 @@ export class Director {
   }
 
   async digitalsm(ctx) {
+    this.mark('dsmex');
     const { tl, ph, bps, prod, qual } = this.cast, a = this.app, ui = a.ui, F = a.factory, S = F.sm, D = a.data.digitalSM;
     const team = [ph, bps, prod, qual], zA = -4.35, last = S.racks[S.racks.length - 1], sp = S.screenPos;
     const walkAll = (spots, speed = 1.7) => Promise.all(team.map((m, k) => new Promise(res => ctx.later(k * 0.15, () => m.walkTo([spots[k]], { speed, onArrive: () => res() })))));
@@ -589,18 +626,24 @@ export class Director {
     ctx.cam(SHOT.sm_watch, 1.6);
     ctx.cap('Before · manual stock count', { kind: 'marker' });
     ctx.cap(D.before.text);
-    await ctx.walk(tl, [[S.racks[0].x, zA]], { speed: 1.4, faceYaw: 0 });
+    // Next during the count jumps straight to the end of it (the 45-min scene)
+    let jump = false; this.onSkip = () => { jump = true; this.onSkip = null; };
+    await Promise.race([ctx.walk(tl, [[S.racks[0].x, zA]], { speed: 1.4, faceYaw: 0 }), ctx.until(() => jump)]);
     tl.holdClipboard(true); ui.smNote('open', 'before');
     for (let i = 0; i < S.racks.length; i++) {
       const r = S.racks[i];
-      if (i) await ctx.walk(tl, [[r.x, zA]], { speed: 1.0, faceYaw: 0 });
+      if (jump) { ui.smNote('row', i); continue; }
+      if (i) await Promise.race([ctx.walk(tl, [[r.x, zA]], { speed: 1.0, faceYaw: 0 }), ctx.until(() => jump)]);
+      if (jump) { ui.smNote('row', i); continue; }
       tl.faceYaw(0); tl.lookAt(r.center); tl.gesture('point', 1.1, { target: r.center });
       if (i === 3) ctx.cam(SHOT.sm_wide, 3);
       await ctx.wait(1.1);
       tl.gesture('write', 1.6); tl.lookAt(null);
       ui.smNote('row', i);
-      await ctx.wait(1.2);
+      await Promise.race([ctx.wait(1.2), ctx.until(() => jump)]);
     }
+    this.onSkip = null;
+    if (jump) { tl.place(last.x, zA, 0); tl.gestures.length = 0; } // straight to the end of the round
     // tired after the round
     tl.holdClipboard(false); tl.faceYaw(PI); tl.setMood('tired');
     ctx.cam({ pos: [last.x - 0.3, 1.75, zA - 2.6], target: [last.x, 1.5, zA], fov: 40 }, 2.2);
@@ -632,6 +675,7 @@ export class Director {
   }
 
   async factcheck(ctx) {
+    this.mark('factcheck');
     const ui = this.app.ui, F = this.app.data.factCheck, A = F.audit, an = this.cast.bps;
     const cam = V(1.1, 1.66, 25.4), panel = V(2.6, 1.55, 22.6);
     an.lookAt(cam);
@@ -652,6 +696,7 @@ export class Director {
   }
 
   async thanks(ctx) {
+    this.mark('thanks');
     const ui = this.app.ui;
     ui.thanks('show');
     await ctx.wait(1.0);
@@ -663,6 +708,7 @@ export class Director {
   }
 
   async future(ctx) {
+    this.mark('future');
     const { ph } = this.cast, a = this.app, gate = a.factory.gate, wall = a.entrance.wall, H = a.data.house2027;
     const team = this.all();
     // step 1: the screens go dark, a black card asks the question
@@ -697,7 +743,7 @@ export class Director {
     ctx.cap('On the screen: BPS GO!+ 2027.', { hold: 600 });
     await this.waitStep(ctx);
     // step: the 2027 target
-    wall.setT27(0, true); wall.setMode('target27'); wall.setT27(1); ph.gesture('present', 2.6);
+this.mark('goal');     wall.setT27(0, true); wall.setMode('target27'); wall.setT27(1); ph.gesture('present', 2.6);
     ctx.cap('Goal 2027, goal 1: a self-learning organisation at BPS Level 3.', { hold: 600 });
     await this.waitStep(ctx);
     // next: goal 2, the Mobility BPS Award
@@ -707,7 +753,7 @@ export class Director {
     // Target 2027: a Gemba walk to three boards; each Next fires one target onto the board
     await this.targetBoards(ctx);
     // step 4: how we do it: the house drops in, its pillars still empty
-    wall.setISA(0, true); wall.setTag(false, true); wall.setMode('house27'); wall.set27(false, 0, true); wall.set27(true, 0);
+this.mark('strategy');     wall.setISA(0, true); wall.setTag(false, true); wall.setMode('house27'); wall.set27(false, 0, true); wall.set27(true, 0);
     this.app.ui.toggleScreenView(true); // full display: the 4K screen pixel-sharp
     ph.gesture('present', 2.6);
     ctx.cap('How we do it: the House of BPS GO!+ 2027.', { hold: 600 });
@@ -734,24 +780,21 @@ export class Director {
     if (H.tagline) { wall.highlight(null, null); wall.setTag(true); ctx.cap(H.tagline.join('  ') + '.', { hold: 600 }); await this.waitStep(ctx); }
     this.app.ui.toggleScreenView(false);
     // BPS GO!+ Roadmap 2027 in full screen (click to zoom)
+this.mark('roadmap27');
     { const ui = this.app.ui; ui.roadmap27(true); ctx.cap('BPS GO!+ Roadmap 2027: every element of the house, quarter by quarter.', { hold: 600 }); await this.waitStep(ctx); ui.roadmap27(false);
       // Challenges & Support Required: each Next brings one in
       const C = this.app.data.challenges2027;
       if (C) {
-        ui.challenges('open'); await this.waitStep(ctx);
+this.mark('challenges');         ui.challenges('open'); await this.waitStep(ctx);
         for (let k = 0; k < C.challenges.length; k++) { ui.challenges('ch', k); ctx.cap('Challenge: ' + C.challenges[k].text + '.', { hold: 600 }); await this.waitStep(ctx); }
         for (let k = 0; k < C.support.length; k++) { ui.challenges('sup', k); ctx.cap('Support required: ' + C.support[k].text + '.', { hold: 600 }); await this.waitStep(ctx); }
-        ui.challenges('close');
       } }
-    // back to the plant for the applause
-    wall.highlight(null, null); ph.lookAt(null); ph.faceYaw(PI * 0.6); team.forEach(m => m.lookAt(ph));
-    ph.gesture('armsOpen', 2.6);
-    team.forEach((m, i) => ctx.later(0.6 + i * 0.15, () => m.gesture('clap', 2.4)));
-    ctx.cap(H.statement + '.');
-    await ctx.wait(3.4);
+    // straight on to the Picture of Future (no return to the house)
+    if (!this.catchUp) { this.next(); await new Promise(() => {}); }
   }
 
   async plant(ctx) {
+    this.mark('pof');
     const { ph, bps, qual: dig } = this.cast, a = this.app, d = a.data.plant, H = a.factory.hotspots; // the Quality Manager presents the AI vision cell
     const Z = id => d.zones.find(z => z.id === id) || { name: id, items: [''] };
     ctx.cap(d.title, { kind: 'marker' });

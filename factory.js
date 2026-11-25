@@ -794,6 +794,21 @@ export function buildFactory(scene, renderer, data = {}) {
   };
   facadeSign(GATE_TEXT.left, 'Plant · JaP', -17);
   facadeSign(GATE_TEXT.right, 'Plant · JaP', 17);
+  // rooftop sign: BOSCH JaP, lit
+  {
+    const rs = new THREE.Group(); rs.position.set(17, HALL.h, fz - 1.2); out.add(rs);
+    const ct = new CanvasTex(2048, 640, (ctx, Wc, Hc) => {
+      ctx.clearRect(0, 0, Wc, Hc); ctx.textAlign = 'center';
+      ctx.fillStyle = '#E20015'; ctx.font = `900 300px ${FONT}`; ctx.fillText('JaP', Wc / 2 + 330, 430);
+      ctx.fillStyle = '#ffffff'; ctx.font = `800 170px ${FONT}`; ctx.fillText('BOSCH', Wc / 2 - 380, 400);
+      ctx.fillStyle = '#29d3ff'; ctx.fillRect(140, 520, Wc - 280, 16);
+    });
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(14, 4.375), new THREE.MeshBasicMaterial({ map: ct.tex, transparent: true, toneMapped: false }));
+    face.position.set(0, 2.9, 0.06); rs.add(face);
+    box(14.4, 3.2, 0.12, mat(0x12161C, { rough: 0.4, metal: 0.6 }), 0, 2.9, -0.04, rs);
+    for (const x of [-5.5, 0, 5.5]) box(0.16, 1.3, 0.16, mat(0x5b6570, { rough: 0.4, metal: 0.7 }), x, 0.65, -0.1, rs);
+    shadows(rs, true, false);
+  }
   // gate frame and canopy
   const frameM = glow(C.red, 1.7);
   box(0.25, GATE.h + 0.25, 0.25, frameM, -GATE.w / 2 - 0.12, (GATE.h + 0.25) / 2, fz + 0.12, out);

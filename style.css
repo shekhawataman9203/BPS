@@ -1058,3 +1058,7 @@ body.roadmap-open #stepHint { top: calc(var(--top-h) + 14px); bottom: auto; righ
 @property --lit { syntax: '<number>'; inherits: true; initial-value: 0; }
 .cs-goal::after { animation: csRing 2.4s ease-out infinite; }
 @keyframes csRing { from { transform: scale(.9); opacity: .8; } to { transform: scale(1.35); opacity: 0; } }
+/* the ‹ › buttons stay usable over every full-screen view */
+#rail { z-index: 35; }
+body.roadmap-open #rail .arrow { visibility: visible; }
+body.factcheck #rail .arrow { visibility: visible; }
