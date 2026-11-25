@@ -164,7 +164,7 @@ class KpiWall {
     this.hl = { pillar: null, row: null }; this.layouts = { house: {}, roadmap: {}, kpi: {}, house27: {}, flash: {}, align: {}, target27: {}, gl26: {} }; this.alignK = 1; this.mode = 'kpi';
     this.h27 = { drop: 1, dropT: 1, rev: [1, 1, 1, 1], shown: 4 }; this.t27 = { shown: 2, v: [1, 1] };
     // Innovate · Simplify · Accelerate logos that drop onto the 2027 house (t = seconds since each one was dropped)
-    this.isa = { shown: 0, t: [0, 0, 0] }; this.isaImg = {};
+    this.isa = { shown: 0, t: [0, 0, 0] }; this.tag = { on: false, k: 0 }; this.isaImg = {};
     try { const G = JSON.parse(document.getElementById('glimpse-images')?.textContent || '{}');
       for (const it of data.house2027?.isa || []) { const src = G['isa-' + (it.img || it.id) + '.png']; if (!src) continue; const im = new Image(); im.onload = () => this.ct.redraw(); im.src = src; this.isaImg[it.id] = im; } } catch (e) { /* no logos */ }
     // 2026 house build-up, one stage per Next: 0 white, 1 roof, 2 band, 3 pillars, 4-7 pillar content, 8 boosters, 9 statement
@@ -190,6 +190,8 @@ class KpiWall {
   // Target 2027: how many target cards are on the screen (each Next adds one)
   setT27(shown, snap = false) { const t = this.t27; t.shown = shown; if (snap) t.v = t.v.map((_, i) => (i < shown ? 1 : 0)); this.ct.redraw(); }
   // how many of the Innovate / Simplify / Accelerate logos are on the 2027 house
+  // the 2027 tagline in the bottom band
+  setTag(on, snap = false) { this.tag.on = !!on; if (snap) this.tag.k = on ? 1 : 0; this.ct.redraw(); }
   setISA(shown, snap = false) { const S = this.isa; S.shown = shown; S.t = S.t.map((t, i) => (i < shown ? (snap ? 10 : t) : 0)); this.ct.redraw(); }
   set26(stage, snap = false) {
     const R = this.h26; R.stage = stage;
@@ -215,6 +217,7 @@ class KpiWall {
     if (this.mode === 'house27') {
       const r = this.h27;
       if (r.drop > 0.5) { this.gearT = (this.gearT || 0) + dt; this.gearAcc = (this.gearAcc || 0) + dt; if (this.gearAcc > 1 / 24) { this.gearAcc = 0; dirty = true; } }
+      { const g = this.tag, tg = g.on ? 1 : 0; if (g.k !== tg) { g.k = tg > g.k ? Math.min(1, g.k + dt / 0.9) : 0; dirty = true; } }
       const S = this.isa; S.t = S.t.map((t, i) => { if (i >= S.shown || t >= 3.2) return t; dirty = true; return Math.min(3.2, t + dt); });
       if (r.drop !== r.dropT) { r.drop = r.dropT > r.drop ? Math.min(r.dropT, r.drop + dt / 1.3) : Math.max(r.dropT, r.drop - dt / 0.6); dirty = true; }
       r.rev = r.rev.map((v, i) => { const t = i < r.shown ? 1 : 0; if (v === t) return v; dirty = true; return t > v ? Math.min(1, v + dt / 0.9) : 0; });
@@ -468,8 +471,23 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
   ctx.restore();
   // statement
   ctx.globalAlpha = r26 ? E(r26.stmt) : k(7);
-  ctx.fillStyle = '#18A8E0'; ctx.fillRect(0, H - 150, W, 150);
-  ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; const fs = fitText(ctx, h.statement, W - 200, 66, 600); ctx.font = `600 ${fs}px ${FONT}`; ctx.fillText(h.statement, W / 2, H - 52); ctx.textAlign = 'left';
+  const tg = is27 && h.tagline ? ease.out(w.tag.k) : 0, bandH = 150 + 50 * tg;
+  ctx.fillStyle = '#18A8E0'; ctx.fillRect(0, H - bandH, W, bandH);
+  if (tg > 0) { const gg = ctx.createLinearGradient(0, 0, W, 0); gg.addColorStop(0, '#0A4F8A'); gg.addColorStop(0.5, '#18A8E0'); gg.addColorStop(1, '#0A4F8A'); ctx.globalAlpha = tg; ctx.fillStyle = gg; ctx.fillRect(0, H - bandH, W, bandH); ctx.globalAlpha = 1; }
+  ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
+  { const fs0 = fitText(ctx, h.statement, W - 200, 66 - 26 * tg, 600); ctx.font = `600 ${fs0}px ${FONT}`; ctx.globalAlpha = 1 - 0.15 * tg; ctx.fillText(h.statement, W / 2, H - 52 - 92 * tg); ctx.globalAlpha = 1; }
+  if (tg > 0) {
+    // tagline: "Focusing on right enablers  #Win More with less", rising in from the bottom
+    const [p1, p2] = h.tagline; ctx.font = `800 70px ${FONT}`; const w1 = ctx.measureText(p1 + '   ').width; ctx.font = `900 76px ${FONT}`; const w2 = ctx.measureText(p2).width;
+    const x0t = W / 2 - (w1 + w2) / 2, yt = H - 34 + (1 - tg) * 60;
+    ctx.save(); ctx.beginPath(); ctx.rect(0, H - bandH, W, bandH); ctx.clip(); ctx.globalAlpha = tg; ctx.textAlign = 'left';
+    ctx.lineJoin = 'round'; ctx.lineWidth = 10; ctx.strokeStyle = 'rgba(6,40,80,0.55)';
+    ctx.font = `800 70px ${FONT}`; ctx.strokeText(p1, x0t, yt); ctx.fillStyle = '#ffffff'; ctx.fillText(p1, x0t, yt);
+    ctx.font = `900 76px ${FONT}`; ctx.strokeText(p2, x0t + w1, yt); ctx.fillStyle = '#FFD34D'; ctx.fillText(p2, x0t + w1, yt);
+    ctx.fillStyle = '#FFD34D'; ctx.fillRect(x0t + w1, yt + 12, w2 * tg, 6);
+    ctx.restore();
+  }
+  ctx.textAlign = 'left';
   ctx.globalAlpha = 1;
   if (is27) drawISA(w, ctx, H, { W, x0, x1, py, ph, pw, gap, by, bh, pillars: h.pillars });
   ctx.restore();

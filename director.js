@@ -707,7 +707,7 @@ export class Director {
     // Target 2027: a Gemba walk to three boards; each Next fires one target onto the board
     await this.targetBoards(ctx);
     // step 4: how we do it: the house drops in, its pillars still empty
-    wall.setISA(0, true); wall.setMode('house27'); wall.set27(false, 0, true); wall.set27(true, 0);
+    wall.setISA(0, true); wall.setTag(false, true); wall.setMode('house27'); wall.set27(false, 0, true); wall.set27(true, 0);
     this.app.ui.toggleScreenView(true); // full display: the 4K screen pixel-sharp
     ph.gesture('present', 2.6);
     ctx.cap('How we do it: the House of BPS GO!+ 2027.', { hold: 600 });
@@ -730,6 +730,8 @@ export class Director {
       ctx.cap(it.cap, { hold: 600 });
       await this.waitStep(ctx);
     }
+    // the tagline in the bottom band
+    if (H.tagline) { wall.highlight(null, null); wall.setTag(true); ctx.cap(H.tagline.join('  ') + '.', { hold: 600 }); await this.waitStep(ctx); }
     this.app.ui.toggleScreenView(false); // back to the plant for the applause
     wall.highlight(null, null); ph.lookAt(null); ph.faceYaw(PI * 0.6); team.forEach(m => m.lookAt(ph));
     ph.gesture('armsOpen', 2.6);
