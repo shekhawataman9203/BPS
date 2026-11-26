@@ -710,10 +710,9 @@ export class Director {
     await ctx.wait(1.0);
     ui.thanks('drop');                 // the three drop from above and land on the BPS plinth
     await ctx.wait(3.6);
-    ui.thanks('jap');                  // JaP lands on the building
-    await this.waitStep(ctx);
-    ui.thanks('trophy');               // Next: the Mobility BPS Award 2027 trophy comes down
-    await this.waitStep(ctx);
+    ui.thanks('jap');                  // JaP lands on the roof of the building
+    for (let k = 0; k < 3; k++) { await this.waitStep(ctx); ui.thanks('check', k); } // each Next: one result lands on the glass with a blast
+    await ctx.wait(1.5);
   }
 
 
