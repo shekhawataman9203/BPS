@@ -1173,3 +1173,10 @@ body:not(.show-rail) #rail .arrow { pointer-events: auto; }
 #railStations.many .station.current .st-name, #railStations.many .station:hover .st-name { opacity: 1; position: relative; z-index: 2; }
 #railStations.many .st-num { font-size: 11px; }
 #railStations.many .station.current .st-name, #railStations.many .station:hover .st-name { max-width: none; overflow: visible; }
+/* House 2027 detail: New initiatives / Continuous focus */
+.dt27-head { margin: 22px 0 8px; padding-left: 12px; border-left: 4px solid #3ddc6e; }
+.dt27-head.cont { border-left-color: #29d3ff; }
+.dt27-head h4 { margin: 4px 0 2px; text-transform: uppercase; letter-spacing: .12em; }
+.dt27-head p { margin: 0; color: var(--grey2); font-size: 13px; }
+.dt27-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; background: rgba(61,220,110,.18); color: #3ddc6e; }
+.dt27-head.cont .dt27-tag { background: rgba(41,211,255,.16); color: #29d3ff; }

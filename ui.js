@@ -746,10 +746,15 @@ export class UI {
         H.pillars.forEach(x => body.append(h('button', { class: 'dt-link', style: `--c:${x.color}`, onclick: () => this.showDetail({ type: 'house27', id: x.id }) }, h('span', {}, x.name, h('small', {}, x.driver)))));
       } else {
         color = el.color || '#1E88D9'; kicker = 'House of BPS GO!+ 2027'; title = el.name;
-        if (el.driver) { body.append(h('h4', {}, el.driver)); const ul = h('ul', { class: 'dt-list' }); el.items.forEach(it => ul.append(item(it))); body.append(ul); }
-        else body.append(h('p', { class: 'dt-el' }, el.text));
+        if (!el.driver) body.append(h('p', { class: 'dt-el' }, el.text));
         const was = [...d.house.pillars, ...d.house.boosters].find(x => x.id + '-27' === el.id);
-        if (was && was.items && el.items && was.items.join() !== el.items.join()) { body.append(h('h4', {}, 'In 2026')); const ul = h('ul', { class: 'dt-list was26' }); was.items.forEach(it => ul.append(h('li', {}, it))); body.append(ul); }
+        // two sections: New initiatives (new for 2027) and Continuous focus (continuity)
+        const sec = (tag, head, sub, list, cls) => {
+          body.append(h('div', { class: 'dt27-head ' + cls }, h('span', { class: 'dt27-tag' }, tag), h('h4', {}, head), h('p', {}, sub)));
+          const ul = h('ul', { class: 'dt-list ' + cls }); (list && list.length ? list : ['Content to follow']).forEach(it => ul.append(cls === 'new' ? item(it) : h('li', {}, it.replace(/\*\*/g, '')))); body.append(ul);
+        };
+        sec('New for 2027', 'New initiatives', 'What we will introduce and implement in 2027', el.newInit || el.items, 'new');
+        sec('Continuity', 'Continuous focus', 'What we will continue, strengthen and sustain', el.continuity || was?.items, 'cont');
       }
       this.app.director.select('house27', hit.id);
     } else if (hit.type === 'house' || hit.type === 'group') {
