@@ -811,16 +811,16 @@
         ],
         "roadmap": "waste-free",
         "newInit": [
-          "2-piece flow in system in VE",
-          "Lot size reduction project",
-          "Ship to line concept for A class part family",
-          "Pull with W/H",
-          "Consumption control in upstream level (no inventory point in VS)",
-          "TPM Maturity"
+          "Two-piece flow across the VE value stream",
+          "Lot-size reduction to shorten throughput time",
+          "Ship-to-line supply for A-class part families",
+          "Pull-based replenishment from the warehouse",
+          "Upstream consumption control: no inventory points in the value stream",
+          "TPM maturity build-up on bottleneck equipment"
         ],
         "continuity": [
-          "Line walk",
-          "Flow Improvement Project (OEE, C/O)"
+          "Daily line walks: see the waste, act on it",
+          "Flow improvement projects: OEE and changeover (SMED)"
         ]
       },
       {
@@ -837,12 +837,12 @@
         ],
         "roadmap": "investment",
         "newInit": [
-          "Smart & scalable automation",
-          "MOC reduction project"
+          "Smart & scalable automation where it adds value",
+          "MOC reduction project: lower cost per part"
         ],
         "continuity": [
-          "Zero breakdown approach",
-          "Low capex retrofit"
+          "Zero-breakdown approach for critical MAEs",
+          "Low-capex retrofit before new investment"
         ]
       },
       {
@@ -858,11 +858,11 @@
         ],
         "roadmap": "everybody-cip",
         "newInit": [
-          "More focus on quantifiable saving ideas → changes in reward process",
-          "Motivate associates toward high business impact"
+          "Focus on quantifiable saving ideas, backed by a revised reward process",
+          "Engage every associate in high business-impact improvements"
         ],
         "continuity": [
-          "Agile methodology"
+          "Agile problem solving: speed weeks and scrum"
         ]
       },
       {
@@ -879,11 +879,11 @@
         ],
         "roadmap": "leadership",
         "newInit": [
-          "Leadership training plan in JaP",
-          "Develop new coach & lean multiplier"
+          "Structured leadership training plan for JaP",
+          "Grow new coaches and lean multipliers"
         ],
         "continuity": [
-          "BPS competency – training on BPS elements"
+          "BPS competency: hands-on training on every BPS element"
         ]
       }
     ],
