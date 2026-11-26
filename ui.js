@@ -753,8 +753,8 @@ export class UI {
           body.append(h('div', { class: 'dt27-head ' + cls }, h('span', { class: 'dt27-tag' }, tag), h('h4', {}, head), h('p', {}, sub)));
           const ul = h('ul', { class: 'dt-list ' + cls }); (list && list.length ? list : ['Content to follow']).forEach(it => ul.append(cls === 'new' ? item(it) : h('li', {}, it.replace(/\*\*/g, '')))); body.append(ul);
         };
-        sec('New for 2027', 'New initiatives', 'What we will introduce and implement in 2027', el.newInit || el.items, 'new');
-        sec('Continuity', 'Continuous focus', 'What we will continue, strengthen and sustain', el.continuity || was?.items, 'cont');
+        if (!(Array.isArray(el.newInit) && !el.newInit.length)) sec('New', 'New in 2027', 'What new we will introduce in 2027', el.newInit || el.items, 'new');
+        if (!(Array.isArray(el.continuity) && !el.continuity.length)) sec('Continuity', 'Continuing 2026', 'What we will continue, strengthen and sustain', el.continuity || was?.items, 'cont');
       }
       this.app.director.select('house27', hit.id);
     } else if (hit.type === 'house' || hit.type === 'group') {

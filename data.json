@@ -811,16 +811,16 @@
         ],
         "roadmap": "waste-free",
         "newInit": [
-          "Two-piece flow across the VE value stream",
-          "Lot-size reduction to shorten throughput time",
-          "Ship-to-line supply for A-class part families",
-          "Pull-based replenishment from the warehouse",
-          "Upstream consumption control: no inventory points in the value stream",
-          "TPM maturity build-up on bottleneck equipment"
+          "1:1 flow in Assembly–Testing–Packing, line 3",
+          "Small-lot integration co-created with HigP: 20 → 4x, and 2-piece flow at the VE pacemaker",
+          "JIS in upstream, 4 areas (IC stud, cam plate, TD piston)",
+          "Pull with W/H coverage >70% (customers ITL, Escort, JD & Koel)",
+          "Ship-to-line coverage: 85% of part families",
+          "TPM maturity: TPM approach at JaP in line with v4.0 standard (SPM)"
         ],
         "continuity": [
-          "Daily line walks: see the waste, act on it",
-          "Flow improvement projects: OEE and changeover (SMED)"
+          "Line walk",
+          "Digital TPT monthly MIS"
         ]
       },
       {
@@ -837,12 +837,12 @@
         ],
         "roadmap": "investment",
         "newInit": [
-          "Smart & scalable automation where it adds value",
-          "MOC reduction project: lower cost per part"
+          "Zero-breakdown approach: 6-step strategy (TPM + Reliability + Digital Maintenance → sustained zero breakdown)",
+          "Smart & scalable automation: cobots in Suphina, Y-stage, Plunger",
+          "MOC reduction project (Kuldeep)"
         ],
         "continuity": [
-          "Zero-breakdown approach for critical MAEs",
-          "Low-capex retrofit before new investment"
+          "Low-capex retrofit and obsolescence management"
         ]
       },
       {
@@ -858,11 +858,13 @@
         ],
         "roadmap": "everybody-cip",
         "newInit": [
-          "Focus on quantifiable saving ideas, backed by a revised reward process",
-          "Engage every associate in high business-impact improvements"
+          "More ideas with quantifiable savings: changes in the reward process",
+          "Agile Master + SW coach certification: 05",
+          "Quarterly Lean Award introduced (category: TBD)"
         ],
         "continuity": [
-          "Agile problem solving: speed weeks and scrum"
+          "Monthly theme-based idea scheme",
+          "Monthly connect with BCA"
         ]
       },
       {
@@ -879,11 +881,12 @@
         ],
         "roadmap": "leadership",
         "newInit": [
-          "Structured leadership training plan for JaP",
-          "Grow new coaches and lean multipliers"
+          "Leadership training on BPS elements by PJ/BPS at JaP",
+          "BLDP nomination",
+          "1S & 2S drive at plant level, inspired by the Q-Prerak drive"
         ],
         "continuity": [
-          "BPS competency: hands-on training on every BPS element"
+          "BPS qualification rate on BPS elements (WaTS, LBP, LLB, BPS Basics, PGL …)"
         ]
       }
     ],
@@ -893,14 +896,29 @@
         "name": "Digi Lean (Industry 4.0)",
         "text": "Transparent flow & efficient value stream across S, M, D",
         "icon": "network",
-        "roadmap": "digi-lean"
+        "roadmap": "digi-lean",
+        "newInit": [
+          "DLR: digital shift handover",
+          "DLR: data knowledge base for quick reaction (Copilot solution)",
+          "Levelling: MTO sequencing through Procon",
+          "Pull principle: actual material real-time visualization",
+          "Standardized work: digital solution for logistics productivity"
+        ],
+        "continuity": [
+          "Hunt Runner projects every quarter"
+        ]
       },
       {
         "id": "h-indirect-27",
         "name": "CIP in Indirect Areas",
         "text": "Indirect process improvement through stability, speed & efficiency",
         "icon": "doc",
-        "roadmap": "cip-indirect"
+        "roadmap": "cip-indirect",
+        "newInit": [],
+        "continuity": [
+          "Increase the reach of the VSDiA approach",
+          "Focus on project completion rate"
+        ]
       }
     ],
     "isa": [
@@ -2226,21 +2244,29 @@
     "challenges": [
       {
         "icon": "⚙️",
-        "text": "Improve System CIP project completion rate in Indirect Functions"
+        "text": "Improve System CIP project completion rate in a 2-month cycle"
       },
       {
-        "icon": "📦",
-        "text": "Inventory reduction in A-Class part families through focused improvement initiatives"
+        "icon": "📈",
+        "text": "DLPC maturity >90% on BPS elements (current level 70%): mindset change from quantity to quality"
+      },
+      {
+        "icon": "⏱️",
+        "text": "Suggestion lead time <50 days (today: multiple follow-ups from BPS)"
       }
     ],
     "support": [
       {
-        "icon": "🧭",
-        "text": "Align departmental improvement initiatives with Vision 2030"
+        "icon": "🧑‍🏫",
+        "text": "Adherence to mentor / RC coaching on SCIP projects"
       },
       {
-        "icon": "🤝",
-        "text": "Strengthen VSDiA implementation through ownership, monitoring and leadership reviews"
+        "icon": "🧭",
+        "text": "Proactive initiative to take VSDiA into indirect areas (today driven by PM/BPS pull)"
+      },
+      {
+        "icon": "💡",
+        "text": "Support in rolling out the new idea scheme application for transparency in the process flow"
       }
     ]
   },
