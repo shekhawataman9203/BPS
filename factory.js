@@ -1049,6 +1049,7 @@ export function buildFactory(scene, renderer, data = {}) {
         const tx = ix + r + 28, tw = cx + cw - tx - 24, big = String(c.big) + (c.unit ? ' ' + c.unit : '');
         const lines = [[c.label.toUpperCase(), '#9fdcf2', 800, Math.min(30, chh * 0.13)], [big, '#ffffff', 900, Math.min(big.length > 12 ? 54 : 76, chh * 0.3)]];
         if (c.sub) lines.push([c.sub, '#c7d6e2', 500, Math.min(28, chh * 0.12)]);
+        if (c.delta) lines.push([(c.delta.dir === 'down' ? '▼ ' : '▲ ') + c.delta.text, '#3ddc6e', 800, Math.min(28, chh * 0.12)]);
         const tot = lines.reduce((a, l) => a + l[3] * 1.25, 0); let y = cy + (chh - tot) / 2;
         lines.forEach(([t, col2, wt, sz]) => { y += sz * 1.08; fit(t, tw, Math.round(sz), wt); ctx.fillStyle = col2; ctx.fillText(t, tx, y); y += sz * 0.17; });
         ctx.fillStyle = 'rgba(41,211,255,0.9)'; ctx.font = `900 30px ${FONT}`; ctx.textAlign = 'right'; ctx.fillText(String(i + 1).padStart(2, '0'), cx + cw - 18, cy + 40); ctx.textAlign = 'left';

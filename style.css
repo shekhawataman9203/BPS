@@ -1161,3 +1161,10 @@ body:not(.show-rail) #rail .arrow { pointer-events: auto; }
 /* JaP back on the roof */
 .ty-jap span { font-size: 7cqw; }
 .ty-c { z-index: 2; }
+/* green delta line on the target cards */
+.tb-delta { margin: .5cqw 0 0; display: flex; align-items: center; gap: .5cqw; font-size: 1.35cqw; font-weight: 800; color: #3ddc6e; }
+.tb-delta i { font-style: normal; display: grid; place-items: center; width: 1.9cqw; height: 1.9cqw; border-radius: 50%; background: rgba(61,220,110,.18); box-shadow: 0 0 1cqw rgba(61,220,110,.45); font-size: 1.05cqw; }
+.tb-board.many .tb-delta { font-size: 1.15cqw; }
+.tb-card.in .tb-delta i { animation: tbDelta 1.4s ease-in-out .9s 2; }
+.tb-delta.down i { --dy: .35cqw; } .tb-delta.up i { --dy: -.35cqw; }
+@keyframes tbDelta { 50% { transform: translateY(var(--dy)); } }

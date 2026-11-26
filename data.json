@@ -2004,7 +2004,7 @@
     "items": [
       {
         "icon": "🎓",
-        "head": "Self-learning organisation",
+        "head": "Towards self-learning organisation",
         "big": "BPS Level 3",
         "sub": "BPS assessment score",
         "steps": [
@@ -2056,7 +2056,7 @@
             "group": 0,
             "icon": "🎓",
             "label": "BPS Maturity Level",
-            "big": "Level 3",
+            "big": "Level >2.5",
             "sub": "BPS, MFH & LOG departments · v4.26 MTS"
           },
           {
@@ -2064,13 +2064,17 @@
             "icon": "⏱️",
             "label": "Stable Flow · improved TPT",
             "big": "8.8 days",
-            "sub": "NHA throughput time"
+            "sub": "NHA throughput time",
+            "delta": {
+              "dir": "down",
+              "text": "10% reduction from 2026"
+            }
           },
           {
             "group": 1,
             "icon": "🎓",
             "label": "BPS Maturity Level",
-            "big": "Level 3",
+            "big": "Level >2.5",
             "sub": "BPS, MFV & LOG departments · v4.26 MTO"
           },
           {
@@ -2078,7 +2082,11 @@
             "icon": "⏱️",
             "label": "Stable Flow · improved TPT",
             "big": "12 days",
-            "sub": "VE throughput time"
+            "sub": "VE throughput time",
+            "delta": {
+              "dir": "down",
+              "text": "14% reduction over 2026"
+            }
           }
         ]
       },
@@ -2091,21 +2099,34 @@
           {
             "icon": "🧭",
             "label": "Coaches & Lean Multipliers",
-            "big": "7",
-            "sub": "BLDP 1 · SW Coach 1 · Silver-star Agile Master 3 · BPS Assessor 2"
+            "big": "6",
+            "sub": "BLDP · SW coach · Silver-star Agile Masters · BPS Assessors",
+            "unit": "nos",
+            "delta": {
+              "dir": "up",
+              "text": "up over 2026"
+            }
           },
           {
             "icon": "✅",
             "label": "SCIP Project Completion",
             "big": ">90%",
-            "sub": "System CIP within 2 months · Point CIP within 1 month"
+            "sub": "System CIP within 2 months · Point CIP within 1 month",
+            "delta": {
+              "dir": "up",
+              "text": "10% up over 2026"
+            }
           },
           {
             "icon": "💡",
             "label": "Employee Involvement",
             "big": "30",
             "unit": "ideas / associate",
-            "sub": "100% individual contribution"
+            "sub": "100% individual contribution",
+            "delta": {
+              "dir": "up",
+              "text": "from 28 in 2026"
+            }
           },
           {
             "icon": "⚡",
@@ -2117,13 +2138,21 @@
             "icon": "📈",
             "label": "DLPC Maturity of BPS Elements",
             "big": ">90%",
-            "sub": "DLR · Pull · 5S · Std. work · Levelling"
+            "sub": "DLR · Pull · 5S · Std. work · Levelling",
+            "delta": {
+              "dir": "up",
+              "text": "from 70% in 2026"
+            }
           },
           {
             "icon": "🗺️",
             "label": "VSDiA Projects",
-            "big": ">5",
-            "sub": "Projects"
+            "big": "5",
+            "sub": "Projects",
+            "delta": {
+              "dir": "up",
+              "text": "from 3 in 2026"
+            }
           }
         ]
       },
@@ -2217,7 +2246,7 @@
               "BLDP 01"
             ],
             "kpi": "No. of coaches",
-            "target": "7",
+            "target": "6",
             "ytd": "",
             "new": true
           },

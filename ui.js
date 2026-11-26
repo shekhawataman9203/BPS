@@ -1188,6 +1188,7 @@ export class UI {
           h('p', { class: 'tb-label' }, c.label),
           h('p', { class: 'tb-big' + (String(c.big).length > 12 ? ' long' : '') }, h('b', {}, c.big), c.unit ? h('small', {}, ' ' + c.unit) : null),
           c.sub ? h('p', { class: 'tb-sub' }, c.sub) : null,
+          c.delta ? h('p', { class: 'tb-delta ' + c.delta.dir }, h('i', {}, c.delta.dir === 'down' ? '▼' : '▲'), c.delta.text) : null,
           h('i', { class: 'tb-wave', 'aria-hidden': 'true' }), h('i', { class: 'tb-scan', 'aria-hidden': 'true' }));
         if (grouped) { const g = c.group || 0, r = B.cards.filter((x, j) => j < k && (x.group || 0) === g).length; el.style.gridColumn = String(g + 1); el.style.gridRow = String(r + 2); }
         return el;
