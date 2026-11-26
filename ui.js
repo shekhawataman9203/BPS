@@ -64,7 +64,7 @@ export class UI {
     $('#introPlant').textContent = d.meta.subtitle || d.meta.event;
     $('#introTag').textContent = d.meta.tagline;
     const rail = $('#railStations');
-    { const n = CHAPTERS.length - 1; rail.style.gridTemplateColumns = `repeat(${n}, 1fr)`; const l = $('#railLine'); if (l) { l.style.left = `calc(100% / ${2 * n})`; l.style.right = `calc(100% / ${2 * n})`; } }
+    { const n = CHAPTERS.length - 1; rail.classList.toggle('many', n > 12); rail.style.gridTemplateColumns = `repeat(${n}, 1fr)`; const l = $('#railLine'); if (l) { l.style.left = `calc(100% / ${2 * n})`; l.style.right = `calc(100% / ${2 * n})`; } }
     CHAPTERS.forEach((c, i) => {
       if (i === 0) return;
       rail.append(h('button', { class: 'station', 'data-i': i, onclick: () => this.app.director.go(i), 'aria-label': `Chapter ${i}: ${c.title}` },
@@ -1135,12 +1135,19 @@ export class UI {
     el = h('section', { id: 'goalfilm' }, fr);
     document.body.append(el);
     fr.addEventListener('load', () => {
-      try { const doc = fr.contentDocument; const st = doc.createElement('style'); st.textContent = '#controls, #pauseBadge { display: none !important; }'; doc.head.append(st); doc.getElementById('btnPlay')?.click(); } catch (e) { /* film shows its own Play button */ }
+      try {
+        const doc = fr.contentDocument, w = fr.contentWindow; const st = doc.createElement('style'); st.textContent = '#controls, #pauseBadge { display: none !important; }'; doc.head.append(st);
+        doc.getElementById('btnPlay')?.click();
+        // hold on the title card until Next
+        this.goalHold = true;
+        const iv = setInterval(() => { const f = w.__film; if (!f || !el.isConnected) { clearInterval(iv); return; } if (this.goalHold && f.T >= -1.6) { f.paused = true; clearInterval(iv); } }, 50);
+      } catch (e) { /* film shows its own Play button */ }
       fr.blur(); window.focus(); // keys stay with the presentation (Next / Back)
     });
     fr.srcdoc = html;
     requestAnimationFrame(() => el.classList.add('on'));
   }
+  goalPlay() { this.goalHold = false; try { const f = document.querySelector('#goalfilm iframe')?.contentWindow?.__film; if (f) f.paused = false; } catch (e) { /* not reachable */ } }
   // ------------------------------------------------------------ Challenges & Support Required
   // 'open' | 'ch' k | 'sup' k | 'close'
   challenges(action, k) {

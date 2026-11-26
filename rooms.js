@@ -374,7 +374,8 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
     // blank screen first: BPS GO!+ 2027
     ctx.globalAlpha = 1 - dk;
     if (w.logoImg && w.logoImg.complete && w.logoImg.naturalWidth) { const lh = 300, lw = w.logoImg.naturalWidth * lh / w.logoImg.naturalHeight; ctx.drawImage(w.logoImg, W / 2 - lw / 2, H * 0.3, lw, lh); }
-    ctx.fillStyle = '#0A6EBD'; ctx.font = `800 240px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText('2027', W / 2, H * 0.3 + 560); ctx.textAlign = 'left';
+    if (w.blank27) { ctx.fillStyle = '#0A6EBD'; ctx.textAlign = 'center'; ctx.font = `900 230px ${FONT}`; ctx.fillText(w.blank27.title, W / 2, H * 0.3 + 560); ctx.fillStyle = '#4a525d'; ctx.font = `600 96px ${FONT}`; ctx.fillText(w.blank27.sub || '', W / 2, H * 0.3 + 720); ctx.fillStyle = CSS.red; ctx.fillRect(W / 2 - 200, H * 0.3 + 610, 400, 14); ctx.textAlign = 'left'; }
+    else { ctx.fillStyle = '#0A6EBD'; ctx.font = `800 240px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText('2027', W / 2, H * 0.3 + 560); ctx.textAlign = 'left'; }
     ctx.globalAlpha = 1;
     if (dk <= 0.001) return;
   }

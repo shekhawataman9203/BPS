@@ -2099,12 +2099,12 @@
           {
             "icon": "🧭",
             "label": "Coaches & Lean Multipliers",
-            "big": "6",
-            "sub": "BLDP · SW coach · Silver-star Agile Masters · BPS Assessors",
+            "big": "7",
+            "sub": "BLDP 1 · SW Coach 1 · Silver-star Agile Master 3 · BPS Assessor 2",
             "unit": "nos",
             "delta": {
               "dir": "up",
-              "text": "up over 2026"
+              "text": "from 1 in 2026"
             }
           },
           {
@@ -2169,9 +2169,9 @@
           },
           {
             "icon": "📦",
-            "label": "Phase 2",
+            "label": "Phase 1 → Phase 2",
             "big": "Digital SM & Digital JIS",
-            "sub": "Plunger & IC stud"
+            "sub": "First Plunger & IC stud → then Feed pump · Drive shaft · Cam plate · Roller ring"
           },
           {
             "icon": "🖥️",
@@ -2181,7 +2181,7 @@
           {
             "icon": "🚚",
             "label": "Inbound digitalization",
-            "big": "Digital W/H Management"
+            "big": "Digital Dock Yard Management"
           }
         ]
       }
@@ -2246,7 +2246,7 @@
               "BLDP 01"
             ],
             "kpi": "No. of coaches",
-            "target": "6",
+            "target": "7",
             "ytd": "",
             "new": true
           },
@@ -2433,7 +2433,7 @@
               "Idea scheme modernisation",
               "Digital SM & Digital JIS",
               "MTO dashboard ↔ Digital Twin",
-              "Digital W/H management"
+              "Digital dock yard management"
             ],
             "kpi": "Platform projects",
             "target": "04",

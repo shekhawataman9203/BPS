@@ -1168,3 +1168,8 @@ body:not(.show-rail) #rail .arrow { pointer-events: auto; }
 .tb-card.in .tb-delta i { animation: tbDelta 1.4s ease-in-out .9s 2; }
 .tb-delta.down i { --dy: .35cqw; } .tb-delta.up i { --dy: -.35cqw; }
 @keyframes tbDelta { 50% { transform: translateY(var(--dy)); } }
+/* chapter bar with many chapters: numbers only, the current chapter's name shown */
+#railStations.many .st-name { opacity: 0; font-size: 11px; white-space: nowrap; transition: opacity .2s; }
+#railStations.many .station.current .st-name, #railStations.many .station:hover .st-name { opacity: 1; position: relative; z-index: 2; }
+#railStations.many .st-num { font-size: 11px; }
+#railStations.many .station.current .st-name, #railStations.many .station:hover .st-name { max-width: none; overflow: visible; }
