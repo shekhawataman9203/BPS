@@ -776,6 +776,9 @@ this.mark('strategy');     wall.setISA(0, true); wall.setTag(false, true); wall.
       if (i < H.pillars.length - 1) await this.waitStep(ctx);
     }
     await this.waitStep(ctx);
+    // next: the System Boosters light up (Digi Lean, CIP in indirect areas)
+    { const bs = H.boosters || []; wall.highlight(bs.map(b => b.id), null); const s = wall.spot(0.5, 0.82); ph.lookAt(s); team.forEach(m => m.lookAt(s)); ph.gesture('point', 2.2, { target: s });
+      ctx.cap('System Boosters: ' + bs.map(b => b.name).join(' and ') + '.', { hold: 600 }); await this.waitStep(ctx); }
     // then each Next drops one logo onto the house: Innovate, Simplify, Accelerate
     wall.highlight(null, null);
     for (let i = 0; i < (H.isa || []).length; i++) {

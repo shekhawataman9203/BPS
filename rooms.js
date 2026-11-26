@@ -380,10 +380,11 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
   }
   ctx.save(); ctx.translate(0, -(1 - dk) * H * 0.9);
   if (is27) { const sh = isaShake(w); if (sh) ctx.translate(sh[0], sh[1]); }
-  const dim = id => (hl.pillar && hl.pillar !== id ? 0.3 : 1);
+  const isOn = id => (Array.isArray(hl.pillar) ? hl.pillar.includes(id) : hl.pillar === id);
+  const dim = id => (hl.pillar && !isOn(id) ? 0.3 : 1);
   // roof
   // roof: in the 2026 build-up it rises from below
-  const hdim = hl.pillar && hl.pillar !== 'h-house' ? 0.45 : 1, rf = r26 ? E(r26.roof) : 1;
+  const hdim = hl.pillar && !isOn('h-house') ? 0.45 : 1, rf = r26 ? E(r26.roof) : 1;
   ctx.save(); if (r26) ctx.translate(0, (1 - rf) * 900);
   ctx.globalAlpha = (r26 ? Math.min(1, r26.roof * 2) : k(0)) * hdim;
   ctx.fillStyle = '#E8101E'; ctx.beginPath(); ctx.moveTo(x0 - 40, top + 210); ctx.lineTo(W / 2, top); ctx.lineTo(x1 + 40, top + 210); ctx.closePath(); ctx.fill();
@@ -401,7 +402,7 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
   // four pillars
   const py = top + 360, ph = is27 ? 620 : 690, gap = 30, pw = (x1 - x0 - gap * 3) / 4, headH = 270;
   const drawPillar = (pl, i, pk) => {
-    const x = x0 + i * (pw + gap), hov = isH(ht, pl.id), on = hl.pillar === pl.id;
+    const x = x0 + i * (pw + gap), hov = isH(ht, pl.id), on = isOn(pl.id);
     ctx.globalAlpha = (r26 ? pk : k(i + 1)) * dim(pl.id);
     ctx.fillStyle = '#ffffff'; ctx.fillRect(x, py, pw, ph);
     ctx.strokeStyle = on || hov ? pl.color : '#d6d9de'; ctx.lineWidth = on || hov ? 10 : 4; ctx.strokeRect(x, py, pw, ph);
@@ -458,7 +459,7 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
   ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.fillText('System Boosters', W / 2, by + 16); ctx.textAlign = 'left';
   const bw = (x1 - x0 - 60) / 2;
   h.boosters.forEach((b, i) => {
-    const x = x0 + i * (bw + 60), y = by + 48, hov = isH(ht, b.id), on = hl.pillar === b.id, ch = bh - 66;
+    const x = x0 + i * (bw + 60), y = by + 48, hov = isH(ht, b.id), on = isOn(b.id), ch = bh - 66;
     ctx.globalAlpha = (r26 ? E(r26.boost) : k(5 + i)) * dim(b.id);
     ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, bw, ch);
     ctx.strokeStyle = on || hov ? '#1E88D9' : '#d6d9de'; ctx.lineWidth = on || hov ? 10 : 4; ctx.strokeRect(x, y, bw, ch);

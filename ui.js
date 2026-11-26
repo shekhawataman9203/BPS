@@ -64,6 +64,7 @@ export class UI {
     $('#introPlant').textContent = d.meta.subtitle || d.meta.event;
     $('#introTag').textContent = d.meta.tagline;
     const rail = $('#railStations');
+    { const n = CHAPTERS.length - 1; rail.style.gridTemplateColumns = `repeat(${n}, 1fr)`; const l = $('#railLine'); if (l) { l.style.left = `calc(100% / ${2 * n})`; l.style.right = `calc(100% / ${2 * n})`; } }
     CHAPTERS.forEach((c, i) => {
       if (i === 0) return;
       rail.append(h('button', { class: 'station', 'data-i': i, onclick: () => this.app.director.go(i), 'aria-label': `Chapter ${i}: ${c.title}` },
@@ -87,7 +88,7 @@ export class UI {
     // chapter bar at the bottom: hidden by default, Chapters button / T shows it
     this.toggleChapters = (v = !document.body.classList.contains('show-rail')) => { document.body.classList.toggle('show-rail', v); this.pressed('#btnChapters', v); };
     $('#btnChapters').onclick = () => this.toggleChapters();
-    $('#btnPrev').onclick = () => this.app.director.prevAct();
+    $('#btnPrev').onclick = () => this.app.director.prev();
     $('#btnNext').onclick = () => { if (this.roadmapOpen) this.closeRoadmap(); this.app.director.nextAct(); };
     $('#helpClose').onclick = () => this.toggleHelp(false);
     $('#enter').onclick = () => this.enter(false);
