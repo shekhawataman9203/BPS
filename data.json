@@ -809,7 +809,19 @@
           "DLPC Maturity >95%",
           "TPM maturity ≥ Level 3"
         ],
-        "roadmap": "waste-free"
+        "roadmap": "waste-free",
+        "newInit": [
+          "2-piece flow in system in VE",
+          "Lot size reduction project",
+          "Ship to line concept for A class part family",
+          "Pull with W/H",
+          "Consumption control in upstream level (no inventory point in VS)",
+          "TPM Maturity"
+        ],
+        "continuity": [
+          "Line walk",
+          "Flow Improvement Project (OEE, C/O)"
+        ]
       },
       {
         "id": "h-invest-27",
@@ -823,7 +835,15 @@
           "Low Capex Retrofit",
           "Smart & scalable automation"
         ],
-        "roadmap": "investment"
+        "roadmap": "investment",
+        "newInit": [
+          "Smart & scalable automation",
+          "MOC reduction project"
+        ],
+        "continuity": [
+          "Zero breakdown approach",
+          "Low capex retrofit"
+        ]
       },
       {
         "id": "h-cip-27",
@@ -836,7 +856,14 @@
           "Ownership – Fast problem solvers thru agile",
           "Reward & Recognition"
         ],
-        "roadmap": "everybody-cip"
+        "roadmap": "everybody-cip",
+        "newInit": [
+          "More focus on quantifiable saving ideas → changes in reward process",
+          "Motivate associates toward high business impact"
+        ],
+        "continuity": [
+          "Agile methodology"
+        ]
       },
       {
         "id": "h-lead-27",
@@ -850,7 +877,14 @@
           "Lean Competency development",
           "Living VSO Culture"
         ],
-        "roadmap": "leadership"
+        "roadmap": "leadership",
+        "newInit": [
+          "Leadership training plan in JaP",
+          "Develop new coach & lean multiplier"
+        ],
+        "continuity": [
+          "BPS competency – training on BPS elements"
+        ]
       }
     ],
     "boosters": [
