@@ -174,6 +174,7 @@ export class Director {
         const ch = CHAPTERS.find(x => x.id === id);
         if (ch?.run === 'glMonth') this.stageMonth(ch);
         else if (ch?.run === 'tBoard') this.stageBoard(ch);
+        break;
       }
       case 'future':
         this.placeGroup(WAIT, () => 0); c.ph.place(0, 40.5, PI); this.setWorld({ gate: false, future: true, screen: 'house27' }); a.entrance.wall.set27(false, 0, true); a.rig.cut(SHOT.g_door); break;
