@@ -373,8 +373,17 @@ export class Director {
   resetView() {
     this.userCam = false; this.app.ui.showResetView(false);
     const id = CHAPTERS[this.index]?.id;
-    const shot = { flashback: SHOT.in_both, house: SHOT.k_wall, kpis: SHOT.k_wall, future: SHOT.k_wall, digitalsm: SHOT.sm_wide, plant: SHOT.p_cell, closing: SHOT.c_crane }[id];
-    if (shot) this.app.rig.moveTo(shot, 2.2);
+    const ch = CHAPTERS[this.index] || {}, a = this.app;
+    let shot = { flashback: SHOT.in_both, house: SHOT.k_wall, kpis: SHOT.k_wall, future: SHOT.k_wall, digitalsm: SHOT.sm_wide, plant: SHOT.p_cell, closing: SHOT.c_crane }[id];
+    if (!shot) {
+      // board chapters go back to their board, screen chapters to the big screen
+      const b = ch.run === 'glMonth' ? a.factory.glBoards?.[a.data.glimpses.months.findIndex(M => M.mark === ch.month)] : ch.run === 'tBoard' ? a.factory.t27Boards?.[ch.board] : null;
+      shot = b ? this.boardShot(b, true) : ch.loc === 'wall' ? SHOT.k_wall : null;
+    }
+    a.entrance.wall.highlight(null, null);
+    if (shot) a.rig.moveTo(shot, 2.2);
+    // the house chapters are shown full display: back to it
+    if (['house', 'strategy'].includes(id)) setTimeout(() => a.ui.toggleScreenView(true), 300);
   }
 
   // ---------- idle life after a chapter's scene ----------

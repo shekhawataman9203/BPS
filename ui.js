@@ -757,7 +757,7 @@ export class UI {
         if (!(Array.isArray(el.newInit) && !el.newInit.length)) sec('New', 'New in 2027', 'What new we will introduce in 2027', el.newInit || el.items, 'new');
         if (!(Array.isArray(el.continuity) && !el.continuity.length)) sec('Continuity', 'Continuing 2026', 'What we will continue, strengthen and sustain', el.continuity || was?.items, 'cont');
       }
-      this.app.director.select('house27', hit.id);
+      this.app.director.select('house27', hit.id, { fly: !this.screenView }); // full display: no camera flight behind it
     } else if (hit.type === 'house' || hit.type === 'group') {
       // a house element (or roadmap block): its drivers and the linked roadmap rows
       const H = d.house, el = [...H.pillars, ...H.boosters].find(x => x.id === hit.id);
@@ -782,7 +782,7 @@ export class UI {
             btn('Zoom in the full roadmap', () => this.openRoadmap(g.id))));
         }
       }
-      this.app.director.select(hit.type, hit.id);
+      this.app.director.select(hit.type, hit.id, { fly: !this.screenView });
     } else if (hit.type === 'kpi') {
       const r = rows.find(x => x.id === hit.id); if (!r) return;
       color = r.color; kicker = `${r.pillarName} › ${r.groupName}`; title = r.kpi;
@@ -1114,7 +1114,9 @@ export class UI {
           return [grp, h('div', { class: 'r7-row', style: `--j:${j}` },
             h('div', { class: 'r7-name' }, r.new ? h('em', { class: 'r7-new' }, 'NEW') : null, r.name),
             h('div', { class: 'r7-track' }, h('i', { class: 'r7-line' }), qs),
-            h('div', { class: 'r7-kpi' }, h('small', {}, r.kpi), h('b', {}, r.target), r.ytd ? h('span', { class: 'r7-ytd' }, 'YTD ' + r.ytd) : null))];
+            (() => { const ks = r.kpi.split(' · '), ts = String(r.target).split(' · ');
+              if (ks.length > 1 && ks.length === ts.length) return h('div', { class: 'r7-kpi multi' }, ks.map((k, n) => h('div', { class: 'r7-kv' }, h('small', {}, k), h('b', {}, ts[n]))), r.ytd ? h('span', { class: 'r7-ytd' }, 'YTD ' + r.ytd) : null);
+              return h('div', { class: 'r7-kpi' }, h('small', {}, r.kpi), h('b', {}, r.target), r.ytd ? h('span', { class: 'r7-ytd' }, 'YTD ' + r.ytd) : null); })())];
         });
         return h('section', { class: 'r7-sec', 'data-i': i, style: `--c:${s.color}` },
           h('div', { class: 'r7-sechead' }, h('h3', {}, s.name), h('p', { class: 'r7-tag' }, s.tag[0], ' ', h('b', {}, s.tag[1]))),

@@ -1182,3 +1182,17 @@ body:not(.show-rail) #rail .arrow { pointer-events: auto; }
 .dt27-head.cont .dt27-tag { background: rgba(41,211,255,.16); color: #29d3ff; }
 .ty-glow { top: 7.6%; }
 .tb-card.tb-blank { opacity: .35; }
+/* top bar always on top of every full-screen view */
+#topbar { z-index: 40; }
+body.factcheck #topbar { visibility: visible; }
+/* no "Press → for the next step" hint, no "Next step / Skip scene" button */
+#stepHint, #btnSkip { display: none !important; }
+/* two-line card titles (Hunt Runner phase 2) */
+.tb-big b { white-space: pre-line; }
+/* roadmap 2027: several KPIs → one line each, target beside it */
+.r7-kpi.multi { display: flex; flex-direction: column; gap: 3px; }
+.r7-kv { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.r7-kv b { grid-row: auto; font-size: clamp(12px, 1.15vw, 20px); }
+/* fact check: its title strip and panel sit below the top bar */
+#factcheck .fc-bug { top: calc(var(--top-h) + 10px) !important; }
+#factcheck .fc-panel { top: calc(var(--top-h) + 6vh) !important; }

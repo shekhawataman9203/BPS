@@ -2220,9 +2220,8 @@
           },
           {
             "icon": "📦",
-            "label": "Phase 2",
-            "big": "Digital SM & Digital JIS",
-            "sub": "MTO order control dashboard integrated with the Digital Twin"
+            "label": "Phase 2 · two projects",
+            "big": "1. Digital SM & Digital JIS\n2. Digital MTO Control Dashboard"
           },
           {
             "icon": "🚚",
@@ -2521,7 +2520,7 @@
               "10"
             ],
             "kpi": "VE MOC · NHA MOC",
-            "target": "TBD",
+            "target": "TBD · TBD",
             "ytd": "",
             "new": false
           },

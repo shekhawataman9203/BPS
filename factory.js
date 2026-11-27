@@ -1046,7 +1046,7 @@ export function buildFactory(scene, renderer, data = {}) {
         const r = Math.min(chh * 0.26, 58), ix = cx + 30 + r, iy = cy + chh / 2;
         ctx.fillStyle = 'rgba(41,211,255,0.25)'; ctx.beginPath(); ctx.arc(ix, iy, r, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = 3; ctx.stroke();
         ctx.textAlign = 'center'; ctx.font = `${Math.round(r * 1.05)}px ${FONT}`; ctx.fillStyle = '#fff'; ctx.fillText(c.icon || '🎯', ix, iy + r * 0.38); ctx.textAlign = 'left';
-        const tx = ix + r + 28, tw = cx + cw - tx - 24, big = String(c.big) + (c.unit ? ' ' + c.unit : '');
+        const tx = ix + r + 28, tw = cx + cw - tx - 24, big = String(c.big).replace(/\n/g, '  ·  ') + (c.unit ? ' ' + c.unit : '');
         const lines = [[c.label.toUpperCase(), '#9fdcf2', 800, Math.min(30, chh * 0.13)], [big, '#ffffff', 900, Math.min(big.length > 12 ? 54 : 76, chh * 0.3)]];
         if (c.sub) lines.push([c.sub, '#c7d6e2', 500, Math.min(28, chh * 0.12)]);
         if (c.delta) lines.push([(c.delta.dir === 'down' ? '▼ ' : '▲ ') + c.delta.text, '#3ddc6e', 800, Math.min(28, chh * 0.12)]);
