@@ -170,9 +170,18 @@ class KpiWall {
     // 2026 house build-up, one stage per Next: 0 white, 1 roof, 2 band, 3 pillars, 4-7 pillar content, 8 boosters, 9 statement
     this.h26 = { stage: 9, v: { roof: 1, band: 1, pil: [1, 1, 1, 1], con: [1, 1, 1, 1], boost: 1, stmt: 1 } }; this.hits = []; this.hover = null;
     this.ct = new CanvasTex(TEX_W, TEX_H, (ctx, W, H) => this.draw(ctx, W, H));
+    // the 4K canvas is uploaded to the GPU at most ~25 times a second, and not at all while it is shown full display (DOM canvas)
+    { const ct = this.ct, draw = ct.draw; ct.redraw = (...a) => { draw(ct.ctx, ct.canvas.width, ct.canvas.height, ...a); this.texDirty = true; if (!this.lastUp) this.flushTex(true); }; }
+    this.hiddenTex = false; this.lastUp = 0;
     this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(KPI_WALL.w, KPI_WALL.h), new THREE.MeshBasicMaterial({ map: this.ct.tex, toneMapped: false }));
     this.mesh.userData.kpiWall = true;
     if (logoImg && !logoImg.complete) logoImg.addEventListener('load', () => this.ct.redraw());
+  }
+  flushTex(force = false) {
+    const now = performance.now();
+    if (!this.texDirty || this.hiddenTex) return;
+    if (!force && now - this.lastUp < 40) return;
+    this.ct.tex.needsUpdate = true; this.texDirty = false; this.lastUp = now;
   }
   setAnisotropy(a) { this.ct.tex.anisotropy = a; this.ct.tex.needsUpdate = true; }
   get layout() { return this.layouts[this.mode]; }
@@ -205,24 +214,25 @@ class KpiWall {
     if (this.mode === 'house') {
       const v = this.h26.v, t = this.t26(), step = (a, b, r) => (a === b ? a : b > a ? Math.min(b, a + dt / r) : 0);
       const before = JSON.stringify(v);
-      v.roof = step(v.roof, t.roof, 1.1); v.band = step(v.band, t.band, 0.8);
-      v.pil = v.pil.map((x, i) => (i === 0 || v.pil[i - 1] > 0.55 ? step(x, t.pil[i], 0.7) : (t.pil[i] ? x : 0)));
-      v.con = v.con.map((x, i) => step(x, t.con[i], 0.8)); v.boost = step(v.boost, t.boost, 0.8); v.stmt = step(v.stmt, t.stmt, 0.8);
+      v.roof = step(v.roof, t.roof, 0.6); v.band = step(v.band, t.band, 0.45);
+      v.pil = v.pil.map((x, i) => (i === 0 || v.pil[i - 1] > 0.55 ? step(x, t.pil[i], 0.4) : (t.pil[i] ? x : 0)));
+      v.con = v.con.map((x, i) => step(x, t.con[i], 0.45)); v.boost = step(v.boost, t.boost, 0.45); v.stmt = step(v.stmt, t.stmt, 0.45);
       if (JSON.stringify(v) !== before) dirty = true;
     }
-    if (this.animating) { this.p = Math.min(1, this.p + dt / 2.2); dirty = true; if (this.p >= 1) this.animating = false; }
+    if (this.animating) { this.p = Math.min(1, this.p + dt / 1.2); dirty = true; if (this.p >= 1) this.animating = false; }
     if (this.mode === 'target27') {
-      const t = this.t27; t.v = t.v.map((v, i) => { const g = i < t.shown ? 1 : 0; if (v === g) return v; dirty = true; return g > v ? Math.min(1, v + dt / 1.1) : 0; });
+      const t = this.t27; t.v = t.v.map((v, i) => { const g = i < t.shown ? 1 : 0; if (v === g) return v; dirty = true; return g > v ? Math.min(1, v + dt / 0.7) : 0; });
     }
     if (this.mode === 'house27') {
       const r = this.h27;
-      if (r.drop > 0.5) { this.gearT = (this.gearT || 0) + dt; this.gearAcc = (this.gearAcc || 0) + dt; if (this.gearAcc > 1 / 24) { this.gearAcc = 0; dirty = true; } }
-      { const g = this.tag, tg = g.on ? 1 : 0; if (g.k !== tg) { g.k = tg > g.k ? Math.min(1, g.k + dt / 0.9) : 0; dirty = true; } }
+      if (r.drop > 0.5 && isaZoom(this, 'boosters', 0, 1.4) > 0) { this.gearT = (this.gearT || 0) + dt; this.gearAcc = (this.gearAcc || 0) + dt; if (this.gearAcc > 1 / 20) { this.gearAcc = 0; dirty = true; } }
+      { const g = this.tag, tg = g.on ? 1 : 0; if (g.k !== tg) { g.k = tg > g.k ? Math.min(1, g.k + dt / 0.6) : 0; dirty = true; } }
       const S = this.isa; S.t = S.t.map((t, i) => { if (i >= S.shown || t >= 3.2) return t; dirty = true; return Math.min(3.2, t + dt); });
-      if (r.drop !== r.dropT) { r.drop = r.dropT > r.drop ? Math.min(r.dropT, r.drop + dt / 1.3) : Math.max(r.dropT, r.drop - dt / 0.6); dirty = true; }
-      r.rev = r.rev.map((v, i) => { const t = i < r.shown ? 1 : 0; if (v === t) return v; dirty = true; return t > v ? Math.min(1, v + dt / 0.9) : 0; });
+      if (r.drop !== r.dropT) { r.drop = r.dropT > r.drop ? Math.min(r.dropT, r.drop + dt / 0.8) : Math.max(r.dropT, r.drop - dt / 0.6); dirty = true; }
+      r.rev = r.rev.map((v, i) => { const t = i < r.shown ? 1 : 0; if (v === t) return v; dirty = true; return t > v ? Math.min(1, v + dt / 0.5) : 0; });
     }
     if (dirty) this.ct.redraw();
+    this.flushTex();
   }
   // world position of a spot on the screen, u,v in 0..1 from top-left
   spot(u, v) { this.mesh.updateMatrixWorld(true); return this.mesh.localToWorld(V((u - 0.5) * KPI_WALL.w, (0.5 - v) * KPI_WALL.h, 0.05)); }
@@ -442,7 +452,7 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
     const z = isaZoom(w, pl.id); if (z <= 0) return;
     const x = x0 + i * (pw + gap), cx = x + pw / 2, cy = py + ph / 2, sc = 1 + 0.07 * z;
     ctx.save(); ctx.translate(cx, cy); ctx.scale(sc, sc); ctx.translate(-cx, -cy);
-    ctx.save(); ctx.shadowColor = 'rgba(6,30,60,0.45)'; ctx.shadowBlur = 60 * z; ctx.shadowOffsetY = 24 * z; ctx.fillStyle = '#ffffff'; ctx.fillRect(x, py, pw, ph); ctx.restore();
+    ctx.save(); ctx.shadowColor = 'rgba(6,30,60,0.45)'; ctx.shadowBlur = 22 * z; ctx.shadowOffsetY = 16 * z; ctx.fillStyle = '#ffffff'; ctx.fillRect(x, py, pw, ph); ctx.restore();
     drawPillar(pl, i, 1); ctx.restore();
   });
   // system boosters
@@ -451,7 +461,7 @@ function drawHouse(w, ctx, W, H, HH, p, L, hits, isHover, h = w.data.house, ht =
   const bz = is27 ? isaZoom(w, 'boosters') : 0;
   ctx.save();
   if (bz > 0) { const cx = W / 2, cy = by + bh / 2, sc = 1 + 0.035 * bz; ctx.translate(cx, cy); ctx.scale(sc, sc); ctx.translate(-cx, -cy);
-    ctx.save(); ctx.shadowColor = 'rgba(6,30,60,0.45)'; ctx.shadowBlur = 60 * bz; ctx.shadowOffsetY = 24 * bz; ctx.fillStyle = '#eceef1'; ctx.fillRect(x0 - 40, by, x1 - x0 + 80, bh); ctx.restore(); }
+    ctx.save(); ctx.shadowColor = 'rgba(6,30,60,0.45)'; ctx.shadowBlur = 22 * bz; ctx.shadowOffsetY = 16 * bz; ctx.fillStyle = '#eceef1'; ctx.fillRect(x0 - 40, by, x1 - x0 + 80, bh); ctx.restore(); }
   ctx.globalAlpha = r26 ? E(r26.boost) : k(5);
   ctx.fillStyle = '#eceef1'; ctx.fillRect(x0 - 40, by, x1 - x0 + 80, bh);
   ctx.fillStyle = '#1E88D9'; ctx.fillRect(x0 - 40, by, x1 - x0 + 80, 8);
@@ -583,7 +593,7 @@ function drawISA(w, ctx, H, G) {
       const k = ease.out(Math.min(1, (lt0 - 0.15) / 0.6));
       const box = pi >= 0 ? [G.x0 + pi * (G.pw + G.gap), G.py, G.pw, G.ph] : [G.x0 - 40, G.by, G.x1 - G.x0 + 80, G.bh];
       { const zz = isaZoom(w, it.at), g = (pi >= 0 ? 0.035 : 0.0175) * zz; box[0] -= box[2] * g; box[1] -= box[3] * g; box[2] *= 1 + 2 * g; box[3] *= 1 + 2 * g; } // follow the zoom
-      ctx.save(); ctx.globalAlpha = k; ctx.strokeStyle = col; ctx.lineWidth = 16; ctx.shadowColor = col; ctx.shadowBlur = 40;
+      ctx.save(); ctx.globalAlpha = k; ctx.strokeStyle = col; ctx.lineWidth = 16; ctx.shadowColor = col; ctx.shadowBlur = 14;
       ctx.strokeRect(box[0] - 10, box[1] - 10, box[2] + 20, box[3] + 20); ctx.restore();
       // arrow path from the card's edge to the target
       const ex = slot.startsWith('left') ? cx + cww / 2 : cx - cww / 2;
@@ -613,7 +623,7 @@ function drawISA(w, ctx, H, G) {
     }
     // the card
     ctx.save(); ctx.translate(cx, ground + dy); ctx.rotate(rot); ctx.scale(sx, sy);
-    ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 18;
+    ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 12;
     ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-cww / 2, -chh, cww, chh, 36) : ctx.rect(-cww / 2, -chh, cww, chh); ctx.fill();
     ctx.shadowColor = 'transparent';
     ctx.lineWidth = 8; ctx.strokeStyle = it.color || '#0A6EBD'; ctx.stroke();
@@ -775,7 +785,7 @@ function drawTarget27(w, ctx, W, H, HH) {
     const c1 = gold ? '#C8960C' : '#0A6EBD', c2 = gold ? '#8A5A00' : '#063E70', ink = gold ? '#7A4E00' : '#0A4F8A';
     ctx.save(); ctx.globalAlpha = a; ctx.translate(x + cw / 2, y0 + ch / 2); const s = 0.85 + 0.15 * a; ctx.scale(s, s); ctx.translate(-(x + cw / 2), -(y0 + ch / 2) + (1 - a) * 120);
     // card with shadow
-    ctx.shadowColor = 'rgba(6,30,60,0.28)'; ctx.shadowBlur = 80; ctx.shadowOffsetY = 30;
+    ctx.shadowColor = 'rgba(6,30,60,0.28)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 18;
     ctx.fillStyle = '#ffffff'; rrect(ctx, x, y0, cw, ch, 48); ctx.fill();
     ctx.shadowColor = 'transparent';
     // header band

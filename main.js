@@ -88,7 +88,7 @@ async function boot() {
   composer.addPass(new OutputPass());
 
   // ---------- quality ----------
-  const Q = { high: { dpr: 2, shadow: 4096, bloom: true, shadows: true, ao: true }, medium: { dpr: 1.25, shadow: 2048, bloom: true, shadows: true, ao: false }, low: { dpr: 1, shadow: 512, bloom: false, shadows: false, ao: false } };
+  const Q = { high: { dpr: 2, shadow: 4096, bloom: true, shadows: true, ao: true }, medium: { dpr: 1.5, shadow: 2048, bloom: true, shadows: true, ao: false }, low: { dpr: 1, shadow: 512, bloom: false, shadows: false, ao: false } };
   // ?quality=low|medium|high in the URL forces a level (handy on weak laptops or projectors)
   const qParam = new URLSearchParams(location.search).get('quality');
   let quality = Q[qParam] ? qParam : isCoarse ? 'medium' : 'high';
@@ -170,8 +170,10 @@ async function boot() {
     timer.update(); const rawDt = timer.getDelta(); const dt = Math.min(rawDt, 0.05) * (ui.paused ? 0 : app.timeScale); t += dt;
     director.update(dt);
     if (controls.enabled) controls.update(); else rig.update(dt, t);
-    for (const c of everyone) c.update(dt);
-    app.factory.update(dt, t); app.meeting.wall.update(dt); app.entrance.update(dt, t);
+    // while a full-screen view covers the plant, the plant is neither animated nor drawn
+    const covered = ui.covering(), hidden3d = covered || ui.screenView;
+    if (!covered) { for (const c of everyone) c.update(dt); app.factory.update(dt, t); app.meeting.wall.update(dt); }
+    app.entrance.update(dt, t);
     // shadow light follows the area being looked at
     const focus = controls.enabled ? controls.target : rig.tgt;
     sun.target.position.set(focus.x, 0, focus.z);
@@ -184,14 +186,14 @@ async function boot() {
     shift.x = damp(shift.x, tx, 4, dt); shift.y = damp(shift.y, ty, 4, dt);
     if (Math.abs(shift.x) > 0.5 || Math.abs(shift.y) > 0.5) camera.setViewOffset(W, H, shift.x, shift.y, W, H); else if (camera.view && camera.view.enabled) camera.clearViewOffset();
     // a full-screen card (Glimpses, 'How 2027 looks like') hides the scene: skip drawing it so the card animates smoothly
-    if (!ui.covering()) { if (Q[quality].bloom) composer.render(); else renderer.render(scene, camera); }
+    if (!hidden3d) { if (Q[quality].bloom) composer.render(); else renderer.render(scene, camera); }
     ui.updatePins(camera, W, H);
     ui.trackGlimpse(camera, W, H);
     app.hoverScreen();
     // adaptive quality after the visitor has entered
     if (document.body.classList.contains('entered') && !document.hidden) {
       fpsAcc += rawDt; fpsN++; fpsCheck += rawDt;
-      if (fpsCheck > 3) { const fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0; fpsCheck = 0; if (fps < 26 && quality !== 'low') { quality = quality === 'high' ? 'medium' : 'low'; applyQuality(); } }
+      if (fpsCheck > 3) { const fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0; fpsCheck = 0; if (!hidden3d) { if (fps < 26 && quality !== 'low') { quality = quality === 'high' ? 'medium' : 'low'; applyQuality(); } else if (fps > 55 && quality === 'medium' && !qParam) { quality = 'high'; applyQuality(); } } }
     }
   }
   frame();

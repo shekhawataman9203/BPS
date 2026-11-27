@@ -173,6 +173,7 @@ export class UI {
   toggleScreenView(v = !this.screenView) {
     const wall = this.app.entrance?.wall; if (!wall) return;
     this.screenView = v; this.pressed('#btnScreen', v); document.body.classList.toggle('screen-view', v);
+    wall.hiddenTex = v; if (!v) wall.flushTex(true);
     const host = $('#svHost'), cv = wall.ct.canvas, sec = $('#screenView');
     if (v) {
       sec.hidden = false; host.append(cv); cv.classList.add('sv-canvas');
