@@ -811,7 +811,7 @@
         ],
         "roadmap": "waste-free",
         "newInit": [
-          "1:1 flow in Assembly–Testing–Packing, line 3",
+          "1:1 flow in the NHA pacemaker loop: integration of laser operation and of line 2 assembly → testing → packing",
           "Small-lot integration co-created with HigP: 20 → 4x, and 2-piece flow at the VE pacemaker",
           "JIS in upstream, 4 areas (IC stud, cam plate, TD piston)",
           "Pull with W/H coverage >70% (customers ITL, Escort, JD & Koel)",
@@ -900,7 +900,6 @@
         "newInit": [
           "DLR: digital shift handover",
           "DLR: data knowledge base for quick reaction (Copilot solution)",
-          "Levelling: MTO sequencing through Procon",
           "Pull principle: actual material real-time visualization",
           "Standardized work: digital solution for logistics productivity"
         ],
@@ -2286,7 +2285,7 @@
             "el": "Leadership commitment",
             "name": "DLPC cadence adherence",
             "q": [
-              "Rollout of DLPC for Std. work, Levelling",
+              "Rollout of DLPC for standardized work, levelling",
               ">80% adherence",
               ">85% adherence",
               ">90% adherence"
@@ -2302,7 +2301,7 @@
             "q": [
               "Silver Star Agile Masters 03",
               "BPS Assessors 02",
-              "Speed week coach 01",
+              "Speed week coaches 01",
               "BLDP 01"
             ],
             "kpi": "No. of coaches",
@@ -2314,7 +2313,7 @@
             "el": "Leadership commitment",
             "name": "BPS competency",
             "q": [
-              "WAtS training >100%",
+              "WAtS training coverage >100%",
               "LBP for planners 99%",
               "BPS Basics 97%",
               "LLB 99%"
@@ -2381,10 +2380,10 @@
             "el": "Waste-free, stable flow",
             "name": "TPT reduction > 10%",
             "q": [
-              "Flow project · 1:1 flow >55%",
-              ">58%",
-              ">60%",
-              ">62%"
+              "Flow project (01/VS): lot size reduction, 1:1 flow >55%",
+              "1:1 flow >58%",
+              "1:1 flow >60%",
+              "1:1 flow >62%"
             ],
             "kpi": "TPT VE · TPT NHA",
             "target": "12 d · 8.8 d",
@@ -2395,10 +2394,10 @@
             "el": "Waste-free, stable flow",
             "name": "E2E connected VS",
             "q": [
-              "A-class · Upstream Pull 92.3% · W/H 50%",
-              "Upstream Pull 100% · W/H 65%",
-              "Upstream Pull 100% · W/H 70%",
-              "STL & STS >85% · W/H 80%"
+              "STL & STS: A-class type · Upstream Pull 92.3% · Pull with W/H 50%",
+              "STL & STS: A-class · Upstream Pull 100% · W/H 65%",
+              "STL & STS: A-class · Upstream Pull 100% · W/H 70%",
+              "STL & STS coverage >85% · Upstream Pull 100% · W/H 80%"
             ],
             "kpi": "E2E coverage · DIO",
             "target": ">80% · 35 d",
@@ -2407,7 +2406,7 @@
           },
           {
             "el": "Waste-free, stable flow",
-            "name": "DLPC maturity of BPS elements",
+            "name": "DLPC maturity of BPS elements (Pull, 5S, Std. work, Levelling, DLR)",
             "q": [
               "DLPC maturity >75%",
               ">80%",
@@ -2423,13 +2422,13 @@
             "el": "Waste-free, stable flow",
             "name": "TPM maturity ≥ Level 3",
             "q": [
-              "MAEs at S4: 10/20",
-              "14/20",
-              "18/20",
-              "20/20"
+              "MAEs at S4: xx/44",
+              "MAEs at S4: xx/44",
+              "MAEs at S4: xx/44",
+              "MAEs at S4: xx/44"
             ],
-            "kpi": "MAEs at S4",
-            "target": "20",
+            "kpi": "No. of MAEs at S4",
+            "target": "44",
             "ytd": "",
             "new": true
           },
@@ -2442,7 +2441,7 @@
               "100%",
               "100%"
             ],
-            "kpi": "Indirect involvement",
+            "kpi": "Indirect function involvement",
             "target": "100%",
             "ytd": "",
             "new": true
@@ -2451,10 +2450,10 @@
             "el": "CIP in indirect areas",
             "name": "Indirect area coverage under VSDiA",
             "q": [
-              "VSDiA 1",
-              "VSDiA 2",
-              "VSDiA 4",
-              "VSDiA 5"
+              "No. of VSDiA: 1",
+              "2",
+              "4",
+              "5"
             ],
             "kpi": "No. of VSDiA",
             "target": "5",
@@ -2476,12 +2475,12 @@
             "el": "Digi Lean (BPS + I4.0)",
             "name": "Digital solution deployment (BPS level 3)",
             "q": [
-              "Digital solutions 3/12",
+              "Digital solutions actual vs plan 3/12",
               "6/12",
               "9/12",
               "12/12"
             ],
-            "kpi": "Digital tools implemented",
+            "kpi": "Digital tool implementation",
             "target": "12 (>65%)",
             "ytd": "",
             "new": true
@@ -2490,12 +2489,12 @@
             "el": "Digi Lean (BPS + I4.0)",
             "name": "Platform project · Hunt Runner @ RO-IN",
             "q": [
-              "Idea scheme modernisation",
-              "Digital SM & Digital JIS",
-              "MTO dashboard ↔ Digital Twin",
-              "Digital dock yard management"
+              "Roll-out: idea scheme modernisation",
+              "Phase 2: Digital SM & Digital JIS · MTO order dashboard ↔ Digital Twin",
+              "Smart Logistics Park: digital W/H, dock yard management, vehicle scheduling",
+              ""
             ],
-            "kpi": "Platform projects",
+            "kpi": "No. of platform projects",
             "target": "04",
             "ytd": "",
             "new": true
@@ -2504,7 +2503,7 @@
             "el": "Investment efficiency",
             "name": "Zero breakdown approach",
             "q": [
-              "MAEs tech. loss <3%: 75%",
+              "MAEs with tech. loss <3%: 75%",
               "80%",
               "85%",
               "90%"
@@ -2516,20 +2515,6 @@
           },
           {
             "el": "Investment efficiency",
-            "name": "MOC reduction",
-            "q": [
-              "Kick-off",
-              "",
-              "",
-              ""
-            ],
-            "kpi": "MOC",
-            "target": "NHA · VE",
-            "ytd": "",
-            "new": true
-          },
-          {
-            "el": "Investment efficiency",
             "name": "Low capex retrofit",
             "q": [
               "De-risking MAEs 02",
@@ -2537,22 +2522,22 @@
               "07",
               "10"
             ],
-            "kpi": "De-risking MAEs",
-            "target": "10",
+            "kpi": "VE MOC · NHA MOC",
+            "target": "TBD",
             "ytd": "",
-            "new": true
+            "new": false
           },
           {
             "el": "Investment efficiency",
-            "name": "Smart & scalable automation",
+            "name": "Standard, smart & scalable automation",
             "q": [
               "Kick-off",
               "",
               "",
               ""
             ],
-            "kpi": "Automation (cobot, robot, AOI / vision)",
-            "target": "10",
+            "kpi": "Digital maturity",
+            "target": "85%",
             "ytd": "",
             "new": true
           }
