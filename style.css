@@ -1181,3 +1181,4 @@ body:not(.show-rail) #rail .arrow { pointer-events: auto; }
 .dt27-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; background: rgba(61,220,110,.18); color: #3ddc6e; }
 .dt27-head.cont .dt27-tag { background: rgba(41,211,255,.16); color: #29d3ff; }
 .ty-glow { top: 7.6%; }
+.tb-card.tb-blank { opacity: .35; }

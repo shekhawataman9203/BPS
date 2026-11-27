@@ -579,6 +579,7 @@ export class Director {
     ui.t27Board('open', i, b);
     await this.waitStep(ctx);
     for (let k = 0; k < T[i].cards.length; k++) {
+      if (T[i].cards[k].blank) continue; // empty slot
       ui.t27Board('card', i, k);
       // the board shakes when the target hits it
       ctx.later(0.43, () => { const g = b.group, x0 = b.x; ctx.tween(0.5, u => { const d = (1 - u) * 0.035; g.position.x = x0 + Math.sin(u * 60) * d; g.rotation.z = Math.sin(u * 47) * d * 0.4; }); ctx.later(0.55, () => { g.position.x = x0; g.rotation.z = 0; }); });

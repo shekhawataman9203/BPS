@@ -1194,6 +1194,7 @@ export class UI {
       if (root) root.remove();
       const cols = B.cols || 2, grouped = !!B.groups;
       const cards = B.cards.map((c, k) => {
+        if (c.blank) return h('div', { class: 'tb-card tb-blank', 'data-k': k, 'aria-hidden': 'true' });
         const el = h('div', { class: 'tb-card', 'data-k': k },
           h('span', { class: 'tb-num' }, String(k + 1).padStart(2, '0')),
           h('div', { class: 'tb-icon' }, c.icon || '🎯'),
@@ -1209,7 +1210,7 @@ export class UI {
         grouped ? B.groups.map((g, j) => h('p', { class: 'tb-group', style: `grid-column:${j + 1};grid-row:1` }, g)) : null, cards);
       const board = h('div', { class: 'tb-board' + (grouped ? ' grouped' : '') + (B.cards.length > 4 ? ' many' : '') },
         h('div', { class: 'tb-head' }, h('span', { class: 'tb-kicker' }, B.kicker), h('h2', { class: 'tb-title' }, B.title),
-          h('div', { class: 'tb-dots' }, B.cards.map(() => h('i', {})))), grid);
+          h('div', { class: 'tb-dots' }, B.cards.filter(c => !c.blank).map(() => h('i', {})))), grid);
       root = h('section', { id: 't27b', 'aria-live': 'polite' }, board);
       document.body.append(root);
       this.t27Track = b ? { obj: b.obj, w: b.w, h: b.h, el: board } : null;

@@ -1040,7 +1040,7 @@ export function buildFactory(scene, renderer, data = {}) {
       B.cards.forEach((c, i) => {
         const col = grouped ? (c.group || 0) : i % cols, row = grouped ? B.cards.filter((x, j) => j < i && (x.group || 0) === (c.group || 0)).length : Math.floor(i / cols);
         const cx = 70 + col * (cw + 30), cy = top + row * (chh + 26);
-        if (i >= shown) { ctx.strokeStyle = 'rgba(41,211,255,0.45)'; ctx.setLineDash([16, 12]); ctx.lineWidth = 3; ctx.strokeRect(cx, cy, cw, chh); ctx.setLineDash([]); ctx.fillStyle = 'rgba(41,211,255,0.5)'; ctx.font = `800 64px ${FONT}`; ctx.fillText(String(i + 1), cx + 26, cy + 80); return; }
+        if (i >= shown || c.blank) { ctx.strokeStyle = 'rgba(41,211,255,0.45)'; ctx.setLineDash([16, 12]); ctx.lineWidth = 3; ctx.strokeRect(cx, cy, cw, chh); ctx.setLineDash([]); ctx.fillStyle = 'rgba(41,211,255,0.5)'; ctx.font = `800 64px ${FONT}`; if (!c.blank) ctx.fillText(String(i + 1), cx + 26, cy + 80); return; }
         const cg = ctx.createLinearGradient(cx, cy, cx + cw, cy + chh); cg.addColorStop(0, '#10345a'); cg.addColorStop(1, '#081a30'); ctx.fillStyle = cg; ctx.fillRect(cx, cy, cw, chh);
         const bg = ctx.createLinearGradient(cx, cy, cx + cw, cy + chh); bg.addColorStop(0, '#29d3ff'); bg.addColorStop(0.5, '#0A6EBD'); bg.addColorStop(1, '#E20015'); ctx.strokeStyle = bg; ctx.lineWidth = 5; ctx.strokeRect(cx + 2, cy + 2, cw - 4, chh - 4);
         const r = Math.min(chh * 0.26, 58), ix = cx + 30 + r, iy = cy + chh / 2;

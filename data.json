@@ -2220,19 +2220,17 @@
           },
           {
             "icon": "📦",
-            "label": "Phase 1 → Phase 2",
+            "label": "Phase 2",
             "big": "Digital SM & Digital JIS",
-            "sub": "First Plunger & IC stud → then Feed pump · Drive shaft · Cam plate · Roller ring"
-          },
-          {
-            "icon": "🖥️",
-            "label": "MTO order control dashboard",
-            "big": "Digital Twin integration"
+            "sub": "MTO order control dashboard integrated with the Digital Twin"
           },
           {
             "icon": "🚚",
-            "label": "Inbound digitalization",
-            "big": "Digital Dock Yard Management"
+            "label": "Smart Logistics Park",
+            "big": "Digital W/H Management · Dock Yard Management · Vehicle Scheduling"
+          },
+          {
+            "blank": true
           }
         ]
       }
